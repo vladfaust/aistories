@@ -6,9 +6,11 @@ import {
   ref,
   type ShallowRef,
   markRaw,
+  nextTick,
 } from "vue";
 import { trpc } from "@/services/api";
 import { sleep } from "@/utils";
+import { useScroll } from "@vueuse/core";
 
 const audioCtx = new AudioContext();
 
@@ -75,6 +77,15 @@ class Message {
   }
 }
 
+const chatbox = ref<HTMLElement | null>(null);
+const chatboxScroll = useScroll(chatbox);
+function maybeScrollChatbox(force: boolean = false) {
+  if (force || chatboxScroll.arrivedState.bottom) {
+    console.debug("Scrolling to bottom");
+    chatboxScroll.y.value = chatbox.value?.scrollHeight || 0;
+  }
+}
+
 async function delayedPrint(text: string, output: Ref<string>, delay: number) {
   console.debug("delayedPrint", text, delay);
 
@@ -110,6 +121,9 @@ onMounted(() => {
   trpc.getChatMessages.query().then((data) => {
     console.debug("getChatMessages: ", data);
     messages.value.push(...data.map((d) => markRaw(new Message(d, false))));
+    nextTick(() => {
+      maybeScrollChatbox(true);
+    });
   });
 
   trpc.onCharMessageSentence.subscribe(undefined, {
@@ -155,6 +169,7 @@ onMounted(() => {
     onData: (data) => {
       console.debug("onChatMessage/onData: ", data);
       messages.value.push(markRaw(new Message(data, data.actorId == 2)));
+      nextTick(maybeScrollChatbox);
     },
     onError: (error) => {
       console.error("onChatMessage/onError: ", error);
@@ -165,7 +180,7 @@ onMounted(() => {
 
 <template lang="pug">
 .flex.h-screen.flex-col.gap-2.p-4
-  .flex.flex-col.gap-1.overflow-y-auto
+  .flex.flex-col.gap-1.overflow-y-auto(ref="chatbox")
     template(v-for="message of orderedMessages")
       template(v-if="message.actorId == 1")
         p 👤 {{ message.text.value }}
