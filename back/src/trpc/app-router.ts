@@ -5,7 +5,6 @@ import { Deferred } from "@/utils.js";
 import { PrismaClient, TextMessage } from "@prisma/client";
 import EventEmitter from "events";
 import { observable } from "@trpc/server/observable";
-import * as elevenLabs from "@/services/elevenLabs.js";
 
 const prisma = new PrismaClient();
 const ee = new EventEmitter();
@@ -15,33 +14,8 @@ const t = initTRPC.create();
 const router = t.router;
 const publicProcedure = t.procedure;
 
-class PromiseQueue {
-  private queue: (() => Promise<any>)[] = [];
-  private running = false;
-
-  async run() {
-    if (this.running) {
-      return;
-    }
-
-    this.running = true;
-
-    while (this.queue.length > 0) {
-      const task = this.queue.shift();
-
-      if (task) {
-        await task();
-      }
-    }
-
-    this.running = false;
-  }
-
-  add(task: () => Promise<any>) {
-    this.queue.push(task);
-    this.run();
-  }
-}
+const CHAT_MESSAGE = "chatMessage";
+const CHAT_MESSAGE_TOKEN = "chatMessageToken";
 
 export const appRouter = router({
   createUserMessage: publicProcedure
@@ -64,9 +38,9 @@ export const appRouter = router({
           createdAt: true,
         },
       });
-      ee.emit("chatMessage", userMessage);
+      ee.emit(CHAT_MESSAGE, userMessage);
 
-      const charMessage = await prisma.textMessage.create({
+      const characterMessage = await prisma.textMessage.create({
         data: {
           chatId: 1,
           actorId: 2,
@@ -79,61 +53,41 @@ export const appRouter = router({
         },
       });
 
-      ee.emit("chatMessage", charMessage);
+      ee.emit(CHAT_MESSAGE, characterMessage);
 
       const text = new Deferred<string>();
       let textBuffer = "";
-      let sentence = "";
-      const promisesQueue = new PromiseQueue();
 
       ai.process.stdout.on("data", async (data: Buffer) => {
-        console.log("🤖 (raw)", data);
+        const token = data.toString();
+        console.debug("🤖 (tok)", token);
 
-        if (data.equals(Buffer.from([0]))) {
-          console.log("🤖 (end)", textBuffer);
+        ee.emit(CHAT_MESSAGE_TOKEN, {
+          messageId: characterMessage.id,
+          token,
+        });
+
+        if (token == "\0") {
+          console.log("🤖", textBuffer);
           text.resolve(textBuffer);
           return;
         }
 
-        const response = data.toString();
-        sentence += response;
-
-        if (!response.match(/[\.\?\!]/)) {
-          return; // Not a sentence terminator
-        }
-
-        const theSentence = sentence;
-        sentence = "";
-
-        console.log("🤖", theSentence);
-        textBuffer += theSentence;
-
-        promisesQueue.add(async () => {
-          const tts = await elevenLabs.tts(theSentence, "21m00Tcm4TlvDq8ikWAM");
-
-          ee.emit("charMessageSentence", {
-            messageId: charMessage.id,
-            sentence: theSentence,
-            tts,
-          });
-        });
-
-        promisesQueue.run();
+        textBuffer += token;
       });
 
       ai.process.stdin.write(`${input}\n`);
-      await text.promise;
 
       await prisma.textMessage.update({
         where: {
-          id: charMessage.id,
+          id: characterMessage.id,
         },
         data: {
-          text: textBuffer,
+          text: await text.promise,
         },
       });
 
-      return charMessage;
+      return characterMessage;
     }),
 
   getChatMessages: publicProcedure.query(() => {
@@ -160,37 +114,26 @@ export const appRouter = router({
         emit.next(data);
       };
 
-      ee.on("chatMessage", onAdd);
+      ee.on(CHAT_MESSAGE, onAdd);
 
       return () => {
-        ee.off("chatMessage", onAdd);
+        ee.off(CHAT_MESSAGE, onAdd);
       };
     });
   }),
 
-  onCharMessageSentence: publicProcedure.subscription(() => {
-    return observable<{ messageId: number; sentence: string; tts?: string }>(
-      (emit) => {
-        const onAdd = (data: {
-          messageId: number;
-          sentence: string;
-          tts?: ArrayBuffer;
-        }) => {
-          emit.next({
-            ...data,
-            tts: data.tts
-              ? Buffer.from(data.tts).toString("base64")
-              : undefined,
-          });
-        };
+  onChatMessageToken: publicProcedure.subscription(() => {
+    return observable<{ messageId: number; token: string }>((emit) => {
+      const onAdd = (data: { messageId: number; token: string }) => {
+        emit.next(data);
+      };
 
-        ee.on("charMessageSentence", onAdd);
+      ee.on(CHAT_MESSAGE_TOKEN, onAdd);
 
-        return () => {
-          ee.off("charMessageSentence", onAdd);
-        };
-      }
-    );
+      return () => {
+        ee.off(CHAT_MESSAGE_TOKEN, onAdd);
+      };
+    });
   }),
 });
 

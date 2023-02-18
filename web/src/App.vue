@@ -20,60 +20,13 @@ class Message {
   readonly actorId: number;
   readonly text: Ref<string>;
   readonly createdAt: Date;
-  private _queue: { sentence: string; tts?: AudioBufferSourceNode }[] = [];
-  completed = false;
 
-  constructor(data: any, play: boolean) {
+  constructor(data: any) {
     this.id = data.id;
     this.chatId = data.chatId;
     this.actorId = data.actorId;
     this.text = ref(data.text || "");
     this.createdAt = new Date(data.createdAt);
-
-    if (play) {
-      this.play();
-    }
-  }
-
-  push(sentence: string, tts?: AudioBufferSourceNode) {
-    this._queue.push({ sentence, tts });
-  }
-
-  async play() {
-    while (!this.completed) {
-      const sentence = this._queue.shift();
-
-      if (!sentence) {
-        await sleep(200);
-        continue;
-      }
-
-      console.debug("Playing", this.id, sentence.sentence);
-
-      const ttsDuration = (sentence.tts?.buffer?.duration || 0) * 0.8;
-
-      const promises = [
-        delayedPrint(
-          sentence.sentence,
-          this.text,
-          (ttsDuration * 1000) / sentence.sentence.length || 50
-        ),
-      ];
-
-      if (sentence.tts) {
-        sentence.tts.start();
-
-        promises.push(
-          new Promise<any>((resolve) => {
-            sentence.tts?.addEventListener("ended", resolve);
-          })
-        );
-      }
-
-      await Promise.all(promises);
-    }
-
-    console.debug("Completed", this.id);
   }
 }
 
@@ -83,15 +36,6 @@ function maybeScrollChatbox(force: boolean = false) {
   if (force || chatboxScroll.arrivedState.bottom) {
     console.debug("Scrolling to bottom");
     chatboxScroll.y.value = chatbox.value?.scrollHeight || 0;
-  }
-}
-
-async function delayedPrint(text: string, output: Ref<string>, delay: number) {
-  console.debug("delayedPrint", text, delay);
-
-  for (const char of text) {
-    output.value = output.value + char;
-    await sleep(delay);
   }
 }
 
@@ -120,13 +64,13 @@ const orderedMessages = computed(() => {
 onMounted(() => {
   trpc.getChatMessages.query().then((data) => {
     console.debug("getChatMessages: ", data);
-    messages.value.push(...data.map((d) => markRaw(new Message(d, false))));
+    messages.value.push(...data.map((d) => markRaw(new Message(d))));
     nextTick(() => {
       maybeScrollChatbox(true);
     });
   });
 
-  trpc.onCharMessageSentence.subscribe(undefined, {
+  trpc.onChatMessageToken.subscribe(undefined, {
     onData: async (data) => {
       console.debug("onCharMessageSentence/onData: ", data);
 
@@ -137,28 +81,7 @@ onMounted(() => {
         return;
       }
 
-      let tts: AudioBufferSourceNode | undefined;
-
-      if (data.tts) {
-        // Decode Base64 to ArrayBuffer
-        const binaryString = atob(data.tts);
-        const binaryLen = binaryString.length;
-        const bytes = new Uint8Array(binaryLen);
-        for (let i = 0; i < binaryLen; i++) {
-          const ascii = binaryString.charCodeAt(i);
-          bytes[i] = ascii;
-        }
-
-        // Decode ArrayBuffer to AudioBuffer
-        const audioBuffer = await audioCtx.decodeAudioData(bytes.buffer);
-
-        // Create AudioBufferSourceNode
-        tts = audioCtx.createBufferSource();
-        tts.buffer = audioBuffer;
-        tts.connect(audioCtx.destination);
-      }
-
-      message.push(data.sentence, tts);
+      message.text.value += data.token;
     },
     onError: (error) => {
       console.error("onCharMessageSentence/onError: ", error);
@@ -168,7 +91,7 @@ onMounted(() => {
   trpc.onChatMessage.subscribe(undefined, {
     onData: (data) => {
       console.debug("onChatMessage/onData: ", data);
-      messages.value.push(markRaw(new Message(data, data.actorId == 2)));
+      messages.value.push(markRaw(new Message(data)));
       nextTick(maybeScrollChatbox);
     },
     onError: (error) => {
