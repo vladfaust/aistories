@@ -1,33 +1,32 @@
-import { inferAsyncReturnType, initTRPC } from "@trpc/server";
-import * as trpcExpress from "@trpc/server/adapters/express";
-import express from "express";
 import config from "./config";
 import { appRouter } from "./trpc/app-router";
-import cors from "cors";
+import { applyWSSHandler } from "@trpc/server/adapters/ws";
+import { WebSocketServer } from "ws";
 
-const createContext = ({
-  req,
-  res,
-}: trpcExpress.CreateExpressContextOptions) => ({}); // no context
+const wss = new WebSocketServer({
+  port: config.server.port,
+  host: config.server.host,
+});
 
-type Context = inferAsyncReturnType<typeof createContext>;
+const handler = applyWSSHandler({
+  wss,
+  router: appRouter,
+  createContext: () => ({}),
+});
 
-const t = initTRPC.context<Context>().create();
+wss.on("connection", (ws) => {
+  console.log(`++Connection (${wss.clients.size})`);
+  ws.once("close", () => {
+    console.log(`--Connection (${wss.clients.size})`);
+  });
+});
 
-const app = express();
-
-app.use(cors());
-
-app.use(
-  "/trpc",
-  trpcExpress.createExpressMiddleware({
-    router: appRouter,
-    createContext,
-  })
+console.log(
+  `WebSocket Server listening on ws://${config.server.host}:${config.server.port}`
 );
 
-app.listen(config.server.port, config.server.host, () => {
-  console.log(
-    `Listening at http://${config.server.host}:${config.server.port}`
-  );
+process.on("SIGTERM", () => {
+  console.log("SIGTERM");
+  handler.broadcastReconnectNotification();
+  wss.close();
 });
