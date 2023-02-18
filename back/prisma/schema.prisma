@@ -16,7 +16,7 @@ model TextMessage {
   chatId  Int
   actorId Int
 
-  text String
+  text String? // A text generation may be in progress
 
   createdAt DateTime @default(now())
 }
