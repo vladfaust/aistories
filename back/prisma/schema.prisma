@@ -10,17 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model HumanMessage {
-  id         Int          @id @default(autoincrement())
-  createdAt  DateTime     @default(now())
-  text       String
-  BotMessage BotMessage[]
-}
+model TextMessage {
+  id Int @id @default(autoincrement())
 
-model BotMessage {
-  id             Int          @id @default(autoincrement())
-  createdAt      DateTime     @default(now())
-  text           String
-  inReplyTo      HumanMessage @relation(fields: [humanMessageId], references: [id])
-  humanMessageId Int
+  chatId  Int
+  actorId Int
+
+  text String
+
+  createdAt DateTime @default(now())
 }

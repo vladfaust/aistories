@@ -2,17 +2,12 @@
 import { computed, onMounted, ref, shallowRef, type ShallowRef } from "vue";
 import { trpc } from "@/services/api";
 
-type HumanMessage = {
+type TextMessage = {
   id: number;
+  chatId: number;
+  actorId: number;
   text: string;
   createdAt: string;
-};
-
-type BotMessage = {
-  id: number;
-  text: string;
-  createdAt: string;
-  humanMessageId: number;
 };
 
 const inputText = ref("");
@@ -21,11 +16,11 @@ async function onEnter() {
   console.debug("Enter pressed, inputText: ", inputText.value);
   const request = inputText.value;
   inputText.value = "";
-  const response = await trpc.createHumanMessage.mutate(request);
+  const response = await trpc.createUserMessage.mutate(request);
   console.debug(response);
 }
 
-const messages: ShallowRef<(HumanMessage | BotMessage)[]> = ref([]);
+const messages: ShallowRef<TextMessage[]> = ref([]);
 
 const orderedMessages = computed(() => {
   return messages.value.sort((a, b) => {
@@ -34,27 +29,12 @@ const orderedMessages = computed(() => {
 });
 
 onMounted(() => {
-  trpc.getHumanMessages.query().then((data) => {
-    console.debug("getHumanMessages: ", data);
+  trpc.getChatMessages.query().then((data) => {
+    console.debug("getChatMessages: ", data);
     messages.value.push(...data);
   });
 
-  trpc.getBotMessages.query().then((data) => {
-    console.debug("getBotMessages: ", data);
-    messages.value.push(...data);
-  });
-
-  trpc.onHumanMessage.subscribe(undefined, {
-    onData: (data) => {
-      console.debug("onData: ", data);
-      messages.value.push(data);
-    },
-    onError: (error) => {
-      console.error("onError: ", error);
-    },
-  });
-
-  trpc.onBotMessage.subscribe(undefined, {
+  trpc.onChatMessage.subscribe(undefined, {
     onData: (data) => {
       console.debug("onData: ", data);
       messages.value.push(data);
@@ -70,10 +50,10 @@ onMounted(() => {
 .m-4
   .flex.flex-col
     template(v-for="message of orderedMessages")
-      template(v-if="'humanMessageId' in message")
-        p 🤖 {{ message.text }}
-      template(v-else)
+      template(v-if="message.actorId == 1")
         p 👤 {{ message.text }}
+      template(v-else)
+        p 🤖 {{ message.text }}
   textarea.h-32.w-full.border.p-4(
     placeholder="Input text"
     @keypress.enter.prevent.exact="onEnter"

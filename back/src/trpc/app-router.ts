@@ -2,7 +2,7 @@ import { initTRPC } from "@trpc/server";
 import { z } from "zod";
 import * as ai from "@/ai.js";
 import { Deferred } from "@/utils.js";
-import { PrismaClient, HumanMessage, BotMessage } from "@prisma/client";
+import { PrismaClient, TextMessage } from "@prisma/client";
 import EventEmitter from "events";
 import { observable } from "@trpc/server/observable";
 
@@ -15,55 +15,67 @@ const router = t.router;
 const publicProcedure = t.procedure;
 
 export const appRouter = router({
-  createHumanMessage: publicProcedure
+  createUserMessage: publicProcedure
     .input(z.string())
     .mutation(async ({ input }) => {
       console.log("👤", input);
 
-      const humanMessage = await prisma.humanMessage.create({
+      const userMessage = await prisma.textMessage.create({
         data: {
+          chatId: 1,
+          actorId: 1,
           text: input,
         },
         select: {
           id: true,
+          chatId: true,
+          actorId: true,
           text: true,
           createdAt: true,
         },
       });
-
-      ee.emit("addHuman", humanMessage);
+      ee.emit("chatMessage", userMessage);
 
       const output = new Deferred<string>();
 
       ai.process.stdout.once("data", async (data: Buffer) => {
         const response = data.toString().trim();
         console.log("🤖", response);
-        output.resolve(response);
-        const botMessage = await prisma.botMessage.create({
+
+        const botMessage = await prisma.textMessage.create({
           data: {
+            chatId: 1,
+            actorId: 2,
             text: response,
-            humanMessageId: humanMessage.id,
           },
           select: {
             id: true,
+            chatId: true,
+            actorId: true,
             text: true,
             createdAt: true,
-            humanMessageId: true,
           },
         });
-        ee.emit("addBot", botMessage);
+        ee.emit("chatMessage", botMessage);
+
+        output.resolve(response);
       });
 
       ai.process.stdin.write(`${input}\n`);
       await output.promise;
     }),
 
-  getHumanMessages: publicProcedure.query(() => {
-    return prisma.humanMessage.findMany({
+  getChatMessages: publicProcedure.query(() => {
+    return prisma.textMessage.findMany({
       select: {
         id: true,
+        chatId: true,
+        actorId: true,
         text: true,
         createdAt: true,
+      },
+      where: {
+        chatId: 1,
       },
       orderBy: {
         createdAt: "desc",
@@ -71,50 +83,16 @@ export const appRouter = router({
     });
   }),
 
-  getBotMessages: publicProcedure.query(() => {
-    return prisma.botMessage.findMany({
-      select: {
-        id: true,
-        text: true,
-        createdAt: true,
-        humanMessageId: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-  }),
-
-  onHumanMessage: publicProcedure.subscription(() => {
-    return observable<HumanMessage>((emit) => {
-      const onAdd = (data: HumanMessage) => {
-        // emit data to client
+  onChatMessage: publicProcedure.subscription(() => {
+    return observable<TextMessage>((emit) => {
+      const onAdd = (data: TextMessage) => {
         emit.next(data);
       };
 
-      // trigger `onAdd()` when `addHuman` is triggered in our event emitter
-      ee.on("addHuman", onAdd);
+      ee.on("chatMessage", onAdd);
 
-      // unsubscribe function when client disconnects or stops subscribing
       return () => {
-        ee.off("addHuman", onAdd);
-      };
-    });
-  }),
-
-  onBotMessage: publicProcedure.subscription(() => {
-    return observable<BotMessage>((emit) => {
-      const onAdd = (data: BotMessage) => {
-        // emit data to client
-        emit.next(data);
-      };
-
-      // trigger `onAdd()` when `addBot` is triggered in our event emitter
-      ee.on("addBot", onAdd);
-
-      // unsubscribe function when client disconnects or stops subscribing
-      return () => {
-        ee.off("addBot", onAdd);
+        ee.off("chatMessage", onAdd);
       };
     });
   }),
