@@ -1,5 +1,5 @@
-import config from "./config";
-import { appRouter } from "./trpc/app-router";
+import config from "./config.js";
+import { appRouter } from "./trpc/app-router.js";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { WebSocketServer } from "ws";
 

@@ -1,7 +1,7 @@
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
-import * as ai from "@/ai";
-import { Deferred } from "@/utils";
+import * as ai from "@/ai.js";
+import { Deferred } from "@/utils.js";
 import { PrismaClient, HumanMessage, BotMessage } from "@prisma/client";
 import EventEmitter from "events";
 import { observable } from "@trpc/server/observable";
