@@ -5,6 +5,7 @@ import { Deferred } from "@/utils.js";
 import { PrismaClient, TextMessage } from "@prisma/client";
 import EventEmitter from "events";
 import { observable } from "@trpc/server/observable";
+import * as elevenLabs from "@/services/elevenLabs.js";
 
 const prisma = new PrismaClient();
 const ee = new EventEmitter();
@@ -42,21 +43,28 @@ export const appRouter = router({
         const response = data.toString().trim();
         console.log("🤖", response);
 
-        const botMessage = await prisma.textMessage.create({
-          data: {
-            chatId: 1,
-            actorId: 2,
-            text: response,
-          },
-          select: {
-            id: true,
-            chatId: true,
-            actorId: true,
-            text: true,
-            createdAt: true,
-          },
+        const [botMessage, tts] = await Promise.all([
+          prisma.textMessage.create({
+            data: {
+              chatId: 1,
+              actorId: 2,
+              text: response,
+            },
+            select: {
+              id: true,
+              chatId: true,
+              actorId: true,
+              text: true,
+              createdAt: true,
+            },
+          }),
+          await elevenLabs.tts(response, "21m00Tcm4TlvDq8ikWAM"),
+        ]);
+
+        ee.emit("chatMessage", {
+          ...botMessage,
+          tts,
         });
-        ee.emit("chatMessage", botMessage);
 
         output.resolve(response);
       });
@@ -84,9 +92,12 @@ export const appRouter = router({
   }),
 
   onChatMessage: publicProcedure.subscription(() => {
-    return observable<TextMessage>((emit) => {
-      const onAdd = (data: TextMessage) => {
-        emit.next(data);
+    return observable<TextMessage & { tts?: string }>((emit) => {
+      const onAdd = (data: TextMessage & { tts?: ArrayBuffer }) => {
+        emit.next({
+          ...data,
+          tts: data.tts ? Buffer.from(data.tts).toString("base64") : undefined,
+        });
       };
 
       ee.on("chatMessage", onAdd);

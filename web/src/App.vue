@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, shallowRef, type ShallowRef } from "vue";
 import { trpc } from "@/services/api";
+const audioCtx = new AudioContext();
 
 type TextMessage = {
   id: number;
@@ -37,6 +38,27 @@ onMounted(() => {
   trpc.onChatMessage.subscribe(undefined, {
     onData: (data) => {
       console.debug("onData: ", data);
+
+      if (data.tts) {
+        // Decode Base64 to ArrayBuffer
+        const binaryString = atob(data.tts);
+        const binaryLen = binaryString.length;
+        const bytes = new Uint8Array(binaryLen);
+        for (let i = 0; i < binaryLen; i++) {
+          const ascii = binaryString.charCodeAt(i);
+          bytes[i] = ascii;
+        }
+
+        // Decode ArrayBuffer to AudioBuffer
+        audioCtx.decodeAudioData(bytes.buffer).then((audioBuffer) => {
+          // Play AudioBuffer
+          const source = audioCtx.createBufferSource();
+          source.buffer = audioBuffer;
+          source.connect(audioCtx.destination);
+          source.start();
+        });
+      }
+
       messages.value.push(data);
     },
     onError: (error) => {
