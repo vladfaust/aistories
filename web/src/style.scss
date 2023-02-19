@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .btn {
+    @apply rounded py-2 px-4 font-semibold;
+    @apply disabled_cursor-not-allowed disabled_opacity-50;
+    @apply pressable transition;
+
+    &.btn-web3 {
+      @apply bg-x2 bg-web3 animate-bg-position text-white;
+    }
+  }
+}
+
+@layer utilities {
+  .pressable {
+    @apply cursor-pointer;
+    @apply active_scale-95;
+    @apply disabled_active_scale-100;
+  }
+
+  .bg-x2 {
+    @apply bg-[length:200%_200%];
+  }
+
+  .bg-web3 {
+    @apply bg-gradient-to-tr from-purple-500 to-pink-500;
+  }
+}

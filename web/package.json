@@ -22,6 +22,9 @@
     "@trpc/client": "^10.11.1",
     "@trpc/server": "^10.11.1",
     "@vueuse/core": "^9.13.0",
+    "ethers": "5",
+    "jdenticon": "^3.2.0",
+    "sass": "^1.58.3",
     "vue": "^3.2.45"
   },
   "devDependencies": {

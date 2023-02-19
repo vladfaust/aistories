@@ -11,6 +11,8 @@ import {
 import { trpc } from "@/services/api";
 import { sleep } from "@/utils";
 import { useScroll } from "@vueuse/core";
+import HeaderVue from "@/components/Header.vue";
+import { autoConnect } from "@/services/eth";
 
 const audioCtx = new AudioContext();
 
@@ -62,6 +64,8 @@ const orderedMessages = computed(() => {
 });
 
 onMounted(() => {
+  autoConnect();
+
   trpc.getChatMessages.query().then((data) => {
     console.debug("getChatMessages: ", data);
     messages.value.push(...data.map((d) => markRaw(new Message(d))));
@@ -102,6 +106,7 @@ onMounted(() => {
 </script>
 
 <template lang="pug">
+HeaderVue
 .flex.h-screen.flex-col.gap-2.p-4
   .flex.flex-col.gap-1.overflow-y-auto(ref="chatbox")
     template(v-for="message of orderedMessages")
