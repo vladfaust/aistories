@@ -9,12 +9,9 @@ import {
   nextTick,
 } from "vue";
 import { trpc } from "@/services/api";
-import { sleep } from "@/utils";
 import { useScroll } from "@vueuse/core";
 import HeaderVue from "@/components/Header.vue";
 import { autoConnect } from "@/services/eth";
-
-const audioCtx = new AudioContext();
 
 class Message {
   readonly id: number;
