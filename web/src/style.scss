@@ -11,6 +11,10 @@
     &.btn-web3 {
       @apply bg-x2 bg-web3 animate-bg-position text-white;
     }
+
+    &.btn-primary {
+      @apply bg-blue-500 text-white;
+    }
   }
 }
 

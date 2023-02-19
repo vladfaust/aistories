@@ -1,1 +1,1 @@
-export { type AppRouter } from "./trpc/app-router.js";
+export { type AppRouter } from "./trpc/routers/app";

@@ -1,14 +1,19 @@
-import { spawn } from "child_process";
+import { ChildProcess, spawn } from "child_process";
 
-// Spawn the python process, launching "./main.py"
-const process = spawn("python", ["src/main.py"]);
+export const processes: Record<number, ChildProcess> = {};
 
-process.stderr.on("data", (data) => {
-  console.error(`stderr: ${data}`);
-});
+export function spawnProcess(): ChildProcess {
+  const process = spawn("python", ["src/main.py"]);
+  if (!process.pid) throw new Error("Failed to spawn process");
 
-process.on("close", (code) => {
-  console.log(`child process exited with code ${code}`);
-});
+  process.stderr.on("data", (data) => {
+    console.error(`stderr: ${data}`);
+  });
 
-export { process };
+  process.on("close", (code) => {
+    console.log(`child process exited with code ${code}`);
+  });
+
+  processes[process.pid] = process;
+  return process;
+}

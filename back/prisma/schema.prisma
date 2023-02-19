@@ -10,6 +10,58 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Actor {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  User      User?
+  Character Character?
+  Messages  TextMessage[]
+}
+
+model User {
+  actorId    Int   @unique
+  evmAddress Bytes @unique
+
+  Actor Actor  @relation(fields: [actorId], references: [id])
+  Chats Chat[]
+}
+
+model Character {
+  actorId Int @unique
+
+  Actor Actor  @relation(fields: [actorId], references: [id])
+  Chats Chat[]
+}
+
+model Chat {
+  id Int @id @default(autoincrement())
+
+  userId      Int
+  characterId Int
+
+  createdAt DateTime @default(now())
+
+  User         User          @relation(fields: [userId], references: [actorId])
+  Character    Character     @relation(fields: [characterId], references: [actorId])
+  ChatSessions ChatSession[]
+  Messages     TextMessage[]
+
+  @@unique([userId, characterId])
+}
+
+model ChatSession {
+  id     Int @id @default(autoincrement())
+  chatId Int
+
+  pid Int
+
+  createdAt DateTime @default(now())
+  endedAt   DateTime
+
+  Chat Chat @relation(fields: [chatId], references: [id])
+}
+
 model TextMessage {
   id Int @id @default(autoincrement())
 
@@ -19,4 +71,7 @@ model TextMessage {
   text String? // A text generation may be in progress
 
   createdAt DateTime @default(now())
+
+  Chat  Chat  @relation(fields: [chatId], references: [id])
+  Actor Actor @relation(fields: [actorId], references: [id])
 }

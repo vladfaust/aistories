@@ -1,5 +1,6 @@
 import config from "./config.js";
-import { appRouter } from "./trpc/app-router.js";
+import { appRouter } from "./trpc/routers/app";
+import { createContext } from "./trpc/context.js";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { WebSocketServer } from "ws";
 
@@ -11,11 +12,12 @@ const wss = new WebSocketServer({
 const handler = applyWSSHandler({
   wss,
   router: appRouter,
-  createContext: () => ({}),
+  createContext,
 });
 
 wss.on("connection", (ws) => {
   console.log(`++Connection (${wss.clients.size})`);
+
   ws.once("close", () => {
     console.log(`--Connection (${wss.clients.size})`);
   });
