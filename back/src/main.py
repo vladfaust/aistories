@@ -1,3 +1,4 @@
+import json
 from langchain.chains import ConversationChain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
@@ -16,15 +17,18 @@ class StreamingStdOutCallbackHandler(BaseCallbackHandler):
         self, serialized: Dict[str, Any], prompts: List[str], **kwargs: Any
     ) -> None:
         """Run when LLM starts running."""
+        sys.stdout.write('\x02')  # Start of token stream
+        sys.stdout.flush()
 
     def on_llm_new_token(self, token: str, **kwargs: Any) -> None:
         """Run on new LLM token. Only available when streaming is enabled."""
         sys.stdout.write(token)
+        sys.stdout.write('\x1F')  # Unit (token) separator
         sys.stdout.flush()
 
     def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
         """Run when LLM ends running."""
-        sys.stdout.write('\0')
+        sys.stdout.write('\x03')  # End of token stream
         sys.stdout.flush()
 
     def on_llm_error(
@@ -90,16 +94,32 @@ llm = OpenAI(
     callback_manager=callback_manager
 )
 
+args = json.loads(sys.argv[1])
+
+memory = ConversationSummaryBufferMemory(
+    moving_summary_buffer=args["moving_summary_buffer"] if "moving_summary_buffer" in args else "",
+    buffer=args["buffer"] if "buffer" in args else [],
+    llm=OpenAI(temperature=0),
+    max_token_limit=40)
+
 conversation = ConversationChain(
     llm=llm,
     prompt=prompt,
-    memory=ConversationSummaryBufferMemory(llm=OpenAI(), max_token_limit=40),
+    memory=memory,
     callback_manager=callback_manager
 )
 
 # REPL mode
 while True:
     try:
-        conversation.predict(input=input())
+        conversation.predict(input=input())  # Would stream to stdout
+        sys.stdout.write('\x1D')  # End of LLM responses
+
+        sys.stdout.write(memory.moving_summary_buffer)
+        sys.stdout.write('\x1E')  # End of memory moving summary buffer
+
+        json.dump(memory.buffer, sys.stdout)  # Print the memory buffer
+        sys.stdout.write('\x04')  # End of transmission
+
     except KeyboardInterrupt:
         break

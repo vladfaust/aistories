@@ -2,8 +2,18 @@ import { ChildProcess, spawn } from "child_process";
 
 export const processes: Record<number, ChildProcess> = {};
 
-export function spawnProcess(): ChildProcess {
-  const process = spawn("python", ["src/main.py"]);
+export function spawnProcess(
+  conversationSummary: string,
+  conversationBuffer: string[]
+): ChildProcess {
+  const process = spawn("python", [
+    "src/main.py",
+    JSON.stringify({
+      moving_summary_buffer: conversationSummary,
+      buffer: conversationBuffer,
+    }),
+  ]);
+
   if (!process.pid) throw new Error("Failed to spawn process");
 
   process.stderr.on("data", (data) => {

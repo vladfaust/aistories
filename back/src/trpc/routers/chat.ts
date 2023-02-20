@@ -48,6 +48,11 @@ export default t.router({
           userId: inputAuth.actorId,
           characterId: input.characterId,
         },
+        select: {
+          id: true,
+          conversationSummary: true,
+          conversationBuffer: true,
+        },
       });
 
       let session = await prisma.chatSession.findFirst({
@@ -80,7 +85,10 @@ export default t.router({
             pid: session.pid,
           });
 
-          const process = ai.spawnProcess();
+          const process = ai.spawnProcess(
+            chat.conversationSummary,
+            JSON.parse(chat.conversationBuffer)
+          );
 
           await prisma.chatSession.update({
             where: {
@@ -96,7 +104,10 @@ export default t.router({
       if (!session) {
         console.log("Creating new session...", { chatId: chat.id });
 
-        const process = ai.spawnProcess();
+        const process = ai.spawnProcess(
+          chat.conversationSummary,
+          JSON.parse(chat.conversationBuffer)
+        );
 
         session = await prisma.chatSession.create({
           data: {
@@ -201,45 +212,126 @@ export default t.router({
         characterMessage
       );
 
-      const text = new Deferred<string>();
-      let textBuffer = "";
+      enum Stage {
+        Prediction,
+        ConversationSummary,
+        ConversationBuffer,
+      }
+
+      let stage = Stage.Prediction;
+
+      let token = "";
+      let text = "";
+      let conversationSummary = "";
+      let conversationBuffer = "";
+
+      const done = new Deferred<void>();
 
       process.stdout!.on("data", async (data: Buffer) => {
-        const token = data.toString();
-        console.debug("🤖 (tok)", token);
+        console.debug("🤖 (data)", data);
 
-        ee.emit(
-          chatMessageTokenChannelName(
-            inputAuth.actorId,
-            session.Chat.characterId
-          ),
-          {
-            messageId: characterMessage.id,
-            token,
+        for (const byte of data) {
+          switch (stage) {
+            case Stage.Prediction: {
+              switch (byte) {
+                // Start of a token stream.
+                case 0x02: {
+                  break;
+                }
+
+                // End of a token.
+                case 0x1f: {
+                  console.debug("🤖 (tok)", token);
+
+                  ee.emit(
+                    chatMessageTokenChannelName(
+                      inputAuth.actorId,
+                      session.Chat.characterId
+                    ),
+                    {
+                      messageId: characterMessage.id,
+                      token,
+                    }
+                  );
+
+                  text += token;
+                  token = "";
+
+                  break;
+                }
+
+                // End of a token stream.
+                case 0x03: {
+                  console.log("🤖 (say)", text);
+                  break;
+                }
+
+                // End of all LLM responses.
+                case 0x1d: {
+                  stage = Stage.ConversationSummary;
+                  break;
+                }
+
+                default: {
+                  token += String.fromCharCode(byte);
+                }
+              }
+
+              break;
+            }
+
+            case Stage.ConversationSummary: {
+              if (byte == 0x1e) {
+                console.debug("🤖 (sum)", conversationSummary);
+                stage = Stage.ConversationBuffer;
+              } else {
+                conversationSummary += String.fromCharCode(byte);
+              }
+
+              break;
+            }
+
+            case Stage.ConversationBuffer: {
+              if (byte == 0x04) {
+                console.debug("🤖 (mem)", conversationBuffer);
+                done.resolve();
+              } else {
+                conversationBuffer += String.fromCharCode(byte);
+              }
+
+              break;
+            }
           }
-        );
-
-        if (token == "\0") {
-          console.log("🤖", textBuffer);
-          text.resolve(textBuffer);
-          return;
         }
-
-        textBuffer += token;
       });
 
       process.stdin!.write(`${input.text}\n`);
 
-      await prisma.textMessage.update({
-        where: {
-          id: characterMessage.id,
-        },
-        data: {
-          text: await text.promise,
-        },
-      });
-
+      await done.promise;
       process.stdout!.removeAllListeners("data");
+
+      await Promise.all([
+        prisma.textMessage.update({
+          where: {
+            id: characterMessage.id,
+          },
+          data: {
+            text,
+          },
+        }),
+        prisma.chat.update({
+          where: {
+            id: session.Chat.id,
+          },
+          data: {
+            // It does not print the summary unless the buffer is overflown.
+            conversationSummary:
+              conversationSummary.length > 0 ? conversationSummary : undefined,
+
+            conversationBuffer,
+          },
+        }),
+      ]);
 
       return {
         characterMessageId: characterMessage.id,
