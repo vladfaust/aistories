@@ -51,7 +51,7 @@ const orderedMessages = computed(() => {
 });
 
 onMounted(async () => {
-  trpc.chats.getRecentMessages
+  trpc.chat.getRecentMessages
     .query({
       authToken: await web3Auth.ensure(),
       characterId,
@@ -63,7 +63,7 @@ onMounted(async () => {
       });
     });
 
-  trpc.chats.onMessageToken.subscribe(
+  trpc.chat.onMessageToken.subscribe(
     {
       authToken: await web3Auth.ensure(),
       characterId,
@@ -82,7 +82,7 @@ onMounted(async () => {
     }
   );
 
-  trpc.chats.onMessage.subscribe(
+  trpc.chat.onMessage.subscribe(
     {
       authToken: await web3Auth.ensure(),
       characterId,

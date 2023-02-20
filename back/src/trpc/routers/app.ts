@@ -1,9 +1,9 @@
 import t from "../index";
 
-import chats from "./chats";
+import chat from "./chat";
 
 export const appRouter = t.router({
-  chats,
+  chat,
 });
 
 export type AppRouter = typeof appRouter;

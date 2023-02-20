@@ -11,7 +11,7 @@ const sessionId: Ref<number | undefined> = ref();
 const inputText = ref("");
 
 async function initialize() {
-  const response = await trpc.chats.initialize.mutate({
+  const response = await trpc.chat.initialize.mutate({
     authToken: await web3Auth.ensure(),
     characterId,
   });
@@ -27,7 +27,7 @@ async function onInputKeypressEnter() {
   const text = inputText.value;
   inputText.value = "";
 
-  await trpc.chats.sendMessage.mutate({
+  await trpc.chat.sendMessage.mutate({
     authToken: await web3Auth.ensure(),
     sessionId: sessionId.value!,
     text,
