@@ -30,6 +30,13 @@ model User {
 model Character {
   actorId Int @unique
 
+  name            String
+  about           String
+  imagePreviewUrl String
+
+  promptTemplate     String
+  summarizerTemplate String? // May be the default one
+
   Actor Actor  @relation(fields: [actorId], references: [id])
   Chats Chat[]
 }

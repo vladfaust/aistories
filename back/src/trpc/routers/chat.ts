@@ -52,6 +52,12 @@ export default t.router({
           id: true,
           conversationSummary: true,
           conversationBuffer: true,
+          Character: {
+            select: {
+              promptTemplate: true,
+              summarizerTemplate: true,
+            },
+          },
         },
       });
 
@@ -85,10 +91,12 @@ export default t.router({
             pid: session.pid,
           });
 
-          const process = ai.spawnProcess(
-            chat.conversationSummary,
-            JSON.parse(chat.conversationBuffer)
-          );
+          const process = ai.spawnProcess({
+            promptTemplate: chat.Character.promptTemplate,
+            summarizerTemplate: chat.Character.summarizerTemplate || undefined,
+            conversationSummary: chat.conversationSummary,
+            conversationBuffer: JSON.parse(chat.conversationBuffer),
+          });
 
           await prisma.chatSession.update({
             where: {
@@ -104,10 +112,12 @@ export default t.router({
       if (!session) {
         console.log("Creating new session...", { chatId: chat.id });
 
-        const process = ai.spawnProcess(
-          chat.conversationSummary,
-          JSON.parse(chat.conversationBuffer)
-        );
+        const process = ai.spawnProcess({
+          promptTemplate: chat.Character.promptTemplate,
+          summarizerTemplate: chat.Character.summarizerTemplate || undefined,
+          conversationSummary: chat.conversationSummary,
+          conversationBuffer: JSON.parse(chat.conversationBuffer),
+        });
 
         session = await prisma.chatSession.create({
           data: {

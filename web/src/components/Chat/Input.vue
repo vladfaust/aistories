@@ -1,47 +1,41 @@
 <script setup lang="ts">
 import { trpc } from "@/services/api";
 import * as web3Auth from "@/services/web3Auth";
-import { type Ref, ref } from "vue";
+import { ref } from "vue";
 
-const { characterId } = defineProps<{
-  characterId: number;
+const { sessionId } = defineProps<{
+  sessionId: number;
 }>();
 
-const sessionId: Ref<number | undefined> = ref();
 const inputText = ref("");
-
-async function initialize() {
-  const response = await trpc.chat.initialize.mutate({
-    authToken: await web3Auth.ensure(),
-    characterId,
-  });
-  console.debug("initialize: ", response);
-  sessionId.value = response.sessionId;
-}
+const textarea = ref<HTMLTextAreaElement | null>(null);
 
 async function onInputKeypressEnter() {
-  if (!sessionId.value) throw new Error("No session id");
+  if (!inputText.value || inputText.value.trim().length === 0) {
+    return;
+  }
 
-  console.debug("Enter pressed, inputText: ", inputText.value);
-
-  const text = inputText.value;
+  const text = inputText.value.trim();
   inputText.value = "";
 
   await trpc.chat.sendMessage.mutate({
     authToken: await web3Auth.ensure(),
-    sessionId: sessionId.value!,
+    sessionId: sessionId,
     text,
   });
+}
+
+async function addNewline() {
+  inputText.value += "\n";
 }
 </script>
 
 <template lang="pug">
-template(v-if="sessionId")
-  textarea.w-full.rounded.border.p-2(
-    placeholder="Input text"
-    @keypress.enter.prevent.exact="onInputKeypressEnter"
-    v-model="inputText"
-  )
-template(v-else)
-  button.btn.btn-primary(@click="initialize") Initialize chat
+textarea.h-full.w-full.rounded.border.px-4.py-2(
+  ref="textarea"
+  placeholder="Interaction console"
+  @keypress.enter.prevent.exact="onInputKeypressEnter"
+  @keypress.shift.enter.exact="addNewline"
+  v-model="inputText"
+)
 </template>

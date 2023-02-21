@@ -3,6 +3,7 @@ from langchain.chains import ConversationChain
 from langchain.llms import OpenAI
 from langchain.prompts import PromptTemplate
 from langchain.chains.conversation.memory import ConversationSummaryBufferMemory
+from langchain.chains.conversation.prompt import _DEFAULT_TEMPLATE, _DEFAULT_SUMMARIZER_TEMPLATE
 from langchain.callbacks.base import CallbackManager
 from langchain.callbacks.base import BaseCallbackHandler
 import sys
@@ -69,15 +70,11 @@ class StreamingStdOutCallbackHandler(BaseCallbackHandler):
         """Run on agent end."""
 
 
-template = """Current conversation:
-
-{history}
-
-Human: {input}
-AI:"""
+args = json.loads(sys.argv[1])
 
 prompt = PromptTemplate(
-    input_variables=["history", "input"], template=template
+    input_variables=["history", "input"],
+    template=args["template"] if "template" in args else _DEFAULT_TEMPLATE
 )
 
 callback_manager = CallbackManager(
@@ -94,11 +91,16 @@ llm = OpenAI(
     callback_manager=callback_manager
 )
 
-args = json.loads(sys.argv[1])
-
 memory = ConversationSummaryBufferMemory(
     moving_summary_buffer=args["moving_summary_buffer"] if "moving_summary_buffer" in args else "",
     buffer=args["buffer"] if "buffer" in args else [],
+    prompt=PromptTemplate(
+        input_variables=[
+            "summary",
+            "new_lines"
+        ],
+        template=args["summarizer_template"] if "summarizer_template" in args else _DEFAULT_SUMMARIZER_TEMPLATE
+    ),
     llm=OpenAI(temperature=0),
     max_token_limit=40)
 

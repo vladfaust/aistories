@@ -26,6 +26,7 @@
     "jdenticon": "^3.2.0",
     "sass": "^1.58.3",
     "vue": "^3.2.45",
+    "vue-router": "4",
     "web3-token": "^1.0.4"
   },
   "devDependencies": {

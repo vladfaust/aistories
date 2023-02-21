@@ -2,13 +2,22 @@ import { ChildProcess, spawn } from "child_process";
 
 export const processes: Record<number, ChildProcess> = {};
 
-export function spawnProcess(
-  conversationSummary: string,
-  conversationBuffer: string[]
-): ChildProcess {
+export function spawnProcess({
+  promptTemplate,
+  summarizerTemplate,
+  conversationSummary,
+  conversationBuffer,
+}: {
+  promptTemplate?: string;
+  summarizerTemplate?: string;
+  conversationSummary: string;
+  conversationBuffer: string[];
+}): ChildProcess {
   const process = spawn("python", [
     "src/main.py",
     JSON.stringify({
+      template: promptTemplate,
+      summarizer_template: summarizerTemplate,
       moving_summary_buffer: conversationSummary,
       buffer: conversationBuffer,
     }),

@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import {
   computed,
-  onMounted,
   type Ref,
   ref,
   type ShallowRef,
   markRaw,
   nextTick,
+  watch,
 } from "vue";
 import { trpc } from "@/services/api";
 import { useScroll } from "@vueuse/core";
 import * as web3Auth from "@/services/web3Auth";
 import Input from "./Chat/Input.vue";
+import { type Character } from "@/models/Character";
+import { Deferred } from "@/utils/deferred";
 
 class Message {
   readonly id: number;
@@ -29,8 +31,8 @@ class Message {
   }
 }
 
-const { characterId } = defineProps<{
-  characterId: number;
+const { character } = defineProps<{
+  character: Deferred<Character | null>;
 }>();
 
 const chatbox = ref<HTMLElement | null>(null);
@@ -50,60 +52,101 @@ const orderedMessages = computed(() => {
   });
 });
 
-onMounted(async () => {
-  trpc.chat.getRecentMessages
-    .query({
-      authToken: await web3Auth.ensure(),
-      characterId,
-    })
-    .then((data) => {
-      messages.value.push(...data.map((d) => markRaw(new Message(d))));
-      nextTick(() => {
-        maybeScrollChatbox(true);
-      });
-    });
+watch(
+  character.ref,
+  async (char) => {
+    if (char) {
+      const authToken = await web3Auth.ensure();
 
-  trpc.chat.onMessageToken.subscribe(
-    {
-      authToken: await web3Auth.ensure(),
-      characterId,
-    },
-    {
-      onData: async (data) => {
-        const message = messages.value.find((m) => m.id === data.messageId);
+      trpc.chat.getRecentMessages
+        .query({
+          authToken,
+          characterId: char.actorId,
+        })
+        .then((data) => {
+          messages.value.push(...data.map((d) => markRaw(new Message(d))));
+          nextTick(() => {
+            maybeScrollChatbox(true);
+          });
+        });
 
-        if (!message) {
-          console.error("Message not found: ", data.messageId);
-          return;
+      trpc.chat.onMessageToken.subscribe(
+        {
+          authToken,
+          characterId: char.actorId,
+        },
+        {
+          onData: async (data) => {
+            const message = messages.value.find((m) => m.id === data.messageId);
+
+            if (!message) {
+              console.error("Message not found: ", data.messageId);
+              return;
+            }
+
+            message.text.value += data.token;
+          },
         }
+      );
 
-        message.text.value += data.token;
-      },
+      trpc.chat.onMessage.subscribe(
+        {
+          authToken,
+          characterId: char.actorId,
+        },
+        {
+          onData: (data) => {
+            messages.value.push(markRaw(new Message(data)));
+            nextTick(maybeScrollChatbox);
+          },
+        }
+      );
     }
-  );
+  },
+  {
+    immediate: true,
+  }
+);
 
-  trpc.chat.onMessage.subscribe(
-    {
-      authToken: await web3Auth.ensure(),
-      characterId,
-    },
-    {
-      onData: (data) => {
-        messages.value.push(markRaw(new Message(data)));
-        nextTick(maybeScrollChatbox);
-      },
-    }
-  );
-});
+const sessionId: Ref<number | undefined> = ref();
+
+async function initializeSession() {
+  if (!character.ref.value) throw new Error("No character");
+
+  const response = await trpc.chat.initialize.mutate({
+    authToken: await web3Auth.ensure(),
+    characterId: character.ref.value.actorId,
+  });
+
+  sessionId.value = response.sessionId;
+}
 </script>
 
 <template lang="pug">
-.flex.h-screen.flex-col.gap-2.p-4
-  .flex.flex-col.gap-1.overflow-y-auto(ref="chatbox")
-    template(v-for="message of orderedMessages")
-      template(v-if="message.actorId == characterId")
-        p 🤖 {{ message.text.value }}
+.flex.flex-col.gap-3(style="height: calc(100vh - 4rem - 3rem)")
+  template(v-if="character.ref.value")
+    .flex.items-center.justify-between.rounded-lg.bg-gray-50.p-4
+      .flex.items-center.gap-3
+        img.w-12.rounded-full(:src="character.ref.value.imagePreviewUrl")
+        span
+          span.font-semibold {{ character.ref.value.name }}
+
+    .flex.shrink.flex-col.gap-1.overflow-y-auto.rounded-lg.bg-gray-50.p-4(
+      v-if="messages.length > 0"
+      ref="chatbox"
+    )
+      template(v-for="message of orderedMessages")
+        p(v-if="message.actorId == character.ref.value.actorId") 🤖 {{ message.text.value }}
+        p(v-else) 👤 {{ message.text.value }}
+
+    .flex.h-32.place-content-center.place-items-center.rounded-lg.bg-gray-50.p-4
+      template(v-if="sessionId")
+        Input(:session-id="sessionId")
       template(v-else)
-        p 👤 {{ message.text.value }}
-  Input(:character-id="characterId")
+        button.btn.btn-primary.btn-sm.grow-0(@click="initializeSession") Load persona
+
+  template(v-else-if="character.ref.value === undefined")
+    p.text-center Loading...
+  template(v-else)
+    p.text-center.text-lg Character not found
 </template>

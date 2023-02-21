@@ -4,14 +4,14 @@ import Jdenticon from "./Jdenticon.vue";
 </script>
 
 <template lang="pug">
-header.w-full.bg-gray-800.p-4
-  .grid.h-full.grid-cols-3
+header.flex.h-20.w-full.place-content-center.bg-gray-800.p-4
+  .grid.w-full.max-w-3xl.grid-cols-3
     .flex.items-center
-      .text-2xl.font-bold.text-white
-        | Chat
+      router-link.pressable.text-xl.font-semibold.uppercase.text-white.transition-transform(
+        to="/"
+      )
+        | AiProject
     .flex.items-center.justify-center
-      .text-2xl.font-bold.text-white
-        | Chat
     ul.flex.items-center.justify-end.gap-2
       template(v-if="account")
         li
