@@ -31,7 +31,7 @@ async function addNewline() {
 </script>
 
 <template lang="pug">
-textarea.h-full.w-full.rounded.border.px-4.py-2(
+textarea.h-full.w-full.rounded.border.px-4.py-2.leading-tight(
   ref="textarea"
   placeholder="Interaction console"
   @keypress.enter.prevent.exact="onInputKeypressEnter"

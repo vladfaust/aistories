@@ -6,7 +6,7 @@ import {
   type ShallowRef,
   markRaw,
   nextTick,
-  watch,
+  watchEffect,
 } from "vue";
 import { trpc } from "@/services/api";
 import { useScroll } from "@vueuse/core";
@@ -14,6 +14,7 @@ import * as web3Auth from "@/services/web3Auth";
 import Input from "./Chat/Input.vue";
 import { type Character } from "@/models/Character";
 import { Deferred } from "@/utils/deferred";
+import { provider } from "@/services/eth";
 
 class Message {
   readonly id: number;
@@ -52,61 +53,57 @@ const orderedMessages = computed(() => {
   });
 });
 
-watch(
-  character.ref,
-  async (char) => {
-    if (char) {
-      const authToken = await web3Auth.ensure();
+watchEffect(async () => {
+  if (character.ref.value && provider.value) {
+    const authToken = await web3Auth.ensure();
 
-      trpc.chat.getRecentMessages
-        .query({
-          authToken,
-          characterId: char.actorId,
-        })
-        .then((data) => {
-          messages.value.push(...data.map((d) => markRaw(new Message(d))));
-          nextTick(() => {
-            maybeScrollChatbox(true);
-          });
+    trpc.chat.getRecentMessages
+      .query({
+        authToken,
+        characterId: character.ref.value.actorId,
+      })
+      .then((data) => {
+        messages.value.push(...data.map((d) => markRaw(new Message(d))));
+        nextTick(() => {
+          maybeScrollChatbox(true);
         });
+      });
 
-      trpc.chat.onMessageToken.subscribe(
-        {
-          authToken,
-          characterId: char.actorId,
+    trpc.chat.onMessageToken.subscribe(
+      {
+        authToken,
+        characterId: character.ref.value.actorId,
+      },
+      {
+        onData: async (data) => {
+          const message = messages.value.find((m) => m.id === data.messageId);
+
+          if (!message) {
+            console.error("Message not found: ", data.messageId);
+            return;
+          }
+
+          message.text.value += data.token;
         },
-        {
-          onData: async (data) => {
-            const message = messages.value.find((m) => m.id === data.messageId);
+      }
+    );
 
-            if (!message) {
-              console.error("Message not found: ", data.messageId);
-              return;
-            }
-
-            message.text.value += data.token;
-          },
-        }
-      );
-
-      trpc.chat.onMessage.subscribe(
-        {
-          authToken,
-          characterId: char.actorId,
+    trpc.chat.onMessage.subscribe(
+      {
+        authToken,
+        characterId: character.ref.value.actorId,
+      },
+      {
+        onData: (data) => {
+          messages.value.push(markRaw(new Message(data)));
+          nextTick(maybeScrollChatbox);
         },
-        {
-          onData: (data) => {
-            messages.value.push(markRaw(new Message(data)));
-            nextTick(maybeScrollChatbox);
-          },
-        }
-      );
-    }
-  },
-  {
-    immediate: true,
+      }
+    );
+  } else {
+    messages.value = [];
   }
-);
+});
 
 const sessionId: Ref<number | undefined> = ref();
 
@@ -139,7 +136,7 @@ async function initializeSession() {
         p(v-if="message.actorId == character.ref.value.actorId") 🤖 {{ message.text.value }}
         p(v-else) 👤 {{ message.text.value }}
 
-    .flex.h-32.place-content-center.place-items-center.rounded-lg.bg-gray-50.p-4
+    .flex.h-24.place-content-center.place-items-center.rounded-lg.bg-gray-50.p-4
       template(v-if="sessionId")
         Input(:session-id="sessionId")
       template(v-else)
