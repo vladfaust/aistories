@@ -10,25 +10,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Actor {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-
-  User      User?
-  Character Character?
-  Messages  TextMessage[]
-}
-
 model User {
-  actorId    Int   @unique
+  id Int @id @default(autoincrement())
+
   evmAddress Bytes @unique
 
-  Actor Actor  @relation(fields: [actorId], references: [id])
-  Chats Chat[]
+  Chats    Chat[]
+  Messages UserMessage[]
 }
 
 model Character {
-  actorId Int @unique
+  id Int @id @default(autoincrement())
 
   name            String
   about           String
@@ -37,8 +29,8 @@ model Character {
   promptTemplate     String
   summarizerTemplate String? // May be the default one
 
-  Actor Actor  @relation(fields: [actorId], references: [id])
-  Chats Chat[]
+  Chats    Chat[]
+  Messages CharacterMessage[]
 }
 
 model Chat {
@@ -52,10 +44,13 @@ model Chat {
 
   createdAt DateTime @default(now())
 
-  User         User          @relation(fields: [userId], references: [actorId])
-  Character    Character     @relation(fields: [characterId], references: [actorId])
+  User      User      @relation(fields: [userId], references: [id])
+  Character Character @relation(fields: [characterId], references: [id])
+
   ChatSessions ChatSession[]
-  Messages     TextMessage[]
+
+  UserMessages      UserMessage[]
+  CharacterMessages CharacterMessage[]
 
   @@unique([userId, characterId])
 }
@@ -72,16 +67,32 @@ model ChatSession {
   Chat Chat @relation(fields: [chatId], references: [id])
 }
 
-model TextMessage {
+model UserMessage {
   id Int @id @default(autoincrement())
 
-  chatId  Int
-  actorId Int
+  chatId Int
+  userId Int
+
+  text      String
+  createdAt DateTime @default(now())
+
+  Chat Chat @relation(fields: [chatId], references: [id])
+  User User @relation(fields: [userId], references: [id])
+}
+
+model CharacterMessage {
+  id Int @id @default(autoincrement())
+
+  chatId      Int
+  characterId Int
 
   text String? // A text generation may be in progress
 
+  finalized Boolean // Once a message is finalized, another one can be generated
+  pid       Int // To track the Python process
+
   createdAt DateTime @default(now())
 
-  Chat  Chat  @relation(fields: [chatId], references: [id])
-  Actor Actor @relation(fields: [actorId], references: [id])
+  Chat      Chat      @relation(fields: [chatId], references: [id])
+  Character Character @relation(fields: [characterId], references: [id])
 }

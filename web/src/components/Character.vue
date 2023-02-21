@@ -13,5 +13,5 @@ const { char } = defineProps<{
     span.text-xl.font-semibold.leading-none {{ char.name }}
     p.leading-tight {{ char.about }}
     .flex
-      router-link.btn.btn-primary.leading-none(:to="'/chat/' + char.actorId") Go to page
+      router-link.btn.btn-primary.leading-none(:to="'/chat/' + char.id") Go to page
 </template>

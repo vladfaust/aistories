@@ -24,9 +24,6 @@ Current conversation:
 Human: {input}
 AI:
 `.trim(),
-      Actor: {
-        create: {},
-      },
     },
   });
 
@@ -57,9 +54,6 @@ Current conversation:
 Human: {input}
 AI:
 `.trim(),
-      Actor: {
-        create: {},
-      },
     },
   });
 }

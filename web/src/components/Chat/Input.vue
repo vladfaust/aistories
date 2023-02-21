@@ -9,20 +9,27 @@ const { sessionId } = defineProps<{
 
 const inputText = ref("");
 const textarea = ref<HTMLTextAreaElement | null>(null);
+const locked = ref(false);
 
 async function onInputKeypressEnter() {
-  if (!inputText.value || inputText.value.trim().length === 0) {
+  if (locked.value || !inputText.value || inputText.value.trim().length === 0) {
     return;
   }
+
+  locked.value = true;
 
   const text = inputText.value.trim();
   inputText.value = "";
 
-  await trpc.chat.sendMessage.mutate({
-    authToken: await web3Auth.ensure(),
-    sessionId: sessionId,
-    text,
-  });
+  try {
+    await trpc.chat.sendMessage.mutate({
+      authToken: await web3Auth.ensure(),
+      sessionId: sessionId,
+      text,
+    });
+  } finally {
+    locked.value = false;
+  }
 }
 
 async function addNewline() {
@@ -37,5 +44,6 @@ textarea.h-full.w-full.rounded.border.px-4.py-2.leading-tight(
   @keypress.enter.prevent.exact="onInputKeypressEnter"
   @keypress.shift.enter.exact="addNewline"
   v-model="inputText"
+  :disabled="locked"
 )
 </template>

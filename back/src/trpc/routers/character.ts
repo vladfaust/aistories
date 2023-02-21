@@ -8,7 +8,7 @@ export default t.router({
   getAll: t.procedure.query(async () => {
     return prisma.character.findMany({
       select: {
-        actorId: true,
+        id: true,
         name: true,
         imagePreviewUrl: true,
         about: true,
@@ -25,10 +25,10 @@ export default t.router({
     .query(async ({ input }) => {
       return prisma.character.findUnique({
         where: {
-          actorId: input.id,
+          id: input.id,
         },
         select: {
-          actorId: true,
+          id: true,
           name: true,
           imagePreviewUrl: true,
           about: true,

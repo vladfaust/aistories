@@ -16,18 +16,48 @@ import { type Character } from "@/models/Character";
 import { Deferred } from "@/utils/deferred";
 import { provider } from "@/services/eth";
 
-class Message {
-  readonly id: number;
-  readonly chatId: number;
-  readonly actorId: number;
-  readonly text: Ref<string>;
+class UserMessage {
+  readonly messageId: number;
+  readonly userId: number;
+  readonly text: string;
   readonly createdAt: Date;
 
-  constructor(data: any) {
-    this.id = data.id;
-    this.chatId = data.chatId;
-    this.actorId = data.actorId;
+  constructor(data: {
+    id: number;
+    userId: number;
+    text: string;
+    createdAt: string;
+  }) {
+    this.messageId = data.id;
+    this.userId = data.userId;
+    this.text = data.text;
+    this.createdAt = new Date(data.createdAt);
+  }
+}
+
+class CharacterMessage {
+  readonly messageId: number;
+  readonly characterId: number;
+  readonly text: Ref<string>;
+  readonly textComplete: Ref<boolean>;
+  readonly finalized: Ref<boolean>;
+  readonly createdAt: Date;
+
+  constructor(
+    data: {
+      id: number;
+      characterId: number;
+      text: string | null;
+      finalized: boolean;
+      createdAt: string;
+    },
+    textDone: boolean
+  ) {
+    this.messageId = data.id;
+    this.characterId = data.characterId;
     this.text = ref(data.text || "");
+    this.textComplete = ref(textDone);
+    this.finalized = ref(data.finalized);
     this.createdAt = new Date(data.createdAt);
   }
 }
@@ -45,63 +75,118 @@ function maybeScrollChatbox(force: boolean = false) {
   }
 }
 
-const messages: ShallowRef<Message[]> = ref([]);
+const userMessages: ShallowRef<UserMessage[]> = ref([]);
+const characterMessages: ShallowRef<CharacterMessage[]> = ref([]);
 
-const orderedMessages = computed(() => {
-  return messages.value.sort((a, b) => {
-    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-  });
+const allMessages = computed(() => {
+  return (userMessages.value as (UserMessage | CharacterMessage)[])
+    .concat(characterMessages.value)
+    .sort((a, b) => {
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    });
+});
+
+const latestCharacterMessageId = computed(() => {
+  const latest = characterMessages.value[0];
+  return latest?.messageId;
 });
 
 watchEffect(async () => {
   if (character.ref.value && provider.value) {
     const authToken = await web3Auth.ensure();
 
-    trpc.chat.getRecentMessages
+    trpc.chat.getRecentUserMessages
       .query({
         authToken,
-        characterId: character.ref.value.actorId,
+        chat: { characterId: character.ref.value.id },
       })
       .then((data) => {
-        messages.value.push(...data.map((d) => markRaw(new Message(d))));
+        userMessages.value.push(
+          ...data.map((d) => markRaw(new UserMessage(d)))
+        );
+
         nextTick(() => {
           maybeScrollChatbox(true);
         });
       });
 
-    trpc.chat.onMessageToken.subscribe(
+    trpc.chat.getRecentCharacterMessages
+      .query({
+        authToken,
+        chat: { characterId: character.ref.value.id },
+      })
+      .then((data) => {
+        characterMessages.value.push(
+          ...data.map((d) => markRaw(new CharacterMessage(d, true)))
+        );
+
+        nextTick(() => {
+          maybeScrollChatbox(true);
+        });
+      });
+
+    trpc.chat.onCharacterMessageUpdate.subscribe(
       {
         authToken,
-        characterId: character.ref.value.actorId,
+        chat: { characterId: character.ref.value.id },
       },
       {
         onData: async (data) => {
-          const message = messages.value.find((m) => m.id === data.messageId);
+          const message = characterMessages.value.find(
+            (m) => m.messageId === data.messageId
+          );
 
           if (!message) {
             console.error("Message not found: ", data.messageId);
             return;
           }
 
-          message.text.value += data.token;
+          if (data.token !== undefined) {
+            if (data.token) {
+              message.text.value += data.token;
+            }
+          } else if (data.textComplete) {
+            message.textComplete.value = true;
+          } else if (data.finalized) {
+            message.finalized.value = true;
+          } else {
+            console.error("Unknown message update: ", data);
+          }
         },
       }
     );
 
-    trpc.chat.onMessage.subscribe(
+    trpc.chat.onUserMessage.subscribe(
       {
         authToken,
-        characterId: character.ref.value.actorId,
+        chat: { characterId: character.ref.value.id },
       },
       {
         onData: (data) => {
-          messages.value.push(markRaw(new Message(data)));
+          userMessages.value.push(markRaw(new UserMessage(data)));
+          nextTick(maybeScrollChatbox);
+        },
+      }
+    );
+
+    trpc.chat.onCharacterMessage.subscribe(
+      {
+        authToken,
+        chat: { characterId: character.ref.value.id },
+      },
+      {
+        onData: (data) => {
+          characterMessages.value.push(
+            markRaw(new CharacterMessage(data, false))
+          );
+
           nextTick(maybeScrollChatbox);
         },
       }
     );
   } else {
-    messages.value = [];
+    userMessages.value = [];
+    characterMessages.value = [];
   }
 });
 
@@ -112,7 +197,7 @@ async function initializeSession() {
 
   const response = await trpc.chat.initialize.mutate({
     authToken: await web3Auth.ensure(),
-    characterId: character.ref.value.actorId,
+    characterId: character.ref.value.id,
   });
 
   sessionId.value = response.sessionId;
@@ -129,12 +214,20 @@ async function initializeSession() {
           span.font-semibold {{ character.ref.value.name }}
 
     .flex.shrink.flex-col.gap-1.overflow-y-auto.rounded-lg.bg-gray-50.p-4(
-      v-if="messages.length > 0"
+      v-if="allMessages.length > 0"
       ref="chatbox"
     )
-      template(v-for="message of orderedMessages")
-        p(v-if="message.actorId == character.ref.value.actorId") 🤖 {{ message.text.value }}
-        p(v-else) 👤 {{ message.text.value }}
+      template(v-for="message of allMessages")
+        div(v-if="message instanceof CharacterMessage && true")
+          p
+            | 🤖
+            span(v-if="message.text.value.length > 0") {{ message.text.value }}
+            span(v-else) &nbsp;...
+            span(
+              v-if="latestCharacterMessageId === message.messageId && message.textComplete.value && !message.finalized.value"
+              title="Due to an unrecoverable error, this message is not a part of the chat history."
+            ) ⚠️
+        p(v-else) 👤 {{ message.text }}
 
     .flex.h-24.place-content-center.place-items-center.rounded-lg.bg-gray-50.p-4
       template(v-if="sessionId")

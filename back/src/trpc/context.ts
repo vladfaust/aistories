@@ -30,9 +30,6 @@ export async function upsertUser(web3Token: string): Promise<User> {
     },
     update: {},
     create: {
-      Actor: {
-        create: {},
-      },
       evmAddress,
     },
   });

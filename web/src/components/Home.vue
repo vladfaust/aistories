@@ -18,7 +18,7 @@ onMounted(async () => {
 .flex.w-full.flex-col.gap-3
   CharacterVue.gap-3.rounded-lg.border.p-4(
     v-for="char in characters"
-    :key="char.actorId"
+    :key="char.id"
     :char="char"
   )
 </template>

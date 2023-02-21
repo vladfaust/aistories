@@ -1,18 +1,32 @@
 import { z } from "zod";
 import { t } from "../index";
 import * as ai from "@/ai.js";
-import { Deferred } from "@/utils.js";
-import { PrismaClient, TextMessage } from "@prisma/client";
+import { Deferred, sleep } from "@/utils.js";
+import { PrismaClient, UserMessage, CharacterMessage } from "@prisma/client";
 import EventEmitter from "events";
 import { observable } from "@trpc/server/observable";
 import { upsertUser } from "../context";
 
-function chatMessageChannelName(userId: number, characterId: number) {
-  return `chatMessage:${userId}:${characterId}`;
+type MessageUpdate = {
+  messageId: number;
+  token?: string;
+  textComplete?: boolean;
+  finalized?: boolean;
+};
+
+function onUserMessageChannelName(userId: number, characterId: number) {
+  return `chat:${userId}:${characterId}:userMessage`;
 }
 
-function chatMessageTokenChannelName(userId: number, characterId: number) {
-  return `chatMessageToken:${userId}:${characterId}`;
+function onCharacterMessageChannelName(userId: number, characterId: number) {
+  return `chat:${userId}:${characterId}:characterMessage`;
+}
+
+function onCharacterMessageUpdateChannelName(
+  userId: number,
+  characterId: number
+) {
+  return `chat:${userId}:${characterId}:characterMessageToken`;
 }
 
 const SESSION_DURATION_MS = 5 * 60 * 1000; // 5 minutes
@@ -39,13 +53,13 @@ export default t.router({
       const chat = await prisma.chat.upsert({
         where: {
           userId_characterId: {
-            userId: inputAuth.actorId,
+            userId: inputAuth.id,
             characterId: input.characterId,
           },
         },
         update: {},
         create: {
-          userId: inputAuth.actorId,
+          userId: inputAuth.id,
           characterId: input.characterId,
         },
         select: {
@@ -137,7 +151,6 @@ export default t.router({
       };
     }),
 
-  // TODO: Prohibit sending messages if the session is busy.
   sendMessage: t.procedure
     .input(
       z.object({
@@ -168,10 +181,31 @@ export default t.router({
         },
       });
 
-      if (!session || session.Chat.userId != inputAuth.actorId) {
+      if (!session || session.Chat.userId != inputAuth.id) {
         throw new Error("Session not found");
       } else if (session.endedAt < new Date()) {
         throw new Error("Session expired");
+      }
+
+      const latestCharacterMessage = await prisma.characterMessage.findFirst({
+        where: {
+          chatId: session.Chat.id,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+          finalized: true,
+          text: true,
+          pid: true,
+        },
+      });
+
+      if (latestCharacterMessage && !latestCharacterMessage.text) {
+        throw new Error(
+          "Cannot send message until previous message is finalized"
+        );
       }
 
       const process = ai.processes[session.pid];
@@ -184,43 +218,86 @@ export default t.router({
         text: input.text,
       });
 
-      const userMessage = await prisma.textMessage.create({
+      const userMessage = await prisma.userMessage.create({
         data: {
           chatId: session.Chat.id,
-          actorId: inputAuth.actorId,
+          userId: inputAuth.id,
           text: input.text,
         },
         select: {
           id: true,
           chatId: true,
-          actorId: true,
+          userId: true,
           text: true,
           createdAt: true,
         },
       });
 
       ee.emit(
-        chatMessageChannelName(inputAuth.actorId, session.Chat.characterId),
+        onUserMessageChannelName(inputAuth.id, session.Chat.characterId),
         userMessage
       );
 
-      const characterMessage = await prisma.textMessage.create({
+      const characterMessage = await prisma.characterMessage.create({
         data: {
           chatId: session.Chat.id,
-          actorId: session.Chat.characterId,
+          characterId: session.Chat.characterId,
+          finalized: false,
+          pid: session.pid,
         },
         select: {
           id: true,
           chatId: true,
-          actorId: true,
+          characterId: true,
           createdAt: true,
         },
       });
 
       ee.emit(
-        chatMessageChannelName(inputAuth.actorId, session.Chat.characterId),
+        onCharacterMessageChannelName(inputAuth.id, session.Chat.characterId),
         characterMessage
       );
+
+      if (latestCharacterMessage && !latestCharacterMessage.finalized) {
+        if (latestCharacterMessage.pid != session.pid) {
+          // Skip waiting if the session has been re-initialized.
+          // That means that the message will not persist in history.
+        } else {
+          let finalized = false;
+          let sessionPid = session.pid;
+
+          while (!finalized) {
+            await sleep(500);
+
+            [finalized, sessionPid] = await Promise.all([
+              (
+                await prisma.characterMessage.findUniqueOrThrow({
+                  where: {
+                    id: latestCharacterMessage.id,
+                  },
+                  select: {
+                    finalized: true,
+                  },
+                })
+              ).finalized,
+              (
+                await prisma.chatSession.findUniqueOrThrow({
+                  where: {
+                    id: session.id,
+                  },
+                  select: {
+                    pid: true,
+                  },
+                })
+              ).pid,
+            ]);
+
+            if (sessionPid != session.pid) {
+              throw new Error("Session re-initialized, try again");
+            }
+          }
+        }
+      }
 
       enum Stage {
         Prediction,
@@ -235,7 +312,8 @@ export default t.router({
       let conversationSummary = "";
       let conversationBuffer = "";
 
-      const done = new Deferred<void>();
+      const textDone = new Deferred<void>();
+      const processingDone = new Deferred<void>();
 
       process.stdout!.on("data", async (data: Buffer) => {
         console.debug("🤖 (data)", data);
@@ -254,14 +332,14 @@ export default t.router({
                   console.debug("🤖 (tok)", token);
 
                   ee.emit(
-                    chatMessageTokenChannelName(
-                      inputAuth.actorId,
+                    onCharacterMessageUpdateChannelName(
+                      inputAuth.id,
                       session.Chat.characterId
                     ),
                     {
                       messageId: characterMessage.id,
                       token,
-                    }
+                    } satisfies MessageUpdate
                   );
 
                   text += token;
@@ -273,6 +351,19 @@ export default t.router({
                 // End of a token stream.
                 case 0x03: {
                   console.log("🤖 (say)", text);
+
+                  ee.emit(
+                    onCharacterMessageUpdateChannelName(
+                      inputAuth.id,
+                      session.Chat.characterId
+                    ),
+                    {
+                      messageId: characterMessage.id,
+                      textComplete: true,
+                    } satisfies MessageUpdate
+                  );
+
+                  textDone.resolve();
                   break;
                 }
 
@@ -304,7 +395,19 @@ export default t.router({
             case Stage.ConversationBuffer: {
               if (byte == 0x04) {
                 console.debug("🤖 (mem)", conversationBuffer);
-                done.resolve();
+
+                ee.emit(
+                  onCharacterMessageUpdateChannelName(
+                    inputAuth.id,
+                    session.Chat.characterId
+                  ),
+                  {
+                    messageId: characterMessage.id,
+                    finalized: true,
+                  } satisfies MessageUpdate
+                );
+
+                processingDone.resolve();
               } else {
                 conversationBuffer += String.fromCharCode(byte);
               }
@@ -317,42 +420,57 @@ export default t.router({
 
       process.stdin!.write(`${input.text}\n`);
 
-      await done.promise;
-      process.stdout!.removeAllListeners("data");
+      await textDone.promise;
+      await prisma.characterMessage.update({
+        where: {
+          id: characterMessage.id,
+        },
+        data: {
+          text,
+        },
+      });
 
-      await Promise.all([
-        prisma.textMessage.update({
-          where: {
-            id: characterMessage.id,
-          },
-          data: {
-            text,
-          },
-        }),
-        prisma.chat.update({
-          where: {
-            id: session.Chat.id,
-          },
-          data: {
-            // It does not print the summary unless the buffer is overflown.
-            conversationSummary:
-              conversationSummary.length > 0 ? conversationSummary : undefined,
+      processingDone.promise.then(() => {
+        process.stdout!.removeAllListeners("data");
 
-            conversationBuffer,
-          },
-        }),
-      ]);
+        prisma.$transaction([
+          prisma.characterMessage.update({
+            where: {
+              id: characterMessage.id,
+            },
+            data: {
+              finalized: true,
+            },
+          }),
+          prisma.chat.update({
+            where: {
+              id: session.Chat.id,
+            },
+            data: {
+              // It does not print the summary unless the buffer is overflown.
+              conversationSummary:
+                conversationSummary.length > 0
+                  ? conversationSummary
+                  : undefined,
+
+              conversationBuffer,
+            },
+          }),
+        ]);
+      });
 
       return {
         characterMessageId: characterMessage.id,
       };
     }),
 
-  getRecentMessages: t.procedure
+  getRecentUserMessages: t.procedure
     .input(
       z.object({
         authToken: z.string(),
-        characterId: z.number().positive(),
+        chat: z.object({
+          characterId: z.number().positive(),
+        }),
       })
     )
     .query(async ({ input }) => {
@@ -361,8 +479,8 @@ export default t.router({
       const chat = await prisma.chat.findUnique({
         where: {
           userId_characterId: {
-            userId: inputAuth.actorId,
-            characterId: input.characterId,
+            userId: inputAuth.id,
+            characterId: input.chat.characterId,
           },
         },
         select: {
@@ -371,15 +489,14 @@ export default t.router({
         },
       });
 
-      if (!chat || chat.userId !== inputAuth.actorId) {
+      if (!chat || chat.userId !== inputAuth.id) {
         throw new Error("Chat not found");
       }
 
-      return prisma.textMessage.findMany({
+      return prisma.userMessage.findMany({
         select: {
           id: true,
-          chatId: true,
-          actorId: true,
+          userId: true,
           text: true,
           createdAt: true,
         },
@@ -392,23 +509,69 @@ export default t.router({
       });
     }),
 
-  onMessage: t.procedure
+  getRecentCharacterMessages: t.procedure
     .input(
       z.object({
         authToken: z.string(),
-        characterId: z.number().positive(),
+        chat: z.object({ characterId: z.number().positive() }),
+      })
+    )
+    .query(async ({ input }) => {
+      const inputAuth = await upsertUser(input.authToken);
+
+      const chat = await prisma.chat.findUnique({
+        where: {
+          userId_characterId: {
+            userId: inputAuth.id,
+            characterId: input.chat.characterId,
+          },
+        },
+        select: {
+          id: true,
+          userId: true,
+        },
+      });
+
+      if (!chat || chat.userId !== inputAuth.id) {
+        throw new Error("Chat not found");
+      }
+
+      return prisma.characterMessage.findMany({
+        select: {
+          id: true,
+          characterId: true,
+          text: true,
+          createdAt: true,
+          finalized: true,
+        },
+        where: {
+          chatId: chat.id,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+    }),
+
+  onUserMessage: t.procedure
+    .input(
+      z.object({
+        authToken: z.string(),
+        chat: z.object({
+          characterId: z.number().positive(),
+        }),
       })
     )
     .subscription(async ({ input }) => {
       const inputAuth = await upsertUser(input.authToken);
 
-      const channelName = chatMessageChannelName(
-        inputAuth.actorId,
-        input.characterId
+      const channelName = onUserMessageChannelName(
+        inputAuth.id,
+        input.chat.characterId
       );
 
-      return observable<TextMessage>((emit) => {
-        const onAdd = (data: TextMessage) => {
+      return observable<UserMessage>((emit) => {
+        const onAdd = (data: UserMessage) => {
           emit.next(data);
         };
 
@@ -420,23 +583,53 @@ export default t.router({
       });
     }),
 
-  onMessageToken: t.procedure
+  onCharacterMessage: t.procedure
     .input(
       z.object({
         authToken: z.string(),
-        characterId: z.number().positive(),
+        chat: z.object({
+          characterId: z.number().positive(),
+        }),
       })
     )
     .subscription(async ({ input }) => {
       const inputAuth = await upsertUser(input.authToken);
 
-      const channelName = chatMessageTokenChannelName(
-        inputAuth.actorId,
-        input.characterId
+      const channelName = onCharacterMessageChannelName(
+        inputAuth.id,
+        input.chat.characterId
       );
 
-      return observable<{ messageId: number; token: string }>((emit) => {
-        const onAdd = (data: { messageId: number; token: string }) => {
+      return observable<CharacterMessage>((emit) => {
+        const onAdd = (data: CharacterMessage) => {
+          emit.next(data);
+        };
+
+        ee.on(channelName, onAdd);
+
+        return () => {
+          ee.off(channelName, onAdd);
+        };
+      });
+    }),
+
+  onCharacterMessageUpdate: t.procedure
+    .input(
+      z.object({
+        authToken: z.string(),
+        chat: z.object({ characterId: z.number().positive() }),
+      })
+    )
+    .subscription(async ({ input }) => {
+      const inputAuth = await upsertUser(input.authToken);
+
+      const channelName = onCharacterMessageUpdateChannelName(
+        inputAuth.id,
+        input.chat.characterId
+      );
+
+      return observable<MessageUpdate>((emit) => {
+        const onAdd = (data: MessageUpdate) => {
           emit.next(data);
         };
 
