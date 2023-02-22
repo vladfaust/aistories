@@ -26,3 +26,27 @@ export class Deferred<T> {
 export async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export async function timeout<T>(
+  ms: number,
+  promise: Promise<T>,
+  message?: string
+): Promise<T> {
+  const deferred = new Deferred<T>();
+
+  const timeout = setTimeout(() => {
+    deferred.reject(new Error(message || "Promise timed out"));
+  }, ms);
+
+  promise
+    .then((value) => {
+      clearTimeout(timeout);
+      deferred.resolve(value);
+    })
+    .catch((error) => {
+      clearTimeout(timeout);
+      deferred.reject(error);
+    });
+
+  return deferred.promise;
+}

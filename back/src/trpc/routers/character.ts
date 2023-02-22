@@ -12,6 +12,8 @@ export default t.router({
         name: true,
         imagePreviewUrl: true,
         about: true,
+        erc1155Address: true,
+        erc1155Id: true,
       },
     });
   }),
@@ -32,6 +34,8 @@ export default t.router({
           name: true,
           imagePreviewUrl: true,
           about: true,
+          erc1155Address: true,
+          erc1155Id: true,
         },
       });
     }),

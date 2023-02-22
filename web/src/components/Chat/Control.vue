@@ -5,6 +5,9 @@ import { useNow } from "@vueuse/core";
 import { type Character } from "@/models/Character";
 import { trpc } from "@/services/api";
 import * as web3Auth from "@/services/web3Auth";
+import { BigNumber, ethers } from "ethers";
+import erc1155Abi from "@/assets/abi/erc1155.json";
+import { account, provider } from "@/services/eth";
 
 type Session = {
   id: number;
@@ -38,6 +41,8 @@ async function initializeSession() {
   };
 }
 
+const tokenBalance: Ref<BigNumber | undefined | null> = ref();
+
 web3Auth.ensure().then((authToken) => {
   if (!authToken) return;
 
@@ -56,6 +61,20 @@ web3Auth.ensure().then((authToken) => {
         session.value = null;
       }
     });
+
+  if (character.erc1155Address) {
+    const contract = new ethers.Contract(
+      ethers.utils.hexlify(character.erc1155Address.data),
+      erc1155Abi,
+      provider.value!
+    );
+
+    contract
+      .balanceOf(account.value!, character.erc1155Id!.data)
+      .then((balance: BigNumber) => {
+        tokenBalance.value = balance;
+      });
+  }
 });
 
 const inputText = ref("");
@@ -112,6 +131,10 @@ async function addNewline() {
         @click="sendMessage"
         :disabled="inputLocked"
       ) Send message
-  template(v-else)
-    button.btn.btn-primary(@click="initializeSession") Begin simulation
+  .flex.flex-col.items-center.gap-1(v-else)
+    button.btn.btn-primary(
+      @click="initializeSession"
+      :disabled="!tokenBalance || tokenBalance.isZero()"
+    ) Begin simulation
+    span.text-sm.text-gray-500 Token balance: {{ tokenBalance ? tokenBalance.toString() : "Loading..." }}
 </template>

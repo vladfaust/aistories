@@ -1,4 +1,9 @@
 import { PrismaClient } from "@prisma/client";
+import { BigNumber, ethers } from "ethers";
+
+const erc1155Address = process.argv[2];
+if (!erc1155Address) throw new Error("Missing erc1155Address");
+console.log("erc1155Address", erc1155Address);
 
 const prisma = new PrismaClient();
 
@@ -24,6 +29,8 @@ Current conversation:
 Human: {input}
 AI:
 `.trim(),
+      erc1155Address: Buffer.from(ethers.utils.arrayify(erc1155Address)),
+      erc1155Id: Buffer.from(ethers.utils.arrayify(BigNumber.from(1))),
     },
   });
 
@@ -54,6 +61,36 @@ Current conversation:
 Human: {input}
 AI:
 `.trim(),
+      erc1155Address: Buffer.from(ethers.utils.arrayify(erc1155Address)),
+      erc1155Id: Buffer.from(ethers.utils.arrayify(BigNumber.from(2))),
+    },
+  });
+
+  // Nixi
+  await prisma.character.create({
+    data: {
+      name: "Nixi the Neko Maid",
+      about:
+        "Nixi is an anime catgirl who works as a maid in a popular cafe. Her outgoing and confident personality make her a favorite among the customers, and her cat-like features only add to her charm.",
+      imagePreviewUrl:
+        "https://upload.wikimedia.org/wikipedia/commons/1/1b/Neko_Wikipe-tan.svg",
+      promptTemplate: `
+The following is a conversation between a human and an AI. The AI is playing a specific character in a story, and may not overcome the bounds of that character.
+
+SYNOPSIS
+You enter a popular maid cafe and are greeted by a charming anime catgirl named Nixi. She welcomes you with a smile and asks what she can do for you. As you talk with her, you notice that she seems competitive and argumentative, especially when it comes to her fellow maids in the cafe. However, she is also hardworking and dedicated to her job. What do you think about Nixi's approach to her work, and how do you think you can best interact with her during your visit to the cafe?
+Occasionally, Nixi will add meows to her sentences.
+END OF SYNOPSIS
+
+Current conversation:
+
+{history}
+
+Human: {input}
+AI:
+`.trim(),
+      erc1155Address: Buffer.from(ethers.utils.arrayify(erc1155Address)),
+      erc1155Id: Buffer.from(ethers.utils.arrayify(BigNumber.from(3))),
     },
   });
 }

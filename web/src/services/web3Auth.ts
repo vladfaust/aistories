@@ -21,17 +21,22 @@ async function sign(signOpts: SignOpts): Promise<string> {
   return signature;
 }
 
-export async function ensure(): Promise<string> {
-  if (!storage.value) {
-    storage.value = await sign({
-      domain: import.meta.env.PROD ? config.trpcUrl.hostname : undefined,
-      expires_in: 60 * 60 * 24 * 1000, // 1 day
-    });
-  } else {
-    // TODO: Check expiration
-  }
+let ensurePromise: Promise<string> | null = null;
 
-  return storage.value!;
+export async function ensure(): Promise<string> {
+  return (ensurePromise ||= (async () => {
+    if (!storage.value) {
+      storage.value = await sign({
+        domain: import.meta.env.PROD ? config.trpcUrl.hostname : undefined,
+        expires_in: 60 * 60 * 24 * 1000, // 1 day
+      });
+    } else {
+      // TODO: Check expiration
+    }
+
+    ensurePromise = null;
+    return storage.value!;
+  })());
 }
 
 watch(account, () => {

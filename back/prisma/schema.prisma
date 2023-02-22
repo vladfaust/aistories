@@ -29,6 +29,9 @@ model Character {
   promptTemplate     String
   summarizerTemplate String? // May be the default one
 
+  erc1155Address Bytes?
+  erc1155Id      Bytes?
+
   Chats    Chat[]
   Messages CharacterMessage[]
 }

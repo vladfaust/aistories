@@ -3,6 +3,9 @@ import { t } from "@/trpc/index";
 import * as ai from "@/ai.js";
 import { PrismaClient } from "@prisma/client";
 import { upsertUser } from "@/trpc/context";
+import { ethers } from "ethers";
+import erc1155Abi from "~/abi/erc1155.json";
+import { provider } from "@/services/eth";
 
 const SESSION_DURATION_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -17,6 +20,41 @@ export default t.procedure
   )
   .mutation(async ({ input }) => {
     const inputAuth = await upsertUser(input.authToken);
+
+    const character = await prisma.character.findUnique({
+      where: {
+        id: input.characterId,
+      },
+      select: {
+        id: true,
+        erc1155Address: true,
+        erc1155Id: true,
+      },
+    });
+
+    if (!character) {
+      throw new Error("Character not found");
+    }
+
+    if (character.erc1155Address) {
+      if (!character.erc1155Id) throw new Error("Invalid ERC1155 ID");
+
+      // Check the user's balance.
+      const contract = new ethers.Contract(
+        ethers.utils.hexlify(character.erc1155Address),
+        erc1155Abi,
+        provider
+      );
+
+      const balance = await contract.balanceOf(
+        ethers.utils.hexlify(inputAuth.evmAddress),
+        character.erc1155Id!
+      );
+
+      if (balance.isZero()) {
+        throw new Error("Insufficient character token balance");
+      }
+    }
 
     const chat = await prisma.chat.upsert({
       where: {
