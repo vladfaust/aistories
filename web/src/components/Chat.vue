@@ -98,6 +98,15 @@ watchEffect(async () => {
   if (character.ref.value && provider.value) {
     const authToken = await web3Auth.ensure();
 
+    trpc.chat.session.findActive
+      .query({
+        authToken,
+        chat: { characterId: character.ref.value.id },
+      })
+      .then((data) => {
+        sessionId.value = data.sessionId;
+      });
+
     trpc.chat.getRecentUserMessages
       .query({
         authToken,

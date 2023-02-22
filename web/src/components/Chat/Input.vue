@@ -22,7 +22,7 @@ async function onInputKeypressEnter() {
   inputText.value = "";
 
   try {
-    await trpc.chat.sendMessage.mutate({
+    await trpc.chat.session.sendMessage.mutate({
       authToken: await web3Auth.ensure(),
       sessionId: sessionId,
       text,

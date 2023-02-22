@@ -15,6 +15,10 @@
     &.btn-primary {
       @apply bg-blue-500 text-white;
     }
+
+    &.btn-success {
+      @apply bg-green-500 text-white;
+    }
   }
 }
 
