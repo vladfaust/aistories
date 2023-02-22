@@ -198,7 +198,7 @@ const sessionId: Ref<number | undefined> = ref();
 async function initializeSession() {
   if (!character.ref.value) throw new Error("No character");
 
-  const response = await trpc.chat.initialize.mutate({
+  const response = await trpc.chat.session.initialize.mutate({
     authToken: await web3Auth.ensure(),
     characterId: character.ref.value.id,
   });
