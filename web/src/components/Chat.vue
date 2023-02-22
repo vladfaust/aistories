@@ -9,9 +9,9 @@ import {
   watchEffect,
 } from "vue";
 import { trpc } from "@/services/api";
-import { useScroll } from "@vueuse/core";
+import { useNow, useScroll } from "@vueuse/core";
 import * as web3Auth from "@/services/web3Auth";
-import Input from "./Chat/Input.vue";
+import Control from "./Chat/Control.vue";
 import { type Character } from "@/models/Character";
 import { Deferred } from "@/utils/deferred";
 import { account, provider } from "@/services/eth";
@@ -65,6 +65,8 @@ class CharacterMessage {
   }
 }
 
+const now = useNow();
+
 const { character } = defineProps<{
   character: Deferred<Character | null>;
 }>();
@@ -97,15 +99,6 @@ const latestCharacterMessageId = computed(() => {
 watchEffect(async () => {
   if (character.ref.value && provider.value) {
     const authToken = await web3Auth.ensure();
-
-    trpc.chat.session.findActive
-      .query({
-        authToken,
-        chat: { characterId: character.ref.value.id },
-      })
-      .then((data) => {
-        sessionId.value = data.sessionId;
-      });
 
     trpc.chat.getRecentUserMessages
       .query({
@@ -201,19 +194,6 @@ watchEffect(async () => {
     characterMessages.value = [];
   }
 });
-
-const sessionId: Ref<number | undefined> = ref();
-
-async function initializeSession() {
-  if (!character.ref.value) throw new Error("No character");
-
-  const response = await trpc.chat.session.initialize.mutate({
-    authToken: await web3Auth.ensure(),
-    characterId: character.ref.value.id,
-  });
-
-  sessionId.value = response.sessionId;
-}
 </script>
 
 <template lang="pug">
@@ -256,11 +236,7 @@ async function initializeSession() {
             | {{ message.text }}
             span.text-xs.italic.text-gray-400 &nbsp;{{ format(message.createdAt, "HH:mm") }}
 
-    .flex.h-24.place-content-center.place-items-center.rounded-lg.bg-gray-50.p-4
-      template(v-if="sessionId")
-        Input(:session-id="sessionId")
-      template(v-else)
-        button.btn.btn-primary.btn-sm.grow-0(@click="initializeSession") Load persona
+    Control(v-if="character.ref.value" :character="character.ref.value")
 
   template(v-else-if="character.ref.value === undefined")
     p.text-center Loading...

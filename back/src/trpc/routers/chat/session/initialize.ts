@@ -15,11 +15,6 @@ export default t.procedure
       characterId: z.number().positive(),
     })
   )
-  .output(
-    z.object({
-      sessionId: z.number(),
-    })
-  )
   .mutation(async ({ input }) => {
     const inputAuth = await upsertUser(input.authToken);
 
@@ -58,6 +53,7 @@ export default t.procedure
       select: {
         id: true,
         pid: true,
+        endedAt: true,
       },
     });
 
@@ -119,7 +115,5 @@ export default t.procedure
       });
     }
 
-    return {
-      sessionId: session.id,
-    };
+    return session;
   });

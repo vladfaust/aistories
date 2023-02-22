@@ -20,11 +20,6 @@ export default t.router({
         }),
       })
     )
-    .output(
-      z.object({
-        sessionId: z.number().optional(),
-      })
-    )
     .query(async ({ input }) => {
       const inputAuth = await upsertUser(input.authToken);
 
@@ -44,11 +39,10 @@ export default t.router({
         },
         select: {
           id: true,
+          endedAt: true,
         },
       });
 
-      return {
-        sessionId: session?.id,
-      };
+      return session;
     }),
 });

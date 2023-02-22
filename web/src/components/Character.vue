@@ -3,13 +3,29 @@ import { type Character } from "@/models/Character";
 import { trpc } from "@/services/api";
 import { account } from "@/services/eth";
 import * as web3Auth from "@/services/web3Auth";
-import { ref, type Ref, watch } from "vue";
+import { useNow } from "@vueuse/core";
+import { ref, type Ref, watch, computed } from "vue";
+import { format } from "date-fns";
+
+const now = useNow();
 
 const { char } = defineProps<{
   char: Character;
 }>();
 
-const sessionActive: Ref<boolean | undefined> = ref();
+const session: Ref<
+  | {
+      id: number;
+      endedAt: Date;
+    }
+  | null
+  | undefined
+> = ref();
+
+const sessionActive = computed(() => {
+  if (!session.value) return false;
+  return session.value.endedAt > now.value;
+});
 
 watch(
   account,
@@ -22,7 +38,14 @@ watch(
         },
       });
 
-      sessionActive.value = !!activeSession.sessionId;
+      if (activeSession) {
+        session.value = {
+          id: activeSession.id,
+          endedAt: new Date(activeSession.endedAt),
+        };
+      } else {
+        session.value = null;
+      }
     }
   },
   {
@@ -42,6 +65,6 @@ watch(
         :to="'/chat/' + char.id"
         :class="{ 'btn-primary': !sessionActive, 'btn-success': sessionActive }"
       )
-        span(v-if="sessionActive") Continue simulation
-        span(v-else) Open controls
+        span(v-if="session && sessionActive") Continue simulation ({{ format(new Date(session.endedAt.valueOf() - now.valueOf()), "mm:ss") }})
+        span(v-else) Open interface
 </template>
