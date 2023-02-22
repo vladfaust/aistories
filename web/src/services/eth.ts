@@ -1,6 +1,7 @@
-import { ethers } from "ethers";
+import { BigNumber, BigNumberish, ethers } from "ethers";
 import { ref, Ref, ShallowRef } from "vue";
 import { useLocalStorage } from "@vueuse/core";
+import erc1155Abi from "@/assets/abi/erc1155.json";
 
 declare global {
   interface Window {
@@ -62,4 +63,20 @@ export async function autoConnect() {
   if (walletStorage.value) {
     await connect();
   }
+}
+
+export async function getErc1155Balance(
+  contractAddress: string,
+  tokenId: BigNumberish
+): Promise<BigNumber> {
+  if (!provider.value) throw "No provider";
+  if (!account.value) throw "No account";
+
+  const contract = new ethers.Contract(
+    contractAddress,
+    erc1155Abi,
+    provider.value
+  );
+
+  return await contract.balanceOf(account.value, tokenId);
 }

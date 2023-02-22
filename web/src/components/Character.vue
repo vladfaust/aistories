@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import { type Character } from "@/models/Character";
 import { trpc } from "@/services/api";
-import { account, provider } from "@/services/eth";
+import { account, getErc1155Balance } from "@/services/eth";
 import * as web3Auth from "@/services/web3Auth";
 import { useNow } from "@vueuse/core";
 import { ref, type Ref, watch, computed } from "vue";
-import { format } from "date-fns";
+import { formatDistance } from "date-fns";
 import { BigNumber, ethers } from "ethers";
-import erc1155Abi from "@/assets/abi/erc1155.json";
 
 const now = useNow();
 
@@ -56,17 +55,10 @@ watch(
         });
 
       if (char.erc1155Address) {
-        const contract = new ethers.Contract(
+        tokenBalance.value = await getErc1155Balance(
           ethers.utils.hexlify(char.erc1155Address.data),
-          erc1155Abi,
-          provider.value!
+          char.erc1155Id!.data
         );
-
-        contract
-          .balanceOf(account, char.erc1155Id!.data)
-          .then((balance: BigNumber) => {
-            tokenBalance.value = balance;
-          });
       }
     } else {
       session.value = undefined;
@@ -80,20 +72,24 @@ watch(
 </script>
 
 <template lang="pug">
-.flex
-  img.aspect-square.w-32.rounded.object-contain(
-    :src="char.imagePreviewUrl"
-    :class="{ 'opacity-50': !tokenBalance || tokenBalance.isZero() }"
-  )
-  .flex.flex-col.gap-2
-    span.text-xl.font-semibold.leading-none {{ char.name }}
+.flex.items-center.gap-3.rounded-lg.border.p-4
+  RouterLink.contents(:to="'/chat/' + char.id")
+    img.pressable.relative.aspect-square.w-40.rounded.bg-base-50.object-contain.transition.hover_opacity-80(
+      :src="char.imagePreviewUrl"
+    )
+  .flex.flex-col.gap-1
+    RouterLink.pressable.max-w-max.text-xl.font-bold.leading-tight.transition(
+      :to="'/chat/' + char.id"
+    ) {{ char.name }}
     p.leading-tight {{ char.about }}
-    .flex.items-center.gap-2
-      router-link.btn.leading-none(
+    .mt-1.flex.items-center.gap-2
+      router-link.btn.btn-base.text-white(
+        v-if="tokenBalance?.gt(0)"
         :to="'/chat/' + char.id"
-        :class="{ 'btn-primary': !sessionActive, 'btn-success': sessionActive }"
+        :class="{ 'btn-success': sessionActive }"
       )
-        span(v-if="session && sessionActive") Continue simulation ({{ format(new Date(session.endedAt.valueOf() - now.valueOf()), "mm:ss") }})
-        span(v-else) Open interface
-      span Token balance: {{ tokenBalance || 0 }}
+        span(v-if="session && sessionActive") Simulation ({{ formatDistance(session.endedAt.valueOf(), now.valueOf()) }} left)
+        span(v-else) Chat
+      a.btn-nft.btn(v-if="!tokenBalance?.gt(0)" href="https://example.com") Collect NFT to chat
+      a.btn-nft.btn(v-else href="https://example.com") See NFT
 </template>

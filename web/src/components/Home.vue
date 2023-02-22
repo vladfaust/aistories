@@ -15,10 +15,7 @@ onMounted(async () => {
 </script>
 
 <template lang="pug">
-.flex.w-full.flex-col.gap-3
-  CharacterVue.gap-3.rounded-lg.border.p-4(
-    v-for="char in characters"
-    :key="char.id"
-    :char="char"
-  )
+.flex.place-content-center.py-4
+  .flex.w-full.max-w-3xl.flex-col.gap-3
+    CharacterVue(v-for="char in characters" :key="char.id" :char="char")
 </template>

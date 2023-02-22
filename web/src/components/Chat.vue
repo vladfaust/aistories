@@ -14,10 +14,11 @@ import * as web3Auth from "@/services/web3Auth";
 import Control from "./Chat/Control.vue";
 import { type Character } from "@/models/Character";
 import { Deferred } from "@/utils/deferred";
-import { account, provider } from "@/services/eth";
+import { account, getErc1155Balance, provider } from "@/services/eth";
 import Jdenticon from "./Jdenticon.vue";
 import { format } from "date-fns";
 import Spinner from "./Spinner.vue";
+import { BigNumber, ethers } from "ethers";
 
 class UserMessage {
   readonly messageId: number;
@@ -82,6 +83,7 @@ function maybeScrollChatbox(force: boolean = false) {
 
 const userMessages: ShallowRef<UserMessage[]> = ref([]);
 const characterMessages: ShallowRef<CharacterMessage[]> = ref([]);
+const tokenBalance: Ref<BigNumber | undefined | null> = ref();
 
 const allMessages = computed(() => {
   return (userMessages.value as (UserMessage | CharacterMessage)[])
@@ -189,6 +191,15 @@ watchEffect(async () => {
         },
       }
     );
+
+    if (character.ref.value.erc1155Address) {
+      getErc1155Balance(
+        ethers.utils.hexlify(character.ref.value.erc1155Address.data),
+        character.ref.value.erc1155Id!.data
+      ).then((balance) => {
+        tokenBalance.value = balance;
+      });
+    }
   } else {
     userMessages.value = [];
     characterMessages.value = [];
@@ -197,49 +208,57 @@ watchEffect(async () => {
 </script>
 
 <template lang="pug">
-.flex.flex-col.gap-3(style="height: calc(100vh - 4rem - 3rem)")
-  template(v-if="character.ref.value")
-    .flex.items-center.justify-between.rounded-lg.bg-gray-50.p-4
-      .flex.items-center.gap-3
-        img.w-12.rounded-full(:src="character.ref.value.imagePreviewUrl")
-        span
-          span.font-semibold {{ character.ref.value.name }}
-
-    .flex.shrink.flex-col.gap-3.overflow-y-auto.rounded-lg.bg-gray-50.p-4(
-      v-if="allMessages.length > 0"
-      ref="chatbox"
-    )
-      template(v-for="message of allMessages")
-        .flex.gap-2(v-if="message instanceof CharacterMessage && true")
-          img.h-10.w-10.rounded-full(
+.flex.place-content-center.p-4
+  .flex.w-full.max-w-3xl.flex-col.divide-y.rounded-lg.border(
+    style="height: calc(100vh - 4rem - 3rem)"
+  )
+    template(v-if="character.ref.value")
+      .flex.items-center.justify-between.rounded-lg.p-4
+        .flex.items-center.gap-2
+          img.w-10.rounded-full.bg-base-50(
             :src="character.ref.value.imagePreviewUrl"
           )
-          p.rounded-lg.rounded-tl-none.bg-gray-100.px-3.py-2
-            span(v-if="message.text.value.length > 0")
-              | {{ message.text.value }}
-            span(v-else)
-              Spinner.inline-block.h-4.w-4(kind="dots-fade")
-            span.text-xs.italic.text-gray-400(
-              v-if="message.textComplete.value"
-            ) &nbsp;{{ format(message.createdAt, "HH:mm") }}
-            span.text-orange-500(
-              v-if="latestCharacterMessageId === message.messageId && message.textComplete.value && !message.finalized.value"
-              title="Due to an unrecoverable error, this message is not a part of the chat history."
-            ) &nbsp;⚠️
+          span
+            span.text-lg.font-bold {{ character.ref.value.name }}
+        .flex.items-center.gap-2
+          span.text-sm.text-base-600 {{ tokenBalance?.toString() || 0 }} collected
+          a.btn-nft.btn(href="https://example.com") See NFT
 
-        .flex.flex-row-reverse.gap-2(v-else)
-          Jdenticon.h-10.w-10.rounded-full.bg-white.p-1(
-            v-if="account"
-            :input="account"
-          )
-          p.rounded-lg.rounded-tr-none.bg-green-100.px-3.py-2
-            | {{ message.text }}
-            span.text-xs.italic.text-gray-400 &nbsp;{{ format(message.createdAt, "HH:mm") }}
+      .flex.shrink.flex-col.gap-3.overflow-y-auto.p-4(
+        v-if="allMessages.length > 0"
+        ref="chatbox"
+      )
+        template(v-for="message of allMessages")
+          .flex.gap-2(v-if="message instanceof CharacterMessage && true")
+            img.h-10.w-10.rounded-full(
+              :src="character.ref.value.imagePreviewUrl"
+            )
+            p.rounded-lg.rounded-tl-none.bg-base-50.px-3.py-2
+              span(v-if="message.text.value.length > 0")
+                | {{ message.text.value }}
+              span(v-else)
+                Spinner.inline-block.h-4.w-4(kind="dots-fade")
+              span.text-xs.italic.text-gray-400(
+                v-if="message.textComplete.value"
+              ) &nbsp;{{ format(message.createdAt, "HH:mm") }}
+              span.text-orange-500(
+                v-if="latestCharacterMessageId === message.messageId && message.textComplete.value && !message.finalized.value"
+                title="Due to an unrecoverable error, this message is not a part of the chat history."
+              ) &nbsp;⚠️
 
-    Control(v-if="character.ref.value" :character="character.ref.value")
+          .flex.flex-row-reverse.gap-2(v-else)
+            Jdenticon.h-10.w-10.rounded-full.bg-base-50.p-1(
+              v-if="account"
+              :input="account"
+            )
+            p.rounded-lg.rounded-tr-none.bg-green-100.px-3.py-2
+              | {{ message.text }}
+              span.text-xs.italic.text-gray-400 &nbsp;{{ format(message.createdAt, "HH:mm") }}
 
-  template(v-else-if="character.ref.value === undefined")
-    p.text-center Loading...
-  template(v-else)
-    p.text-center.text-lg Character not found
+      Control(v-if="character.ref.value" :character="character.ref.value")
+
+    template(v-else-if="character.ref.value === undefined")
+      p.text-center Loading...
+    template(v-else)
+      p.text-center.text-lg Character not found
 </template>

@@ -11,11 +11,9 @@ onMounted(autoConnect);
 
 <template lang="pug">
 HeaderVue
-.flex.w-full.place-content-center.p-4
-  .w-full.max-w-3xl
-    RouterView(v-slot="{ Component }")
-      Transition(name="fade" mode="out-in")
-        Component(:is="Component" :key="route.path")
+RouterView(v-slot="{ Component }")
+  Transition(name="fade" mode="out-in")
+    Component(:is="Component" :key="route.path")
 </template>
 
 <style lang="scss">

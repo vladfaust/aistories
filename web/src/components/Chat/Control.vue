@@ -81,15 +81,17 @@ const inputText = ref("");
 const textarea = ref<HTMLTextAreaElement | null>(null);
 const inputLocked = ref(false);
 
+const maySend = computed(() => {
+  return (
+    session.value &&
+    sessionActive.value &&
+    inputText.value &&
+    inputText.value.trim().length > 0
+  );
+});
+
 async function sendMessage() {
-  if (
-    !session.value ||
-    inputLocked.value ||
-    !inputText.value ||
-    inputText.value.trim().length === 0
-  ) {
-    return;
-  }
+  if (!maySend.value) return;
 
   inputLocked.value = true;
 
@@ -99,7 +101,7 @@ async function sendMessage() {
   try {
     await trpc.chat.session.sendMessage.mutate({
       authToken: await web3Auth.ensure(),
-      sessionId: session.value.id,
+      sessionId: session.value!.id,
       text,
     });
   } finally {
@@ -113,28 +115,25 @@ async function addNewline() {
 </script>
 
 <template lang="pug">
-.flex.flex-col.gap-2.rounded-lg.bg-gray-50.p-4
+.flex.flex-col.gap-3.p-4
   template(v-if="session && sessionActive")
-    textarea.h-full.w-full.resize-none.rounded.border.px-4.py-2.leading-tight(
+    textarea.h-full.w-full.resize-none.rounded-lg.border.px-4.py-3.leading-tight(
       ref="textarea"
       placeholder="Simulation terminal"
       @keypress.enter.prevent.exact="sendMessage"
       @keypress.shift.enter.exact="addNewline"
       v-model="inputText"
       :disabled="inputLocked"
-      rows="3"
+      rows="2"
     )
     .flex.items-center.justify-between
-      .rounded.bg-gray-100.px-2.text-sm.text-gray-500(class="py-1.5")
+      .rounded.bg-base-100.px-2.text-sm.text-gray-500(class="py-1.5")
         | {{ format(new Date(session.endedAt.valueOf() - now.valueOf()), "mm:ss") }}
-      button.btn.btn-primary.btn-sm(
-        @click="sendMessage"
-        :disabled="inputLocked"
-      ) Send message
-  .flex.flex-col.items-center.gap-1(v-else)
-    button.btn.btn-primary(
+      button.btn-primary.btn-sm.btn(@click="sendMessage" :disabled="!maySend") Send
+
+  .flex.flex-col.items-center.gap-1(v-else-if="tokenBalance?.gt(0)")
+    button.btn-primary.btn(
       @click="initializeSession"
       :disabled="!tokenBalance || tokenBalance.isZero()"
     ) Begin simulation
-    span.text-sm.text-gray-500 Token balance: {{ tokenBalance ? tokenBalance.toString() : "Loading..." }}
 </template>
