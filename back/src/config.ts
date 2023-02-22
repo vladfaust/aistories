@@ -6,16 +6,8 @@ class Server {
   constructor(readonly host: string, readonly port: number) {}
 }
 
-class ElevenLabs {
-  constructor(readonly baseUrl: URL, readonly apiKey: string) {}
-}
-
 class Config {
-  constructor(
-    readonly prod: boolean,
-    readonly server: Server,
-    readonly elevenLabs: ElevenLabs
-  ) {}
+  constructor(readonly prod: boolean, readonly server: Server) {}
 }
 
 function requireEnv(id: string): string {
@@ -25,11 +17,7 @@ function requireEnv(id: string): string {
 
 const config = new Config(
   process.env.NODE_ENV === "production",
-  new Server(requireEnv("SERVER_HOST"), parseInt(requireEnv("SERVER_PORT"))),
-  new ElevenLabs(
-    new URL(requireEnv("ELEVEN_LABS_BASE_URL")),
-    requireEnv("ELEVEN_LABS_API_KEY")
-  )
+  new Server(requireEnv("SERVER_HOST"), parseInt(requireEnv("SERVER_PORT")))
 );
 
 export default config;
