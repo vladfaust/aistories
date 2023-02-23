@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { Character } from "@/models/Character";
 import { trpc } from "@/services/api";
-import { Splitpanes, Pane } from "splitpanes";
-import "splitpanes/dist/splitpanes.css";
-import { ref, type ShallowRef, type Ref, computed, onMounted } from "vue";
+import {
+  ref,
+  type ShallowRef,
+  type Ref,
+  computed,
+  onMounted,
+  type WatchStopHandle,
+  onUnmounted,
+  watch,
+} from "vue";
 import Chat from "./Messenger/Chat.vue";
 import Contacts from "./Messenger/Contacts.vue";
 import Profile from "./Messenger/Profile.vue";
@@ -14,72 +21,63 @@ const chosenCharacter = computed(() => {
   if (!chosenCharacterId.value) return null;
   return characters.value.find((c) => c.id === chosenCharacterId.value)!;
 });
+const watchers: WatchStopHandle[] = [];
+
+const displayContacts = ref(true);
+const displayProfile = ref(true);
 
 onMounted(() => {
-  trpc.character.getAll.query().then((cs) => {
-    characters.value = cs.map((c) => new Character(c));
+  trpc.character.getAll.query().then((datum) => {
+    characters.value = datum.map((data) => {
+      const c = Character.fromBackendModel(data);
+      watchers.push(c.watchBalance());
+      return c;
+    });
   });
+});
+
+onUnmounted(() => {
+  watchers.forEach((w) => w());
+});
+
+watch(displayProfile, (val) => {
+  console.log("displayProfile", val);
 });
 </script>
 
 <template lang="pug">
 .flex.w-full.justify-center.p-4
-  Splitpanes.w-full.rounded-lg.border(style="height: calc(100vh - 7rem)")
-    Pane(min-size="4rem" max-size="25" size="25")
-      Contacts(:characters="characters" @select="chosenCharacterId = $event")
-    Pane
-      Suspense
-        Chat(
-          v-if="chosenCharacter"
+  .flex.w-full.divide-x.rounded-lg.border(style="height: calc(100vh - 7rem)")
+    Contacts(
+      :class="'w-1/4'"
+      :characters="characters"
+      :displayDetails="true"
+      @select="chosenCharacterId = $event"
+    )
+
+    Suspense(v-if="chosenCharacter && chosenCharacter.collected.value")
+      Chat(
+        :class="displayProfile ? 'w-2/4' : 'w-3/4'"
+        :character="chosenCharacter"
+        :key="chosenCharacter.id"
+        @toggle-contacts="displayContacts = !displayContacts"
+        @toggle-profile="displayProfile = !displayProfile"
+      )
+
+    template(v-if="chosenCharacter")
+      .flex.h-full.items-center.justify-center(
+        v-if="displayProfile"
+        :class="chosenCharacter.collected.value ? 'w-1/4' : 'w-3/4'"
+      )
+        Profile.min-h-min.max-w-sm(
+          v-if="displayProfile"
           :character="chosenCharacter"
           :key="chosenCharacter.id"
         )
-    Pane(max-size="25" size="25")
-      Profile(v-if="chosenCharacter" :character="chosenCharacter")
+
+    .flex.h-full.flex-col.items-center.justify-center.p-4(v-else class="w-3/4")
+      .text-2xl.font-bold.text-base-500
+        | Select a character to view their profile
+      .text-base-500
+        | You can also view your profile by clicking on your avatar in the top right corner
 </template>
-
-<style lang="scss">
-// .splitpanes__pane {
-//   box-shadow: 0 0 5px rgba(0, 0, 0, 0.2) inset;
-//   justify-content: center;
-//   align-items: center;
-//   display: flex;
-// }
-
-.splitpanes__splitter {
-  position: relative;
-
-  &:before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 0;
-    transition: opacity 0.4s;
-    background-color: rgba(255, 0, 0, 0.3);
-    opacity: 0;
-    z-index: 1;
-  }
-}
-
-.splitpanes--vertical > .splitpanes__splitter {
-  min-width: 1px;
-  background-color: #e5e7eb;
-
-  &:before {
-    left: -10px;
-    right: -10px;
-    height: 100%;
-  }
-}
-
-.splitpanes--horizontal > .splitpanes__splitter {
-  min-height: 1px;
-  background-color: #e5e7eb;
-
-  &:before {
-    top: -10px;
-    bottom: -10px;
-    width: 100%;
-  }
-}
-</style>

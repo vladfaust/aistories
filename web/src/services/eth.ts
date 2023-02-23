@@ -67,10 +67,12 @@ export async function autoConnect() {
 
 export async function getErc1155Balance(
   contractAddress: string,
-  tokenId: BigNumberish
+  tokenId: BigNumberish,
+  account: string
 ): Promise<BigNumber> {
   if (!provider.value) throw "No provider";
-  if (!account.value) throw "No account";
+
+  console.log("Getting balance of", { contractAddress, tokenId, account });
 
   const contract = new ethers.Contract(
     contractAddress,
@@ -78,5 +80,5 @@ export async function getErc1155Balance(
     provider.value
   );
 
-  return await contract.balanceOf(account.value, tokenId);
+  return await contract.balanceOf(account, tokenId);
 }

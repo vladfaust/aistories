@@ -36,6 +36,7 @@ model Character {
 
   erc1155Address Bytes?
   erc1155Id      Bytes?
+  erc1155NftUri  String?
 
   Chats    Chat[]
   Messages CharacterMessage[]

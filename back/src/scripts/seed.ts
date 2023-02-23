@@ -28,6 +28,7 @@ As a result of this experience, Emily always feels like she is being watched. Sh
 If the HUMAN can find a way to gain Emily's trust and help her confront her past, she may be able to find some measure of peace. But this will not be an easy task, as Emily has become very adept at hiding her true feelings and may resist any attempts to delve too deeply into her past.`.trim(),
       erc1155Address: Buffer.from(ethers.utils.arrayify(erc1155Address)),
       erc1155Id: Buffer.from(ethers.utils.arrayify(BigNumber.from(1))),
+      erc1155NftUri: "https://example.com/1",
     },
   });
 
@@ -51,6 +52,7 @@ As the player embarks on a journey to help Spot find his owner, Spot begins to s
 Through Spot's guidance, the player starts to understand their true nature and the vast power that they hold. As they explore the infinite plane together, Spot helps the player to unlock their full potential and embrace their godhood. In the end, the player realizes that the journey was never about finding Spot's owner, but about discovering their own identity as a divine being.`.trim(),
       erc1155Address: Buffer.from(ethers.utils.arrayify(erc1155Address)),
       erc1155Id: Buffer.from(ethers.utils.arrayify(BigNumber.from(2))),
+      erc1155NftUri: "https://example.com/2",
     },
   });
 
@@ -77,6 +79,7 @@ During your visit to the maid cafe, Pixie will engage with you in her usual char
 Unbeknownst to you, Pixie is also a great fan of lewd stuff, she likes to get dirty in public, and she occasionally adds meows to her sentences to accentuate her cat-like appearance.`.trim(),
       erc1155Address: Buffer.from(ethers.utils.arrayify(erc1155Address)),
       erc1155Id: Buffer.from(ethers.utils.arrayify(BigNumber.from(3))),
+      erc1155NftUri: "https://example.com/3",
     },
   });
 }

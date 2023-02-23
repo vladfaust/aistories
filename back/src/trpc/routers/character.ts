@@ -16,6 +16,7 @@ export default t.router({
         about: true,
         erc1155Address: true,
         erc1155Id: true,
+        erc1155NftUri: true,
       },
     });
   }),
@@ -40,6 +41,7 @@ export default t.router({
           about: true,
           erc1155Address: true,
           erc1155Id: true,
+          erc1155NftUri: true,
         },
       });
     }),
