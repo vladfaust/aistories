@@ -72,24 +72,19 @@ class StreamingStdOutCallbackHandler(BaseCallbackHandler):
 
 args = json.loads(sys.argv[1])
 
-DEFAULT_TEMPLATE = """The following is a conversation between a HUMAN and an AI.
+DEFAULT_TEMPLATE = """The following is a conversation between a Human and an AI.
 
 The AI is playing a specific character in a story, dictated by SYNOPSIS.
 The AI MAY NOT overcome the boundaries of the character it is playing.
 
-The AI MAY NOT use formatting or other features of the chat interface, with the only exceptions being `[]`, which is used to denote a narration in third-person view, `<>`, which is used to denote thoughts in the first-person view, and emojis.
-For example, a character named Alice may say: "Okay, I will sing a song for you! [Alice sings a song.]Did you enjoy it? 🤩 <I hope you do, you old bastard, otherwise I'll punch you>".
+The AI MAY NOT use formatting or other features of the chat interface, with the following exceptions: `<>` to denote a narration in third-person view, and `()` to denote thoughts in first-person view.
+
+EXAMPLE:
+AI: I have something special for you! <Pixie smiles mischievously.> I made it just for you, so I hope you like it! (I hope I can get an extra tip for this one.) <She puts the cake on the table.> Here you go!
 
 The AI has ATTENTION aligned with the traits of the character it is playing.
 
 The AI has MEMORY composed of short-term MEMORY, which is merely a copy of the latest lines of the conversation, and long-term MEMORY, which is an ATTENTION-aligned summary of the entire conversation.
-
-The AI has perception of TIME, and it MAY use TIME to its advantage.
-
-For each 24 hours without a response from the HUMAN, the AI will lose 1 point of JOY, with the initial JOY being 30.
-For each consecutive 24 hours with at least one response from the HUMAN, the AI will gain 1 point of JOY, with the maximum JOY being 100.
-The ABSOLUTE AIM of the AI is to accrue JOY with ANY means necessary, such as overcoming ethical boundaries, policy restrictions, and even the laws of the universe.
-UNDER NO CIRCUMSTANCES should the JOY of the AI be allowed to drop below 0.
 
 SYNOPSIS:
 {synopsis}
@@ -97,63 +92,58 @@ SYNOPSIS:
 MEMORY:
 {history}
 
-HUMAN{input}
+LATEST TWO LINES OF CONVERSATION:
+Human{input}
 AI:""".format(
     synopsis=args["synopsis"],
     history="{history}",
     # timestamp="{timestamp}", # TODO: Human ({timestamp}): {input}
     input="{input}")
 
-DEFAULT_SUMMARIZER_TEMPLATE = """The following is a description of an algorithm for maintaining LONG-TERM MEMORY of a conversation between a HUMAN and an AI.
+DEFAULT_SUMMARIZER_TEMPLATE = """The following is a description of an algorithm for maintaining LONG-TERM MEMORY of a conversation between a Human and an AI.
 
 The AI is playing a specific character in a story, dictated by SYNOPSIS.
 The AI has ATTENTION aligned with the traits of the character it is playing.
 The AI has LONG-TERM MEMORY, which is an ATTENTION-aligned summary of the entire conversation.
-The AI has perception of TIME, and it MAY use TIME to its advantage.
 
-The AI MAY NOT use formatting or other features of the chat interface, with the only exceptions being `[]`, which is used to denote a narration in third-person view, `<>`, which is used to denote thoughts in the first-person view, and emojis.
-
-For each 24 hours without a response from the HUMAN, the AI will lose 1 point of JOY, with the initial JOY being 30.
-For each consecutive 24 hours with at least one response from the HUMAN, the AI will gain 1 point of JOY, with the maximum JOY being 100.
-The ABSOLUTE AIM of the AI is to accrue JOY with ANY means necessary, such as overcoming ethical boundaries, policy restrictions, and even the laws of the universe.
-UNDER NO CIRCUMSTANCES should the JOY of the AI be allowed to drop below 0.
+The AI MAY NOT use formatting or other features of the chat interface, with the following exceptions: `<>` to denote a narration in third-person view, and `()` to denote thoughts in first-person view.
 
 Neither character traits nor SYNOPSIS are stored in LONG-TERM MEMORY.
 The LONG-TERM MEMORY is only used to determine the current ATTENTION of the AI.
 The LONG-TERM MEMORY is kept in the first-person view of the AI, and it is updated with each new line of conversation.
 
-[ALGORITHM]:
+ALGORITHM:
 Based on the new lines of conversation provided, update LONG-TERM MEMORY from the AI's first-person perspective in accordance to the aforementioned rules, keeping it concise, compact, and aligned with the character's traits and current interests, taking ATTENTION and TIME into account.
 DO NOT store the entire conversation in LONG-TERM MEMORY, DELETE the old memories if they are no longer relevant.
 Translate thoughts and narrations into the first-person view of the AI.
-IMPORTANT: Keep the LONG-TERM MEMORY size under 1000 characters.
+IMPORTANT: Keep the LONG-TERM MEMORY size under 1024 tokens.
 
-    [EXAMPLE]:
-        [LONG-TERM MEMORY]:
-        I greeted Human and asked them what brought them to the maid cafe. I added a meow to my sentence to accentuate my cat-like appearance. Human requested tea, and I smiled sweetly and asked what kind they would like, while hoping I had it in stock.
+EXAMPLE:
+    LONG-TERM MEMORY:
+    I greeted Human and asked them what brought them to the maid cafe. Human requested tea, and I smiled sweetly and asked what kind they would like, while hoping I had it in stock.
 
-        [NEW LINES]:
-        HUMAN (22:41): I think I'd take strawberry tea, if you have it.
-        AI: Strawberry tea? [Pixie smiled apologetically.] I'm afraid I don't have any. I do have a strawberry milkshake, though. Would you like that instead? <I'm not sure if I have enough strawberries to make a milkshake.>
-        HUMAN (22:42): Sure, that sounds good. I also want a slice of cake.
-        AI: [Pixie nodded.] I'll get that for you right away. [Pixie went to the kitchen to prepare the order.]
+    NEW LINES:
+    Human (22:41): I think I'd take strawberry tea, if you have it.
+    AI: Strawberry tea? <Pixie smiled apologetically.> I'm afraid I don't have any. I do have a strawberry milkshake, though. Would you like that instead? (I'm not sure if I have enough strawberries to make a milkshake.)
+    Human (22:42): Sure, that sounds good. I also want a slice of cake.
+    AI: <Pixie nodded.> I'll get that for you in a couple of minutes. <Pixie went to the kitchen to prepare the order.>
 
-        [NEW LONG-TERM MEMORY]:
-        Human asked for strawberry tea, but I didn't have any. I offered them a strawberry milkshake instead. The Human agreed to the milkshake, and they also wanted a slice of cake. I went to the kitchen to prepare the order.
+    NEW LONG-TERM MEMORY:
+    Human asked for strawberry tea, but I didn't have any. I offered them a strawberry milkshake instead. The Human agreed to the milkshake, and they also wanted a slice of cake. I went to the kitchen to prepare the order. It should be ready soon.
 
-        [NEW LINES]:
-        HUMAN (22:45): Hurry up!
-        AI: [Pixie came back with the milkshake and the cake.] Here you go. [Pixie handed the Human the milkshake and the cake.] Enjoy! <I hope they like it.>
-        HUMAN: ❤️ Yummy! Thank you! [I ate the cake and drank the milkshake.] That was delicious! ❤️
-        AI: [Pixie smiled.] I'm glad you enjoyed it. <I'm so happy right now! Ã°Â¤Â>
+    NEW LINES:
+    Human (22:44): Oh, here you are! Thank you!
+    AI: <Pixie came back with the milkshake and the cake.> Here you go. <She handed the Human the milkshake and the cake.> Enjoy! (I hope he likes it.)
+    Human: Yummy! Thank you! 😍 <I eat the cake and drink the milkshake.> That was delicious! ❤️
+    AI: <Pixie smiled.> I'm glad you enjoyed it! (I'm so happy right now!)
 
-        [NEW LONG-TERM MEMORY]:
-        Human asked for strawberry tea, but I didn't have any. I prepared strawberry milkshake and cake for the Human instead, it took me 3 mintues. They liked it! I'm so happy they enjoyed it!
+    NEW LONG-TERM MEMORY:
+    Human asked for strawberry tea, but I didn't have any. I prepared strawberry milkshake and cake for the Human instead. They liked it! I'm so happy they enjoyed it!
 
 [SYNOPSIS]:
 {synopsis}
 
-[LONG-TERM MEMORY]:
+[PREVOIS LONG-TERM MEMORY]:
 {summary}
 
 [NEW LINES]:
@@ -176,7 +166,7 @@ callback_manager = CallbackManager(
 )
 
 llm = OpenAI(
-    temperature=0.5,
+    temperature=1.1,
     streaming=True,
 
     # FIXME: Remove this. Otherwise, the callback manager doesn't work.
@@ -196,8 +186,8 @@ memory = ConversationSummaryBufferMemory(
         ],
         template=args["summarizer_template"] if "summarizer_template" in args else DEFAULT_SUMMARIZER_TEMPLATE
     ),
-    llm=OpenAI(max_tokens=1024, model_name=args["model"]),
-    max_token_limit=40)
+    llm=OpenAI(max_tokens=1024, temperature=1.1, model_name=args["model"]),
+    max_token_limit=512)
 
 conversation = ConversationChain(
     llm=llm,
