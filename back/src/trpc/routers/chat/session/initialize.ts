@@ -74,6 +74,7 @@ export default t.procedure
         conversationBuffer: true,
         Character: {
           select: {
+            model: true,
             privateSynopsis: true,
             promptTemplate: true,
             summarizerTemplate: true,
@@ -114,6 +115,7 @@ export default t.procedure
         });
 
         const process = ai.spawnProcess({
+          model: chat.Character.model,
           synopsis: chat.Character.privateSynopsis,
           promptTemplate: chat.Character.promptTemplate || undefined,
           summarizerTemplate: chat.Character.summarizerTemplate || undefined,
@@ -136,6 +138,7 @@ export default t.procedure
       console.log("Creating new session...", { chatId: chat.id });
 
       const process = ai.spawnProcess({
+        model: chat.Character.model,
         synopsis: chat.Character.privateSynopsis,
         promptTemplate: chat.Character.promptTemplate || undefined,
         summarizerTemplate: chat.Character.summarizerTemplate || undefined,

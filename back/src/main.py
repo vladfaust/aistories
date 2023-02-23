@@ -182,7 +182,8 @@ llm = OpenAI(
     # FIXME: Remove this. Otherwise, the callback manager doesn't work.
     verbose=True,
 
-    callback_manager=callback_manager
+    callback_manager=callback_manager,
+    model_name=args["model"],
 )
 
 memory = ConversationSummaryBufferMemory(
@@ -195,7 +196,7 @@ memory = ConversationSummaryBufferMemory(
         ],
         template=args["summarizer_template"] if "summarizer_template" in args else DEFAULT_SUMMARIZER_TEMPLATE
     ),
-    llm=OpenAI(max_tokens=1024),
+    llm=OpenAI(max_tokens=1024, model_name=args["model"]),
     max_token_limit=40)
 
 conversation = ConversationChain(

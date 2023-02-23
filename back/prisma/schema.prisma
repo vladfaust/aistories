@@ -28,6 +28,8 @@ model Character {
   title String // E.g. "The all-seeing dog"
   about String // Short description
 
+  model String @default("text-davinci-003")
+
   publicSynopsis  String // Used in the prompt
   privateSynopsis String // Used in the prompt, should be hidden from the user
 

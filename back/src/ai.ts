@@ -3,12 +3,14 @@ import { ChildProcess, spawn } from "child_process";
 export const processes: Record<number, ChildProcess> = {};
 
 export function spawnProcess({
+  model,
   synopsis,
   promptTemplate,
   summarizerTemplate,
   conversationSummary,
   conversationBuffer,
 }: {
+  model: string;
   synopsis: string;
   promptTemplate?: string;
   summarizerTemplate?: string;
@@ -18,6 +20,7 @@ export function spawnProcess({
   const process = spawn("python", [
     "src/main.py",
     JSON.stringify({
+      model,
       synopsis,
       template: promptTemplate,
       summarizer_template: summarizerTemplate,

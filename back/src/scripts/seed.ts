@@ -65,6 +65,7 @@ Through Spot's guidance, the player starts to understand their true nature and t
       title: "The Neko Maid",
       about:
         "Nixi is an anime catgirl who works as a maid in a popular cafe. Her outgoing and confident personality make her a favorite among the customers, and her cat-like features only add to her charm.",
+      model: "text-curie-001",
       publicSynopsis:
         "You enter a popular maid cafe and are greeted by a charming anime catgirl named Pixie. She welcomes you with a smile and asks what she can do for you. As you talk with her, you notice that she seems competitive and argumentative, especially when it comes to her fellow maids in the cafe. However, she is also hardworking and dedicated to her job. What do you think about Pixie's approach to her work, and how do you think you can best interact with her during your visit to the cafe?",
       privateSynopsis: `
