@@ -56,7 +56,6 @@ async function sendMessage() {
   await ensureSession();
 
   const text = inputText.value.trim();
-  inputText.value = "";
 
   try {
     await trpc.chat.session.sendMessage.mutate({
@@ -64,6 +63,8 @@ async function sendMessage() {
       sessionId: session.value!.id,
       text,
     });
+
+    inputText.value = "";
   } finally {
     inputLocked.value = false;
   }
