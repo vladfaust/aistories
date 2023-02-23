@@ -4,7 +4,7 @@ import * as ai from "@/ai.js";
 import { PrismaClient } from "@prisma/client";
 import { upsertUser } from "@/trpc/context";
 import { ethers } from "ethers";
-import erc1155Abi from "~/abi/erc1155.json";
+import erc1155Abi from "~/abi/erc1155.json" assert { type: "json" };
 import { provider } from "@/services/eth";
 
 const SESSION_DURATION_MS = 5 * 60 * 1000; // 5 minutes
