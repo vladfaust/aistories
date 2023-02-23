@@ -59,15 +59,25 @@ export default t.procedure
       },
     });
 
-    if (latestCharacterMessage && !latestCharacterMessage.text) {
-      throw new Error(
-        "Cannot send message until previous message is finalized"
-      );
-    }
-
     const process = ai.processes[session.pid];
     if (!process) {
       throw new Error("Process not found, re-initialize session");
+    }
+
+    if (latestCharacterMessage && !latestCharacterMessage.text) {
+      if (latestCharacterMessage.pid != session.pid) {
+        console.warn(
+          "Last message was not finalized, but its pid has changed",
+          {
+            sessionId: input.sessionId,
+            messageId: latestCharacterMessage.id,
+          }
+        );
+      } else {
+        throw new Error(
+          "Cannot send message until previous message is finalized"
+        );
+      }
     }
 
     console.log("👤", {

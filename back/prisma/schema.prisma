@@ -22,11 +22,16 @@ model User {
 model Character {
   id Int @id @default(autoincrement())
 
-  name            String
-  about           String
   imagePreviewUrl String
 
-  promptTemplate     String
+  name  String // E.g. "Spot"
+  title String // E.g. "The all-seeing dog"
+  about String // Short description
+
+  publicSynopsis  String // Used in the prompt
+  privateSynopsis String // Used in the prompt, should be hidden from the user
+
+  promptTemplate     String? // May be the default one
   summarizerTemplate String? // May be the default one
 
   erc1155Address Bytes?

@@ -9,8 +9,10 @@ export default t.router({
     return prisma.character.findMany({
       select: {
         id: true,
-        name: true,
         imagePreviewUrl: true,
+        name: true,
+        title: true,
+        publicSynopsis: true,
         about: true,
         erc1155Address: true,
         erc1155Id: true,
@@ -31,8 +33,10 @@ export default t.router({
         },
         select: {
           id: true,
-          name: true,
           imagePreviewUrl: true,
+          name: true,
+          title: true,
+          publicSynopsis: true,
           about: true,
           erc1155Address: true,
           erc1155Id: true,

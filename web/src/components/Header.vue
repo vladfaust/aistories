@@ -6,7 +6,7 @@ import Jdenticon from "./Jdenticon.vue";
 
 <template lang="pug">
 header.flex.h-20.w-full.place-content-center.border-b.p-4
-  .grid.w-full.max-w-3xl.grid-cols-3
+  .grid.w-full.grid-cols-3
     .flex.items-center
       router-link.pressable.select-none.text-2xl.font-black.uppercase.transition-transform(
         to="/"

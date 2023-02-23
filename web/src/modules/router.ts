@@ -7,18 +7,7 @@ const router = createRouter({
   routes: [
     {
       path: "/",
-      component: () => import("@/components/Home.vue"),
-    },
-    {
-      path: "/chat/:characterId",
-      component: () => import("@/components/Chat.vue"),
-      props: (route) => ({
-        character: Deferred.create(
-          trpc.character.find.query({
-            id: parseInt(route.params.characterId as string),
-          })
-        ),
-      }),
+      component: () => import("@/components/Messenger.vue"),
     },
   ],
 });

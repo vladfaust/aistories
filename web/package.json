@@ -19,6 +19,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.0.16",
     "@trpc/client": "^10.11.1",
     "@trpc/server": "^10.11.1",
     "@vueuse/core": "^9.13.0",
@@ -26,12 +27,14 @@
     "ethers": "5",
     "jdenticon": "^3.2.0",
     "sass": "^1.58.3",
+    "splitpanes": "^3.1.5",
     "vue": "^3.2.45",
     "vue-router": "4",
     "web3-token": "^1.0.4"
   },
   "devDependencies": {
     "@prettier/plugin-pug": "^2.4.1",
+    "@types/splitpanes": "^2.2.1",
     "@vitejs/plugin-vue": "^4.0.0",
     "@volar/vue-language-plugin-pug": "^1.0.24",
     "autoprefixer": "^10.4.13",
