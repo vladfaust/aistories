@@ -60,7 +60,7 @@ export default t.procedure
     });
 
     const process = ai.processes[session.pid];
-    if (!process) {
+    if (!process || process.exitCode) {
       throw new Error("Process not found, re-initialize session");
     }
 
