@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import { onMounted, type Ref, ref, type ShallowRef } from "vue";
-import { type Character } from "@/models/Character";
-import { trpc } from "@/services/api";
+import { type Ref, ref } from "vue";
+import { Character } from "@/models/Character";
+
+const { characters } = defineProps<{
+  characters: Character[];
+}>();
 
 const emit = defineEmits<{
   (event: "select", characterId: number | null): void;
 }>();
 
 const selectedId: Ref<number | null> = ref(null);
-const characters: ShallowRef<Character[]> = ref([]);
-
-onMounted(async () => {
-  characters.value = await trpc.character.getAll.query();
-});
 </script>
 
 <template lang="pug">
@@ -24,7 +22,7 @@ onMounted(async () => {
     :class="{ '!border-b': i === characters.length - 1, 'bg-base-50': selectedId == char.id }"
   )
     img.h-12.w-12.rounded-full.bg-base-50.object-cover(
-      :src="char.imagePreviewUrl"
+      :src="char.imagePreviewUrl.toString()"
     )
     .flex.flex-col
       span.font-bold.leading-tight {{ char.name }}

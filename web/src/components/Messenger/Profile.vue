@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Character } from "@/models/Character";
+import { Character } from "@/models/Character";
 
 const { character } = defineProps<{
   character: Character;
@@ -9,7 +9,7 @@ const { character } = defineProps<{
 <template lang="pug">
 .flex.flex-col.items-center.gap-4.p-8
   img.aspect-square.w-full.rounded-full.bg-base-50(
-    :src="character.imagePreviewUrl"
+    :src="character.imagePreviewUrl.toString()"
   )
   .flex.flex-col.items-center(class="gap-1.5")
     span.text-lg.font-bold.leading-none {{ character.name }}

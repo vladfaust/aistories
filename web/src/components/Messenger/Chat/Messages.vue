@@ -47,8 +47,8 @@ class CharacterMessage {
 </script>
 
 <script setup lang="ts">
-import { type Character } from "@/models/Character";
-import { account, getErc1155Balance, provider } from "@/services/eth";
+import { Character } from "@/models/Character";
+import { account, provider } from "@/services/eth";
 import {
   type Ref,
   ref,
@@ -199,7 +199,7 @@ watchEffect(async () => {
 .flex.h-full.w-full.flex-col.gap-3.overflow-y-auto.p-4(ref="main")
   template(v-for="message of allMessages")
     .flex.gap-2(v-if="message instanceof CharacterMessage && true")
-      img.h-10.w-10.rounded-full(:src="character.imagePreviewUrl")
+      img.h-10.w-10.rounded-full(:src="character.imagePreviewUrl.toString()")
       p.rounded-lg.rounded-tl-none.bg-base-50.px-3.py-2.leading-snug
         span(v-if="message.text.value.length > 0")
           | {{ message.text.value }}

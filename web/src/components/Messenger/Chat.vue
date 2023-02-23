@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { type Character } from "@/models/Character";
+import { Character } from "@/models/Character";
 import HeaderVue from "./Chat/Header.vue";
 import Messages from "./Chat/Messages.vue";
 import InputVue from "./Chat/Input.vue";
-// import { Splitpanes, Pane } from "splitpanes";
 
 const { character } = defineProps<{
   character: Character;

@@ -1,36 +1,32 @@
 <script setup lang="ts">
-import { type Character } from "@/models/Character";
+import { Character } from "@/models/Character";
 import { trpc } from "@/services/api";
 import { Splitpanes, Pane } from "splitpanes";
 import "splitpanes/dist/splitpanes.css";
-import { ref, watch, type Ref } from "vue";
+import { ref, type ShallowRef, type Ref, computed, onMounted } from "vue";
 import Chat from "./Messenger/Chat.vue";
 import Contacts from "./Messenger/Contacts.vue";
 import Profile from "./Messenger/Profile.vue";
 
+const characters: ShallowRef<Character[]> = ref([]);
 const chosenCharacterId: Ref<number | null> = ref(null);
-const chosenCharacter: Ref<Character | null> = ref(null);
+const chosenCharacter = computed(() => {
+  if (!chosenCharacterId.value) return null;
+  return characters.value.find((c) => c.id === chosenCharacterId.value)!;
+});
 
-watch(
-  chosenCharacterId,
-  async (id) => {
-    if (id) {
-      chosenCharacter.value = await trpc.character.find.query({
-        id,
-      });
-    } else {
-      chosenCharacter.value = null;
-    }
-  },
-  { immediate: true }
-);
+onMounted(() => {
+  trpc.character.getAll.query().then((cs) => {
+    characters.value = cs.map((c) => new Character(c));
+  });
+});
 </script>
 
 <template lang="pug">
 .flex.w-full.justify-center.p-4
   Splitpanes.w-full.rounded-lg.border(style="height: calc(100vh - 7rem)")
     Pane(min-size="4rem" max-size="25" size="25")
-      Contacts(@select="chosenCharacterId = $event")
+      Contacts(:characters="characters" @select="chosenCharacterId = $event")
     Pane
       Suspense
         Chat(

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, type Ref } from "vue";
 import { useNow } from "@vueuse/core";
-import { type Character } from "@/models/Character";
+import { Character } from "@/models/Character";
 import { trpc } from "@/services/api";
 import * as web3Auth from "@/services/web3Auth";
 
