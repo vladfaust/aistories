@@ -200,7 +200,7 @@ conversation = ConversationChain(
 while True:
     try:
         the_input = input()
-        timestamp = datetime.datetime.now().isoformat()
+        timestamp = datetime.datetime.now().isoformat(timespec='seconds')
 
         conversation.predict(
             input="({timestamp}): {input}".format(
