@@ -47,7 +47,9 @@ watch(displayProfile, (val) => {
 
 <template lang="pug">
 .flex.w-full.justify-center.p-4
-  .flex.w-full.divide-x.rounded-lg.border(style="height: calc(100vh - 7rem)")
+  .flex.w-full.max-w-7xl.divide-x.rounded-lg.border(
+    style="height: calc(100vh - 7rem)"
+  )
     Contacts(
       :class="'w-1/4'"
       :characters="characters"

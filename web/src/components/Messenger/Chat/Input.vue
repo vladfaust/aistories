@@ -1,21 +1,26 @@
 <script setup lang="ts">
 import { computed, ref, type Ref } from "vue";
-import { useNow } from "@vueuse/core";
+import { useLocalStorage, useNow } from "@vueuse/core";
 import { Character } from "@/models/Character";
 import { trpc } from "@/services/api";
 import * as web3Auth from "@/services/web3Auth";
+import Currency from "@/components/utility/Currency.vue";
+import { addRemoveClassAfterTimeout } from "@/utils";
 
 type Session = {
   id: number;
   endedAt: Date;
 };
 
+const ENERGY_COST = 1;
+
 const { character } = defineProps<{
   character: Character;
 }>();
 
 const now = useNow();
-
+const energy = useLocalStorage("energy", 0);
+const energyRef = ref<any | null>(null);
 const session: Ref<Session | null | undefined> = ref();
 
 const sessionActive = computed(() => {
@@ -42,13 +47,27 @@ async function ensureSession() {
 
 const inputText = ref("");
 const textarea = ref<HTMLTextAreaElement | null>(null);
+const textareaFocused = ref(false);
 const inputLocked = ref(false);
 
 const maySend = computed(() => {
-  return inputText.value && inputText.value.trim().length > 0;
+  return (
+    inputText.value &&
+    inputText.value.trim().length > 0 &&
+    energy.value >= ENERGY_COST
+  );
 });
 
 async function sendMessage() {
+  if (energy.value < ENERGY_COST) {
+    // Add a little animation to the energy button
+    addRemoveClassAfterTimeout(
+      energyRef.value!.$el,
+      ["animate__animated", "animate__headShake"],
+      1000
+    );
+  }
+
   if (!maySend.value) return;
 
   inputLocked.value = true;
@@ -76,13 +95,25 @@ async function addNewline() {
 </script>
 
 <template lang="pug">
-textarea.h-14.w-full.resize-none.p-4.leading-tight(
-  ref="textarea"
-  placeholder="Write a message..."
-  @keypress.enter.prevent.exact="sendMessage"
-  @keypress.shift.enter.exact="addNewline"
-  v-model="inputText"
-  :disabled="inputLocked"
-  rows="1"
-)
+.relative.h-14.w-full
+  textarea.h-full.w-full.resize-none.p-4.pr-12.leading-tight(
+    ref="textarea"
+    placeholder="Write a message..."
+    @keypress.enter.prevent.exact="sendMessage"
+    @keypress.shift.enter.exact="addNewline"
+    v-model="inputText"
+    :disabled="inputLocked"
+    rows="1"
+    @focus="textareaFocused = true"
+    @blur="textareaFocused = false"
+  )
+  .absolute.right-0.top-0.flex.h-full.items-center.justify-center.p-2
+    .flex.cursor-help.items-center.rounded-lg.bg-base-50.py-2.pl-4.pr-3.transition-colors(
+      ref="energyRef"
+      :title="`A message costs ${ENERGY_COST} energy`"
+    )
+      span.font-medium(
+        :class="energy >= ENERGY_COST ? 'text-base-500' : textareaFocused ? 'text-red-500' : 'text-base-500'"
+      ) {{ ENERGY_COST }}
+      Currency.h-5.w-5
 </template>

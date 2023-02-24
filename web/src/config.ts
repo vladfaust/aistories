@@ -1,5 +1,5 @@
 class Config {
-  constructor(readonly trpcUrl: URL) {}
+  constructor(readonly trpcUrl: URL, readonly receiverAddress: string) {}
 }
 
 function requireEnv(id: string): string {
@@ -7,6 +7,9 @@ function requireEnv(id: string): string {
   else throw `Missing env var ${id}`;
 }
 
-const config = new Config(new URL(requireEnv("VITE_TRPC_URL")));
+const config = new Config(
+  new URL(requireEnv("VITE_TRPC_URL")),
+  requireEnv("VITE_RECEIVER_ADDRESS")
+);
 
 export default config;

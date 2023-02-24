@@ -5,6 +5,7 @@ import { Deferred, sleep } from "@/utils.js";
 import { PrismaClient } from "@prisma/client";
 import { upsertUser } from "@/trpc/context";
 import * as chat from "../../chat";
+import { getEnergyBalance } from "../../user/energy";
 
 const prisma = new PrismaClient();
 
@@ -80,24 +81,34 @@ export default t.procedure
       }
     }
 
+    const userMessage = await prisma.$transaction(async (p) => {
+      // @ts-expect-error
+      const energy = await getEnergyBalance(inputAuth.id, p);
+
+      if (energy < 1) {
+        throw new Error("Not enough energy");
+      }
+
+      return await p.userMessage.create({
+        data: {
+          chatId: session.Chat.id,
+          userId: inputAuth.id,
+          energyCost: 1,
+          text: input.text,
+        },
+        select: {
+          id: true,
+          chatId: true,
+          userId: true,
+          text: true,
+          createdAt: true,
+        },
+      });
+    });
+
     console.log("👤", {
       sessionId: input.sessionId,
       text: input.text,
-    });
-
-    const userMessage = await prisma.userMessage.create({
-      data: {
-        chatId: session.Chat.id,
-        userId: inputAuth.id,
-        text: input.text,
-      },
-      select: {
-        id: true,
-        chatId: true,
-        userId: true,
-        text: true,
-        createdAt: true,
-      },
     });
 
     chat.ee.emit(

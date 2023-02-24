@@ -6,7 +6,7 @@
   .btn {
     @apply rounded py-2 px-4 text-base font-semibold;
     @apply disabled_cursor-not-allowed disabled_opacity-50;
-    @apply pressable select-none transition;
+    @apply pressable cursor-pointer select-none transition;
   }
 
   .btn-base {
@@ -36,7 +36,6 @@
 
 @layer utilities {
   .pressable {
-    @apply cursor-pointer;
     @apply active_scale-95;
     @apply disabled_active_scale-100;
   }

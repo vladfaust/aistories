@@ -9,6 +9,7 @@ specifiers:
   '@vitejs/plugin-vue': ^4.0.0
   '@volar/vue-language-plugin-pug': ^1.0.24
   '@vueuse/core': ^9.13.0
+  animate.css: ^4.1.1
   autoprefixer: ^10.4.13
   date-fns: ^2.29.3
   ethers: '5'
@@ -32,6 +33,7 @@ dependencies:
   '@trpc/client': 10.11.1_@trpc+server@10.11.1
   '@trpc/server': 10.11.1
   '@vueuse/core': 9.13.0_vue@3.2.47
+  animate.css: 4.1.1
   date-fns: 2.29.3
   ethers: 5.7.2
   jdenticon: 3.2.0
@@ -909,6 +911,10 @@ packages:
 
   /aes-js/3.0.0:
     resolution: {integrity: sha512-H7wUZRn8WpTq9jocdxQ2c8x2sKo9ZVmzfRE13GiNJXfp7NcKYEdvl3vspKjXox6RIG2VtaRe4JFvxG4rqp2Zuw==}
+    dev: false
+
+  /animate.css/4.1.1:
+    resolution: {integrity: sha512-+mRmCTv6SbCmtYJCN4faJMNFVNN5EuCTTprDTAo7YzIGji2KADmakjVA3+8mVDkZ2Bf09vayB35lSQIex2+QaQ==}
     dev: false
 
   /anymatch/3.1.3:

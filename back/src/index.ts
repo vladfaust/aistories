@@ -3,6 +3,7 @@ import { appRouter } from "./trpc/routers/app";
 import { createContext } from "./trpc/context.js";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { WebSocketServer } from "ws";
+import "./eventSyncer";
 
 const wss = new WebSocketServer({
   port: config.server.port,

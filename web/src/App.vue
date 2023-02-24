@@ -3,6 +3,7 @@ import { onMounted } from "vue";
 import HeaderVue from "@/components/Header.vue";
 import { autoConnect } from "@/services/eth";
 import { useRoute } from "vue-router";
+import "animate.css";
 
 const route = useRoute();
 
@@ -26,5 +27,51 @@ RouterView(v-slot="{ Component }")
 .fade-leave-to {
   transition: opacity 0.1s ease-in;
   opacity: 0;
+}
+
+.treat {
+  --scale-x: 0;
+  --scale-y: 0;
+
+  pointer-events: none;
+  display: block;
+  position: absolute;
+  top: 0;
+  left: calc(50% - 0.5rem);
+  border-radius: 50%;
+  width: 1em;
+  height: 1em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 5vmin;
+  transform: translate(calc(var(--x) * 1px), calc(var(--y) * 1px))
+    translate(-50%, -50%);
+  pointer-events: none;
+  animation: treat-enter 0.1s ease-in backwards,
+    treat-exit 300ms linear calc((var(--lifetime, 3000) * 1ms) - 300ms) forwards;
+
+  @keyframes treat-enter {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes treat-exit {
+    to {
+      opacity: 0;
+    }
+  }
+
+  .inner {
+    animation: inner-rotate 0.6s linear infinite;
+    transform: rotate(calc(-1turn * var(--direction)));
+
+    @keyframes inner-rotate {
+      to {
+        transform: none;
+      }
+    }
+  }
 }
 </style>

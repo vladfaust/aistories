@@ -9,3 +9,12 @@ export class Box<T> {
 export function displayAddress(address: string): string {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
+
+export function addRemoveClassAfterTimeout(
+  element: HTMLElement,
+  classNames: string[],
+  ms: number
+) {
+  element.classList.add(...classNames);
+  setTimeout(() => element.classList.remove(...classNames), ms);
+}

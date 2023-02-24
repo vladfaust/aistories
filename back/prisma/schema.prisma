@@ -15,8 +15,25 @@ model User {
 
   evmAddress Bytes @unique
 
-  Chats    Chat[]
-  Messages UserMessage[]
+  OnChainEnergyPurchases OnChainEnergyPurchase[]
+  Chats                  Chat[]
+  Messages               UserMessage[]
+}
+
+model OnChainEnergyPurchase {
+  blockNumber Int
+  logIndex    Int
+
+  txHash    Bytes
+  blockTime DateTime
+
+  userId Int
+  energy Int
+  value  Bytes // In native token
+
+  User User @relation(fields: [userId], references: [id])
+
+  @@id([blockNumber, logIndex])
 }
 
 model Character {
@@ -84,8 +101,9 @@ model UserMessage {
   chatId Int
   userId Int
 
-  text      String
-  createdAt DateTime @default(now())
+  energyCost Int
+  text       String
+  createdAt  DateTime @default(now())
 
   Chat Chat @relation(fields: [chatId], references: [id])
   User User @relation(fields: [userId], references: [id])
