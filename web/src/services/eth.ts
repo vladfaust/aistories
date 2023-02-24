@@ -2,6 +2,7 @@ import { BigNumber, BigNumberish, ethers } from "ethers";
 import { ref, Ref, ShallowRef } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 import erc1155Abi from "@/assets/abi/erc1155.json";
+import { clearStore } from "@/store";
 
 declare global {
   interface Window {
@@ -27,6 +28,7 @@ export async function connect() {
 
   window.ethereum.on("accountsChanged", function (accounts: string[]) {
     if (accounts.length > 0) {
+      clearStore();
       account.value = accounts[0];
     } else {
       disconnect();
@@ -43,11 +45,13 @@ export async function connect() {
     // oldNetwork exists, it represents a changing network
     // See https://docs.ethers.io/v5/concepts/best-practices/.
     if (oldNetwork) {
+      clearStore();
       window.location.reload();
     }
   });
 
   window.ethereum.on("chainChanged", function (chainId: any) {
+    clearStore();
     window.location.reload();
   });
 }
@@ -57,6 +61,7 @@ export async function disconnect() {
   walletStorage.value = null;
   account.value = null;
   provider.value = null;
+  clearStore();
 }
 
 export async function autoConnect() {

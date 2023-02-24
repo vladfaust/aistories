@@ -7,9 +7,8 @@ import { onMounted, onUnmounted, ref, watch } from "vue";
 import Currency from "./utility/Currency.vue";
 import Jdenticon from "./utility/Jdenticon.vue";
 import * as web3Auth from "@/services/web3Auth";
-import { useLocalStorage } from "@vueuse/core";
+import { energy } from "@/store";
 
-const energy = useLocalStorage("energy", 0);
 let energyUnsubscribable: Unsubscribable | undefined;
 let watchStopHandle: () => void;
 const energyRef = ref<any | null>(null);
@@ -17,7 +16,6 @@ const energyRef = ref<any | null>(null);
 onMounted(() => {
   watchStopHandle = watch(account, async (newAccount) => {
     energyUnsubscribable?.unsubscribe();
-    energy.value = 0;
 
     if (newAccount) {
       const authToken = await web3Auth.ensure();
@@ -39,8 +37,6 @@ onMounted(() => {
           },
         }
       );
-    } else {
-      energy.value = 0;
     }
   });
 });

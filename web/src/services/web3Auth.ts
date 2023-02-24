@@ -1,11 +1,8 @@
 import config from "@/config";
-import { useLocalStorage } from "@vueuse/core";
-import { watch } from "vue";
 import Web3Token from "web3-token";
 import { SignOpts } from "web3-token/lib/interfaces";
-import { account, provider } from "./eth";
-
-const storage = useLocalStorage<string | null>("web3Auth", null);
+import { provider } from "./eth";
+import { web3Auth as storage } from "@/store";
 
 async function sign(signOpts: SignOpts): Promise<string> {
   if (!provider.value) throw new Error("No provider");
@@ -38,7 +35,3 @@ export async function ensure(): Promise<string> {
     return storage.value!;
   })());
 }
-
-watch(account, () => {
-  if (!account.value) storage.value = null;
-});
