@@ -62,8 +62,8 @@ import * as web3Auth from "@/services/web3Auth";
 import { trpc } from "@/services/api";
 import { useScroll } from "@vueuse/core";
 import { format } from "date-fns";
-import Spinner from "@/components/Spinner.vue";
-import Jdenticon from "@/components/Jdenticon.vue";
+import Spinner from "@/components/utility/Spinner.vue";
+import Jdenticon from "@/components/utility/Jdenticon.vue";
 
 function maybeScroll(force: boolean = false) {
   if (force || mainScroll.arrivedState.bottom) {

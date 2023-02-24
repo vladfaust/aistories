@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { connect, account } from "@/services/eth";
 import { displayAddress } from "@/utils";
-import Jdenticon from "./Jdenticon.vue";
+import Jdenticon from "./utility/Jdenticon.vue";
 </script>
 
 <template lang="pug">
