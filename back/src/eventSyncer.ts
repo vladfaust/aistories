@@ -110,18 +110,19 @@ const SUBSCRIBE_TO_LOGS_GQL = gql`
   subscription {
     log(
       contractAddress: "${config.receiverAddress}",
-      topics: [["${receiveEventTopic}"]]) {
-        block {
-           number
-           timestamp
-         }
-         logIndex
-         transaction {
-           hash
-         }
-         data
-         topics
+      topics: [["${receiveEventTopic}"]]
+    ) {
+      block {
+        number
+        timestamp
       }
+      logIndex
+      transaction {
+        hash
+      }
+      data
+      topics
+    }
   }`;
 
 const prisma = new PrismaClient();
