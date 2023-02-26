@@ -1,16 +1,38 @@
+import { trpc } from "@/services/api";
 import { account, getErc1155Balance } from "@/services/eth";
+import { Deferred } from "@/utils/deferred";
 import { BigNumber, ethers } from "ethers";
 import { computed, markRaw, ref, Ref, watch } from "vue";
 
-export class Character {
+export default class Character {
+  static cache = new Map<number, Character>();
   private _fetchBalancePromise?: Promise<BigNumber | undefined>;
   readonly collected = computed(() => this.balance.value?.gt(0));
+
+  static findOrCreate(id: number): Deferred<Character | null> {
+    const deferred = new Deferred<Character | null>();
+
+    if (Character.cache.has(id)) {
+      deferred.resolve(Character.cache.get(id)!);
+    } else {
+      trpc.character.find.query({ id }).then((data) => {
+        if (data) {
+          const character = Character.fromBackendModel(data);
+          Character.cache.set(id, character);
+          deferred.resolve(character);
+        } else {
+          deferred.resolve(null);
+        }
+      });
+    }
+
+    return deferred;
+  }
 
   static fromBackendModel(data: {
     id: number;
     name: string;
     title: string;
-    publicSynopsis: string;
     about: string;
     imagePreviewUrl: string;
     erc1155Address: { type: "Buffer"; data: number[] } | null;
@@ -22,7 +44,6 @@ export class Character {
         data.id,
         data.name,
         data.title,
-        data.publicSynopsis,
         data.about,
         new URL(data.imagePreviewUrl),
         data.erc1155Address
@@ -36,11 +57,10 @@ export class Character {
     );
   }
 
-  constructor(
+  private constructor(
     readonly id: number,
     readonly name: string,
     readonly title: string,
-    readonly publicSynopsis: string,
     readonly about: string,
     readonly imagePreviewUrl: URL,
     readonly erc1155Token?: {
@@ -55,6 +75,7 @@ export class Character {
     return watch(
       account,
       (account) => {
+        console.log("watchBalance", account);
         this.balance.value = undefined;
         this._fetchBalancePromise = undefined;
         if (account) this.fetchBalance(account);

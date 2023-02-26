@@ -4,6 +4,11 @@ import { createContext } from "./trpc/context.js";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { WebSocketServer } from "ws";
 import "./eventSyncer";
+import * as health from "./health";
+import * as ai from "./ai";
+
+health.heartbeat();
+ai.loop();
 
 const wss = new WebSocketServer({
   port: config.server.port,

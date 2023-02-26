@@ -33,15 +33,25 @@ async function logToOnChainEnergyPurchaseObject(
 
   const evmAddress = toBuffer("0x" + log.topics[1].slice(26));
 
-  const user = await prisma.user.upsert({
-    where: {
-      evmAddress,
-    },
-    update: {},
-    create: {
-      evmAddress,
-    },
-  });
+  let user;
+
+  try {
+    user = await prisma.user.upsert({
+      where: {
+        evmAddress,
+      },
+      update: {},
+      create: {
+        evmAddress,
+      },
+    });
+  } catch (e) {
+    user = await prisma.user.findUniqueOrThrow({
+      where: {
+        evmAddress,
+      },
+    });
+  }
 
   const energy = amount
     .mul(EXCHANGE_RATE)

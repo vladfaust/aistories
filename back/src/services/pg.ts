@@ -13,3 +13,33 @@ export const pool = new pg.Pool({
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
+
+/**
+ * @returns Cancel function
+ */
+export async function listen(
+  notificationChannel: string,
+  onPayload: (payload: any) => void
+): Promise<() => void> {
+  const client = await pool.connect();
+
+  client.on("notification", async (msg: any) => {
+    if (msg.channel == notificationChannel) {
+      onPayload(msg.payload);
+    }
+  });
+
+  client.query(`LISTEN "${notificationChannel}"`);
+
+  return () => {
+    client.query(`UNLISTEN "${notificationChannel}"`);
+    client.release();
+  };
+}
+
+/**
+ * @param byteaString E.g. "\\xa3bb..."
+ */
+export function byteaStringToBuffer(byteaString: string): Buffer {
+  return Buffer.from(byteaString.slice(2), "hex");
+}

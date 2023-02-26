@@ -7,29 +7,7 @@ import { observable } from "@trpc/server/observable";
 
 const prisma = new PrismaClient();
 
-/**
- * @returns Cancel function
- */
-async function pgListen(
-  notificationChannel: string,
-  onPayload: (payload: any) => void
-): Promise<() => void> {
-  const client = await pg.pool.connect();
-
-  client.on("notification", async (msg: any) => {
-    if (msg.channel == notificationChannel) {
-      onPayload(msg.payload);
-    }
-  });
-
-  client.query(`LISTEN "${notificationChannel}"`);
-
-  return () => {
-    client.query(`UNLISTEN "${notificationChannel}"`);
-    client.release();
-  };
-}
-
+// OPTIMIZE: Store energy balance in user table, or cache it in memory.
 export async function getEnergyBalance(userId: number, prismaClient = prisma) {
   const [purchases, spendings] = await Promise.all([
     prismaClient.onChainEnergyPurchase.aggregate({
@@ -86,13 +64,13 @@ export default t.router({
 
       return observable<number>((emit) => {
         const cancels = [
-          pgListen("OnChainEnergyPurchaseChannel", async (payload: any) => {
+          pg.listen("OnChainEnergyPurchaseChannel", async (payload: any) => {
             const purchase = JSON.parse(payload);
             if (purchase.userId != inputAuth.id) return;
             emit.next(+purchase.energy);
           }),
 
-          pgListen("UserMessageChannel", async (payload: any) => {
+          pg.listen("UserMessageChannel", async (payload: any) => {
             const message = JSON.parse(payload);
             if (message.userId != inputAuth.id) return;
             emit.next(-message.energyCost);

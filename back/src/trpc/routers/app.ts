@@ -1,12 +1,12 @@
 import t from "../index";
 
 import character from "./character";
-import chat from "./chat";
+import story from "./story";
 import user from "./user";
 
 export const appRouter = t.router({
   character,
-  chat,
+  story,
   user,
 });
 

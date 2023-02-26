@@ -18,3 +18,8 @@ export function addRemoveClassAfterTimeout(
   element.classList.add(...classNames);
   setTimeout(() => element.classList.remove(...classNames), ms);
 }
+
+export function tap<T>(object: T, fn: (object: T) => void): T {
+  fn(object);
+  return object;
+}

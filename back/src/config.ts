@@ -1,4 +1,5 @@
 import * as dotenv from "dotenv";
+import { random } from "nanoid";
 
 dotenv.config();
 
@@ -11,10 +12,14 @@ class Ethereum {
 }
 
 class Config {
+  readonly pid = Buffer.from(random(32));
+
   constructor(
     readonly prod: boolean,
     readonly databaseUrl: URL,
+    readonly redisUrl: URL,
     readonly offchainCafeEndpoint: URL,
+    readonly openaiApiKey: string,
     readonly receiverAddress: string,
     readonly server: Server,
     readonly eth: Ethereum
@@ -29,7 +34,9 @@ function requireEnv(id: string): string {
 const config = new Config(
   process.env.NODE_ENV === "production",
   new URL(requireEnv("DATABASE_URL")),
+  new URL(requireEnv("REDIS_URL")),
   new URL(requireEnv("OFFCHAIN_CAFE_ENDPOINT")),
+  requireEnv("OPENAI_API_KEY"),
   requireEnv("RECEIVER_ADDRESS"),
   new Server(requireEnv("SERVER_HOST"), parseInt(requireEnv("SERVER_PORT"))),
   new Ethereum(

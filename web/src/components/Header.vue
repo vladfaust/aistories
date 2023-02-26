@@ -55,6 +55,10 @@ header.flex.h-20.w-full.place-content-center.border-b.p-4
         RouterLink.block.text-2xl.font-extrabold.uppercase.tracking-widest.transition-transform(
           to="/"
         ) δραμα
+      li
+        RouterLink.pressable.block.uppercase.transition-transform(
+          to="/stories"
+        ) stories
     .flex.items-center.justify-center
     ul.flex.items-center.justify-end.gap-2
       template(v-if="account")

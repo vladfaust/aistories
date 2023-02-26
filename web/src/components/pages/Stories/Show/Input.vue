@@ -1,49 +1,21 @@
 <script setup lang="ts">
 import { computed, ref, type Ref } from "vue";
 import { useLocalStorage, useNow } from "@vueuse/core";
-import { Character } from "@/models/Character";
+import Story from "@/models/Story";
 import { trpc } from "@/services/api";
 import * as web3Auth from "@/services/web3Auth";
 import Currency from "@/components/utility/Currency.vue";
 import { addRemoveClassAfterTimeout } from "@/utils";
 
-type Session = {
-  id: number;
-  endedAt: Date;
-};
-
 const ENERGY_COST = 1;
 
-const { character } = defineProps<{
-  character: Character;
+const { story } = defineProps<{
+  story: Story;
 }>();
 
 const now = useNow();
 const energy = useLocalStorage("energy", 0);
 const energyRef = ref<any | null>(null);
-const session: Ref<Session | null | undefined> = ref();
-
-const sessionActive = computed(() => {
-  if (!session.value) return false;
-  return session.value.endedAt > now.value;
-});
-
-async function initializeSession() {
-  const response = await trpc.chat.session.initialize.mutate({
-    authToken: await web3Auth.ensure(),
-    characterId: character.id,
-  });
-
-  session.value = {
-    id: response.id,
-    endedAt: new Date(response.endedAt),
-  };
-}
-
-async function ensureSession() {
-  if (sessionActive.value) return;
-  await initializeSession();
-}
 
 const inputText = ref("");
 const textarea = ref<HTMLTextAreaElement | null>(null);
@@ -72,15 +44,13 @@ async function sendMessage() {
 
   inputLocked.value = true;
 
-  await ensureSession();
-
   const text = inputText.value.trim();
 
   try {
-    await trpc.chat.session.sendMessage.mutate({
+    await trpc.story.sendMessage.mutate({
       authToken: await web3Auth.ensure(),
-      sessionId: session.value!.id,
-      text,
+      storyId: story.id,
+      message: { text },
     });
 
     inputText.value = "";

@@ -16,7 +16,7 @@ model User {
   evmAddress Bytes @unique
 
   OnChainEnergyPurchases OnChainEnergyPurchase[]
-  Chats                  Chat[]
+  Stories                Story[]
   Messages               UserMessage[]
 }
 
@@ -45,83 +45,64 @@ model Character {
   title String // E.g. "The all-seeing dog"
   about String // Short description
 
-  model String @default("text-davinci-003")
-
-  publicSynopsis  String // Used in the prompt
-  privateSynopsis String // Used in the prompt, should be hidden from the user
-
-  promptTemplate     String? // May be the default one
-  summarizerTemplate String? // May be the default one
+  personality String // Used in a prompt, should be hidden from the user
 
   erc1155Address Bytes?
   erc1155Id      Bytes?
   erc1155NftUri  String?
 
-  Chats    Chat[]
+  Stories  Story[]
   Messages CharacterMessage[]
 }
 
-model Chat {
+model Story {
   id Int @id @default(autoincrement())
 
   userId      Int
   characterId Int
 
-  conversationSummary String @default("")
-  conversationBuffer  String @default("[]")
+  name   String?
+  fabula String? // Basic prompt for the story
+
+  summary String? // Summary of the previous lines
+  buffer  Int[]   @default([]) // Ids of currently buffered messages
+
+  busy Boolean // Is the story generation in progress?
+  pid  Bytes?  @unique // Process responsible for the generation
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   User      User      @relation(fields: [userId], references: [id])
   Character Character @relation(fields: [characterId], references: [id])
 
-  ChatSessions ChatSession[]
-
   UserMessages      UserMessage[]
   CharacterMessages CharacterMessage[]
-
-  @@unique([userId, characterId])
-}
-
-model ChatSession {
-  id     Int @id @default(autoincrement())
-  chatId Int
-
-  pid Int
-
-  createdAt DateTime @default(now())
-  endedAt   DateTime
-
-  Chat Chat @relation(fields: [chatId], references: [id])
 }
 
 model UserMessage {
   id Int @id @default(autoincrement())
 
-  chatId Int
-  userId Int
+  storyId Int
+  userId  Int
 
   energyCost Int
-  text       String
+  content    String
   createdAt  DateTime @default(now())
 
-  Chat Chat @relation(fields: [chatId], references: [id])
-  User User @relation(fields: [userId], references: [id])
+  Story Story @relation(fields: [storyId], references: [id])
+  User  User  @relation(fields: [userId], references: [id])
 }
 
 model CharacterMessage {
   id Int @id @default(autoincrement())
 
-  chatId      Int
+  storyId     Int
   characterId Int
 
-  text String? // A text generation may be in progress
-
-  finalized Boolean // Once a message is finalized, another one can be generated
-  pid       Int // To track the Python process
-
+  content   String? // Content generation may be in progress
   createdAt DateTime @default(now())
 
-  Chat      Chat      @relation(fields: [chatId], references: [id])
+  Story     Story     @relation(fields: [storyId], references: [id])
   Character Character @relation(fields: [characterId], references: [id])
 }
