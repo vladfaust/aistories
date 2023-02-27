@@ -1,79 +1,73 @@
 import { PrismaClient } from "@prisma/client";
 import config from "@/config";
-import { sleep, toBuffer } from "@/utils";
+import { chooseRandom, sleep, toBuffer } from "@/utils";
 import * as redis from "@/services/redis";
 import { encode } from "gpt-3-encoder";
 import { OpenAI } from "langchain/llms";
 import { Channel } from "@eyalsh/async_channels";
 import * as health from "@/health";
 import konsole from "./services/konsole";
+import { assert } from "console";
 
-const bufferTokenLimit = 100;
+const bufferHardLimit = 512;
+const bufferSoftLimit = 256; // Would truncate to this limit when hard limit is reached
+assert(bufferSoftLimit < bufferHardLimit);
 
 const prisma = new PrismaClient();
 
-const PROMPT = `
-This is partial recording of a roleplaying chat game between HUMAN and AI.
-Third-person narration is in <>; other than that, no other formatting is allowed.
-No newlines are allowed.
-
-AI PERSONALITY:
-{{personality}}
-
-PREVIOUS SUMMARY:
-{{summary}}
-
-RECORDING:
-`.trim();
-
-const SUMMARIZATION_PROMPT = `
-This is a summary of recording of a roleplaying chat game between HUMAN and AI.
-It is not a summary of the entire game, but rather a summary of what AI finds important to remember in accordance with its personality.
-Third-person narration is in <>; other than that, no other formatting is allowed.
-No newlines are allowed.
-
-AI PERSONALITY:
-{{personality}}
-
-PREVIOUS SUMMARY:
-{{summary}}
-
-NEW LINES:
-{{newLines}}
-
-NEW SUMMARY:
-`.trim();
-
 /**
- *
- * @param fabula The initial story fabula
- * @param personality The character personality
- * @param summary The cuurent story summary
- * @param recentLines The story recent lines
- *
  * @yields Tokens
  */
-async function* generateCharacterResponse(
-  fabula: string | null,
-  personality: string,
-  summary: string | null,
-  recentLines: string[],
-  input: string
-): AsyncGenerator<Buffer> {
-  const prompt =
-    PROMPT.replace("{{personality}}", personality).replace(
-      "{{summary}}",
-      summary || fabula || ""
-    ) +
-    "\n" +
-    recentLines.join("\n") +
-    "\n" +
-    input +
-    "\nAI:";
+async function* generateCharacterResponse({
+  setup,
+  characters,
+  context,
+  recentLines,
+  currentCharacterName,
+}: {
+  setup: string | null;
+  characters: { name: string; about: string; personality: string }[];
+  context: string | null;
+  recentLines: { name: string; content: string }[];
+  currentCharacterName: string;
+}): AsyncGenerator<Buffer> {
+  const prompt = `
+The following is a recording of a roleplaying chat game.
 
-  console.debug(prompt);
+[RULES]
+A message ALWAYS ends with a newline (\\n), no exceptions.
+Player MAY skip their turn with a empty line.
+Player MUST skip if their character is currently absent.
+Third-person narration is ALWAYS wrapped in (), and ONLY in ().
+Emojis are allowed.
+Any other formatting is NOT allowed.
+
+[[EXAMPLE]]
+Alice: Hey, you don't look like the other kids here, what's your story?
+Semyon: (Semyon's face lights up.) Well, I'm from the Moscow suburbs. You?
+Alisa: A music video star, don't you know? 😏 (Alice smiles.)
+
+${setup ? "[SETUP]\n" + setup + "\n" : ""}
+
+[CHARACTERS]
+${characters
+  .map(
+    (c) =>
+      `[[${c.name}]]\n` +
+      (c.name == currentCharacterName ? c.personality : c.about)
+  )
+  .join("\n")}
+
+${context ? "[CONTEXT]\n" + context + "\n" : ""}
+
+[RECORDING]
+${recentLines
+  .map((l) => `${l.name}: ` + l.content)
+  .join("\n")}${currentCharacterName}:
+`.trim();
 
   const tokenChannel = new Channel<Buffer>();
+  let text = "";
 
   const openai = new OpenAI({
     streaming: true,
@@ -93,29 +87,59 @@ async function* generateCharacterResponse(
   openai.generate([prompt], ["\n"]);
 
   for await (const token of tokenChannel) {
+    if (token.length === 0) continue;
+    text += token.toString();
     yield token;
   }
+
+  console.debug(prompt, text.trim());
 }
 
 /**
- *
- * @param fabula The story fabula
- * @param personality The character personality
- * @param summary The existing story summary
- * @param newLines New lines to include in the summary
  * @returns The new summary
  */
-async function summarize(
-  fabula: string | null,
-  personality: string,
-  summary: string | null,
-  newLines: string[]
-): Promise<string> {
-  const prompt = SUMMARIZATION_PROMPT.replace("{{personality}}", personality)
-    .replace("{{summary}}", summary || fabula || "")
-    .replace("{{newLines}}", newLines.join("\n"));
+async function summarize({
+  setup,
+  characterName,
+  characters,
+  oldSummary,
+  newLines,
+}: {
+  setup: string | null;
+  characterName: string;
+  characters: { name: string; about: string; personality: string }[];
+  oldSummary: string | null;
+  newLines: { name: string; content: string }[];
+}): Promise<string> {
+  const prompt = `
+Revise the summary for ${characterName}'s perspective, tailored to their personality and highlighting the key information relevant to their understanding of the story and relationships with other characters.
+The summary should be concise, under 512 tokens, and omit any irrelevant details
+.
+DO NOT include the setup or characters in the new summary.
+ONLY include the story progression since the last summary revision.
 
-  console.debug(prompt);
+[GAME RULES]
+Messages are ALWAYS separated by newlines (\\n).
+Player MAY skip their turn with a empty line.
+Third-person narration is ALWAYS wrapped in (), and ONLY in ().
+
+${setup ? "[SETUP]\n" + setup + "\n" : ""}
+
+[CHARACTERS]
+${characters
+  .map(
+    (c) =>
+      `[[${c.name}]]\n` + (c.name == characterName ? c.personality : c.about)
+  )
+  .join("\n")}
+
+${oldSummary ? "[OLD SUMMARY]\n" + oldSummary + "\n" : ""}
+
+[NEW LINES]
+${newLines.map((l) => `${l.name}: ` + l.content).join("\n")}
+
+[NEW SUMMARY]
+  `.trim();
 
   const openai = new OpenAI({
     maxTokens: 512,
@@ -123,8 +147,9 @@ async function summarize(
   });
 
   const response = await openai.generate([prompt]);
-
-  return response.generations[0][0].text.trim();
+  const text = response.generations[0][0].text.trim();
+  console.debug("Summary generated", prompt, text);
+  return text;
 }
 
 export function loop() {
@@ -134,226 +159,259 @@ export function loop() {
 
 async function mainLoop() {
   while (true) {
-    let story = await prisma.story.findFirst({
+    const busyStory = await prisma.story.findFirst({
       where: {
         busy: true,
         pid: null,
       },
       select: {
         id: true,
-        characterId: true,
-        fabula: true,
-        summary: true,
-        buffer: true,
       },
     });
 
-    if (story) {
-      const lock = await prisma.$transaction(async (prisma) => {
-        story = await prisma.story.findFirst({
+    if (busyStory) {
+      const story = await prisma.$transaction(async (prisma) => {
+        const s = await prisma.story.findFirst({
           where: {
-            id: story!.id,
+            id: busyStory.id,
             busy: true,
             pid: null,
           },
           select: {
             id: true,
-            characterId: true,
+            userIds: true,
+            userMap: true,
+            charIds: true,
+            nextCharId: true,
+            setup: true,
             fabula: true,
-            summary: true,
             buffer: true,
           },
         });
 
-        if (!story) return false;
+        if (!s) return false; // Someone else got the lock
 
         await prisma.story.update({
-          where: {
-            id: story.id,
-          },
-          data: {
-            pid: config.pid,
-          },
+          where: { id: busyStory.id },
+          data: { pid: config.pid },
         });
 
-        return true;
+        return s;
       });
 
-      if (!lock) continue;
+      if (!story) continue;
 
       konsole.log(["ai", "mainLoop"], "Processing story", story.id);
 
-      // Get the latest message, be it user or character message,
-      // selected by the latest createdAt timestamp.
-      let [latestUserMessage, latestCharacterMessage] = await Promise.all([
-        prisma.userMessage.findFirst({
-          where: {
+      // Get the latest content of the story.
+      let latestContent = await prisma.storyContent.findFirst({
+        where: {
+          storyId: story.id,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+          charId: true,
+          content: true,
+        },
+      });
+
+      if (latestContent?.charId !== story.nextCharId) {
+        // If the latest content is not from the next actor,
+        // create a new empty content.
+        //
+
+        latestContent = await prisma.storyContent.create({
+          data: {
             storyId: story.id,
-          },
-          orderBy: {
-            createdAt: "desc",
+            charId: story.nextCharId,
+            energyCost: 0,
           },
           select: {
             id: true,
-            userId: true,
-            createdAt: true,
+            charId: true,
             content: true,
           },
-        }),
-        prisma.characterMessage.findFirst({
-          where: {
-            storyId: story.id,
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-          select: {
-            id: true,
-            characterId: true,
-            createdAt: true,
-            content: true,
-          },
-        }),
-      ]);
-
-      let latestMessage = latestUserMessage
-        ? latestCharacterMessage
-          ? latestUserMessage.createdAt > latestCharacterMessage.createdAt
-            ? latestUserMessage
-            : latestCharacterMessage
-          : latestUserMessage
-        : latestCharacterMessage;
-
-      if (!latestMessage) {
-        throw "Unexpected: no latest message found";
+        });
       }
 
-      if ("userId" in latestMessage) {
-        // User message is the latest message,
-        // create a character message in response.
-        latestMessage = latestCharacterMessage =
-          await prisma.characterMessage.create({
-            data: {
-              storyId: story.id,
-              characterId: story.characterId,
+      if (!latestContent.content) {
+        // If the latest content is empty, generate it.
+        //
+
+        const [characters, contentBuffer, memory] = await Promise.all([
+          prisma.character.findMany({
+            where: {
+              id: {
+                in: story.charIds,
+              },
             },
             select: {
               id: true,
-              characterId: true,
-              createdAt: true,
+              name: true,
+              about: true,
+              personality: true,
+            },
+          }),
+          prisma.storyContent.findMany({
+            where: {
+              id: {
+                in: story.buffer,
+              },
+            },
+            select: {
+              charId: true,
               content: true,
             },
-          });
-      }
-
-      if (!latestMessage.content) {
-        // If the latest character message is empty, generate a response.
-        //
-
-        let [character, userMessagesBuffer, charMessageBuffer] =
-          await Promise.all([
-            prisma.character.findFirstOrThrow({
-              where: {
-                id: latestCharacterMessage!.characterId,
-              },
-              select: {
-                id: true,
-                name: true,
-                personality: true,
-              },
-            }),
-            prisma.userMessage.findMany({
-              where: {
+            orderBy: {
+              createdAt: "asc",
+            },
+          }),
+          prisma.storyMemory.findUnique({
+            where: {
+              storyId_charId: {
                 storyId: story.id,
-                id: {
-                  // Negative IDs are used to indicate user messages.
-                  in: story.buffer.filter((id) => id < 0).map((id) => -id),
-                },
+                charId: latestContent.charId,
               },
-              select: {
-                userId: true,
-                content: true,
-                createdAt: true,
-              },
-            }),
-            prisma.characterMessage.findMany({
-              where: {
-                storyId: story.id,
-                id: {
-                  in: story.buffer,
-                },
-              },
-              select: {
-                characterId: true,
-                content: true,
-                createdAt: true,
-              },
-            }),
-          ]);
+            },
+            select: {
+              memory: true,
+              checkpoint: true,
+            },
+          }),
+        ]);
 
-        let stringBuffer = [...userMessagesBuffer, ...charMessageBuffer]
-          .sort((a, b) => a.createdAt.valueOf() - b.createdAt.valueOf())
-          .map((message) =>
-            "userId" in message
-              ? `HUMAN: ${message.content}`
-              : `AI: ${message.content}`
-          );
-
-        const input = `HUMAN: ${latestUserMessage!.content}`;
         const pubChannel =
-          redis.prefix + `story:${story.id}:messageToken:${latestMessage.id}`;
-
+          redis.prefix + `story:${story.id}:contentToken:${latestContent.id}`;
         let generatedline = "";
-        for await (const token of generateCharacterResponse(
-          story.fabula,
-          character.personality,
-          story.summary,
-          stringBuffer,
-          input
-        )) {
+        for await (const token of generateCharacterResponse({
+          setup: story.setup,
+          characters,
+          context: memory?.memory || story.fabula || null,
+          currentCharacterName: characters.find(
+            (char) => char.id === latestContent!.charId
+          )!.name,
+          recentLines: contentBuffer.map((content) => ({
+            name: characters.find((char) => char.id === content.charId)!.name,
+            content: content.content!,
+          })),
+        })) {
           await redis.default.publish(pubChannel, token);
           generatedline += token.toString();
         }
+        generatedline = generatedline.trim();
         await redis.default.publish(pubChannel, "\n");
-
-        console.debug(generatedline);
-
-        // Update the buffer with the new messages.
-        stringBuffer.push(input);
-        stringBuffer.push("AI: " + generatedline);
-
-        if (latestUserMessage) story.buffer.push(-latestUserMessage.id);
-        story.buffer.push(latestCharacterMessage!.id);
 
         // If the new buffer exceeds the limit, split the buffer into two parts:
         // one to summarize (on the left), and one to keep (on the right).
+        //
+
+        contentBuffer.push({
+          charId: latestContent.charId,
+          content: generatedline,
+        });
+
+        story.buffer.push(latestContent.id);
+
         let bufferTokenLength = 0;
-        let toSummarize: string[] = [];
-        for (let i = stringBuffer.length - 1; i >= 0; i--) {
-          bufferTokenLength += encode(stringBuffer[i]).length;
-          if (bufferTokenLength > bufferTokenLimit) {
-            toSummarize = stringBuffer.slice(0, i + 1); // The part to summarize.
-            stringBuffer = stringBuffer.slice(i + 1); // The part to keep.
-            story.buffer = story.buffer.slice(i + 1); // The part to keep.
+        let softLimitReachedAt: number | null = null;
+        let hardLimitReachedAt: number | null = null;
+        let linesToSummarize: { name: string; content: string }[] = [];
+
+        for (let i = contentBuffer.length - 1; i >= 0; i--) {
+          bufferTokenLength += encode(contentBuffer[i].content!).length;
+
+          if (
+            softLimitReachedAt === null &&
+            bufferTokenLength >= bufferSoftLimit
+          ) {
+            softLimitReachedAt = i;
+          }
+
+          if (bufferTokenLength >= bufferHardLimit) {
+            hardLimitReachedAt = i;
+            softLimitReachedAt = softLimitReachedAt!;
+
+            // The part to summarize.
+            linesToSummarize = contentBuffer
+              .slice(0, softLimitReachedAt + 1)
+              .map((c) => ({
+                name: characters.find((char) => char.id === c.charId)!.name,
+                content: c.content!,
+              }));
+
+            // The part to keep.
+            story.buffer = story.buffer.slice(softLimitReachedAt);
+
             break;
           }
         }
 
-        if (toSummarize.length > 0) {
+        const userMap = JSON.parse(story.userMap) as Record<number, number>;
+
+        if (linesToSummarize.length > 0) {
           console.debug("Would summarize", {
-            summary: story.summary,
-            toSummarize,
+            bufferTokenLength,
+            softLimitReachedAt,
+            hardLimitReachedAt,
           });
 
-          story.summary = await summarize(
-            story.fabula,
-            character.personality,
-            story.summary,
-            toSummarize
-          );
+          // For all non-user characters, update their memories.
+          await Promise.all(
+            characters
+              .filter((c) => !Object.values(userMap).includes(c.id))
+              .map(async (char) => {
+                const previousMemory = await prisma.storyMemory.findUnique({
+                  where: {
+                    storyId_charId: {
+                      storyId: story.id,
+                      charId: char.id,
+                    },
+                  },
+                  select: {
+                    memory: true,
+                    checkpoint: true,
+                  },
+                });
 
-          console.debug(story.summary);
+                // If the memory is already up-to-date, skip.
+                if (previousMemory?.checkpoint == latestContent!.id) return;
+
+                const newMemory = await summarize({
+                  setup: story.setup,
+                  characterName: char.name,
+                  characters,
+                  oldSummary: previousMemory?.memory || story.fabula || null,
+                  newLines: linesToSummarize,
+                });
+
+                await prisma.storyMemory.upsert({
+                  where: {
+                    storyId_charId: {
+                      storyId: story.id,
+                      charId: char.id,
+                    },
+                  },
+                  create: {
+                    storyId: story.id,
+                    charId: char.id,
+                    memory: newMemory,
+                    checkpoint: latestContent!.id,
+                  },
+                  update: {
+                    memory: newMemory,
+                    checkpoint: latestContent!.id,
+                  },
+                });
+              })
+          );
         }
+
+        const nextCharId = chooseRandom(
+          story.charIds.filter((id) => id !== latestContent!.charId)
+        );
 
         await prisma.$transaction([
           prisma.story.update({
@@ -361,22 +419,30 @@ async function mainLoop() {
               id: story.id,
             },
             data: {
-              busy: false,
+              nextCharId,
+
+              // If the next actor is a character, mark the story as busy.
+              busy: !Object.values(userMap).includes(nextCharId),
+
               pid: null,
               buffer: story.buffer,
-              summary: story.summary,
             },
           }),
 
-          prisma.characterMessage.update({
+          prisma.storyContent.update({
             where: {
-              id: latestCharacterMessage!.id,
+              id: latestContent.id,
             },
             data: {
               content: generatedline,
             },
           }),
         ]);
+
+        await redis.default.publish(
+          redis.prefix + `story:${story.id}:turn`,
+          nextCharId.toString()
+        );
       } else {
         throw "Unexpected: latest message has no content";
       }

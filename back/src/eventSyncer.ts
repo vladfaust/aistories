@@ -35,6 +35,7 @@ async function logToOnChainEnergyPurchaseObject(
 
   let user;
 
+  // OPTIMIZE: Upsert is not atomic, so we need to catch the error and try again.
   try {
     user = await prisma.user.upsert({
       where: {

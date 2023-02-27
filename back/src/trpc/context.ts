@@ -24,15 +24,24 @@ export async function upsertUser(web3Token: string): Promise<User> {
   const { address } = verifyWeb3Token(web3Token);
   const evmAddress = Buffer.from(ethers.utils.arrayify(address));
 
-  return await prisma.user.upsert({
-    where: {
-      evmAddress,
-    },
-    update: {},
-    create: {
-      evmAddress,
-    },
-  });
+  // OPTIMIZE: Upsert is not atomic, so we need to catch the error and try again.
+  try {
+    return await prisma.user.upsert({
+      where: {
+        evmAddress,
+      },
+      update: {},
+      create: {
+        evmAddress,
+      },
+    });
+  } catch (e) {
+    return await prisma.user.findUniqueOrThrow({
+      where: {
+        evmAddress,
+      },
+    });
+  }
 }
 
 async function getAuthFromHeader(header: string): Promise<User | null> {

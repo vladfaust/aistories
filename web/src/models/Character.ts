@@ -5,28 +5,31 @@ import { BigNumber, ethers } from "ethers";
 import { computed, markRaw, ref, Ref, watch } from "vue";
 
 export default class Character {
-  static cache = new Map<number, Character>();
+  static cache = new Map<number, Deferred<Character | null>>();
   private _fetchBalancePromise?: Promise<BigNumber | undefined>;
-  readonly collected = computed(() => this.balance.value?.gt(0));
+  readonly collected = computed(
+    () => !this.erc1155Token || this.balance.value?.gt(0)
+  );
 
   static findOrCreate(id: number): Deferred<Character | null> {
-    const deferred = new Deferred<Character | null>();
+    let char = Character.cache.get(id);
 
-    if (Character.cache.has(id)) {
-      deferred.resolve(Character.cache.get(id)!);
+    if (char) {
+      return char;
     } else {
+      char = new Deferred<Character | null>();
+      Character.cache.set(id, char);
+
       trpc.character.find.query({ id }).then((data) => {
         if (data) {
-          const character = Character.fromBackendModel(data);
-          Character.cache.set(id, character);
-          deferred.resolve(character);
+          char!.resolve(Character.fromBackendModel(data));
         } else {
-          deferred.resolve(null);
+          char!.resolve(null);
         }
       });
     }
 
-    return deferred;
+    return char;
   }
 
   static fromBackendModel(data: {
@@ -57,7 +60,7 @@ export default class Character {
     );
   }
 
-  private constructor(
+  constructor(
     readonly id: number,
     readonly name: string,
     readonly title: string,

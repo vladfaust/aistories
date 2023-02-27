@@ -1,19 +1,21 @@
 import { t } from "../index";
 
+import addContent from "./story/addContent";
 import create from "./story/create";
 import find from "./story/find";
 import getHistory from "./story/getHistory";
 import list from "./story/list";
-import onMessage from "./story/onMessage";
-import onMessageToken from "./story/onMessageToken";
-import sendMessage from "./story/sendMessage";
+import onContent from "./story/onContent";
+import onContentToken from "./story/onContentToken";
+import onTurn from "./story/onTurn";
 
 export default t.router({
+  addContent,
   create,
   find,
   getHistory,
   list,
-  onMessage,
-  onMessageToken,
-  sendMessage,
+  onContent,
+  onContentToken,
+  onTurn,
 });

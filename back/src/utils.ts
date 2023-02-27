@@ -64,3 +64,7 @@ export function toHex(
 ): string {
   return ethers.utils.hexlify(value);
 }
+
+export function chooseRandom<T>(array: T[]): T {
+  return array[Math.floor(Math.random() * array.length)];
+}

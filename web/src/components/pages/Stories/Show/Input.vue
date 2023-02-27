@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, type Ref } from "vue";
-import { useLocalStorage, useNow } from "@vueuse/core";
+import { computed, onMounted, onUnmounted, ref } from "vue";
+import { useLocalStorage } from "@vueuse/core";
 import Story from "@/models/Story";
 import { trpc } from "@/services/api";
 import * as web3Auth from "@/services/web3Auth";
 import Currency from "@/components/utility/Currency.vue";
 import { addRemoveClassAfterTimeout } from "@/utils";
+import { type Unsubscribable } from "@trpc/server/observable";
 
 const ENERGY_COST = 1;
 
@@ -13,7 +14,8 @@ const { story } = defineProps<{
   story: Story;
 }>();
 
-const now = useNow();
+const nextActorId = ref(0);
+
 const energy = useLocalStorage("energy", 0);
 const energyRef = ref<any | null>(null);
 
@@ -22,8 +24,21 @@ const textarea = ref<HTMLTextAreaElement | null>(null);
 const textareaFocused = ref(false);
 const inputLocked = ref(false);
 
+const inputDisabled = computed(() => {
+  return (
+    inputLocked.value ||
+    userCharacter.value.ref.value?.id !== nextActorId.value ||
+    energy.value < ENERGY_COST
+  );
+});
+
+const userCharacter = computed(() => {
+  return story.users[0].char;
+});
+
 const maySend = computed(() => {
   return (
+    userCharacter.value.ref.value?.id === nextActorId.value &&
     inputText.value &&
     inputText.value.trim().length > 0 &&
     energy.value >= ENERGY_COST
@@ -40,6 +55,7 @@ async function sendMessage() {
     );
   }
 
+  console.log("maySend", maySend.value);
   if (!maySend.value) return;
 
   inputLocked.value = true;
@@ -47,10 +63,10 @@ async function sendMessage() {
   const text = inputText.value.trim();
 
   try {
-    await trpc.story.sendMessage.mutate({
+    await trpc.story.addContent.mutate({
       authToken: await web3Auth.ensure(),
       storyId: story.id,
-      message: { text },
+      content: text,
     });
 
     inputText.value = "";
@@ -59,20 +75,41 @@ async function sendMessage() {
   }
 }
 
-async function addNewline() {
-  inputText.value += "\n";
-}
+let unsub: Unsubscribable;
+
+onMounted(async () => {
+  textarea.value!.focus();
+
+  unsub = trpc.story.onTurn.subscribe(
+    {
+      authToken: await web3Auth.ensure(),
+      storyId: story.id,
+    },
+    {
+      onData: (data) => {
+        nextActorId.value = data.nextCharId;
+      },
+    }
+  );
+});
+
+onUnmounted(() => {
+  unsub.unsubscribe();
+});
 </script>
 
 <template lang="pug">
-.relative.h-14.w-full
-  textarea.h-full.w-full.resize-none.p-4.pr-12.leading-tight(
+.relative.flex.h-14.w-full
+  .absolute.top-2.left-2(v-if="userCharacter?.ref.value")
+    img.h-10.w-10.rounded-full.border.object-cover(
+      :src="userCharacter.ref.value.imagePreviewUrl.toString()"
+    )
+  textarea.h-full.w-full.resize-none.py-4.pl-14.pr-12.leading-tight(
     ref="textarea"
     placeholder="Write a message..."
     @keypress.enter.prevent.exact="sendMessage"
-    @keypress.shift.enter.exact="addNewline"
     v-model="inputText"
-    :disabled="inputLocked"
+    :disabled="inputDisabled"
     rows="1"
     @focus="textareaFocused = true"
     @blur="textareaFocused = false"

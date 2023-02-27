@@ -2,28 +2,32 @@
 import Character from "@/models/Character";
 import { trpc } from "@/services/api";
 import { computed, onMounted, ref, type Ref, type ShallowRef } from "vue";
-import { LockClosedIcon } from "@heroicons/vue/24/outline";
 import { tap } from "@/utils";
 import * as web3Auth from "@/services/web3Auth";
 import { useRouter } from "vue-router";
+import CharacterCard from "./Create/CharacterCard.vue";
+import CharacterListItem from "./Create/CharacterListItem.vue";
 
-const characters: ShallowRef<Character[]> = ref([]);
-const chosenCharacter: Ref<Character | null> = ref(null);
-const fabula: Ref<string | undefined> = ref();
 const router = useRouter();
+
+const allCharacters: ShallowRef<Character[]> = ref([]);
+const selectedProtagonist: ShallowRef<Character | null> = ref(null);
+const selectedCharactes: ShallowRef<Set<Character>> = ref(new Set());
+const setup: Ref<string | undefined> = ref();
+const fabula: Ref<string | undefined> = ref();
 
 const mayCreate = computed(() => {
   return (
     !createInProgress.value &&
-    chosenCharacter.value !== null &&
-    chosenCharacter.value.collected.value
+    selectedProtagonist.value &&
+    selectedCharactes.value.size > 0
   );
 });
 const createInProgress = ref(false);
 
 onMounted(() => {
   trpc.character.getAll.query().then((datum) => {
-    characters.value = datum.map((data) => {
+    allCharacters.value = datum.map((data) => {
       return tap(Character.fromBackendModel(data), (c) => c.watchBalance());
     });
   });
@@ -36,7 +40,11 @@ async function create() {
   try {
     const storyId = await trpc.story.create.mutate({
       authToken: await web3Auth.ensure(),
-      characterId: chosenCharacter.value!.id,
+      nonUserCharacterIds: [...selectedCharactes.value.values()].map(
+        (c) => c.id
+      ),
+      userCharacterId: selectedProtagonist.value!.id,
+      setup: setup.value,
       fabula: fabula.value,
     });
 
@@ -52,41 +60,40 @@ async function create() {
   .flex.w-full.max-w-3xl.flex-col.gap-4.py-6
     h1.text-3xl.font-extrabold.uppercase.leading-none.tracking-wider New story
 
-    h2.text-xl.leading-none Choose character
+    h2.text-xl.leading-none Choose protagonist
     .flex.flex-col.gap-3
       .grid.grid-cols-6.gap-3
-        template(v-for="character in characters")
-          template(v-if="character.collected.value")
-            img.pressable.aspect-square.cursor-pointer.select-none.rounded.bg-base-50.transition.hover_opacity-100(
-              :src="character.imagePreviewUrl.toString()"
-              :class="character === chosenCharacter ? 'opacity-100' : 'opacity-50'"
-              @click="chosenCharacter = character"
-            )
-          template(v-else)
-            .pressable.transitio.relative.cursor-pointer.select-none.items-center.justify-center.overflow-hidden.transition.hover_opacity-100(
-              :class="character === chosenCharacter ? 'opacity-100' : 'opacity-50'"
-              @click="chosenCharacter = character"
-            )
-              img.aspect-square.rounded.bg-base-50.brightness-50.grayscale(
-                :src="character.imagePreviewUrl.toString()"
-              )
-              LockClosedIcon.absolute-centered.z-10.h-8.w-8.text-white
-      .flex.flex-col.gap-3.rounded.border.p-4.sm_flex-row(
-        v-if="chosenCharacter"
-      )
-        img.aspect-square.rounded.bg-base-50.object-contain.sm_w-48(
-          :src="chosenCharacter.imagePreviewUrl.toString()"
-          :class="{ grayscale: !chosenCharacter.collected.value }"
+        CharacterListItem(
+          v-for="character in allCharacters"
+          :key="character.id"
+          :character="character"
+          :selected="character === selectedProtagonist"
+          @click="selectedProtagonist = character; selectedCharactes.delete(character)"
         )
-        .flex.flex-col.gap-1
-          span.text-lg.font-bold.leading-tight {{ chosenCharacter.name }}
-          span.text-sm.leading-tight.text-base-500 {{ chosenCharacter.title }}
-          p.leading-tight {{ chosenCharacter.about }}
-          .mt-1.flex.items-center.gap-2(v-if="chosenCharacter.erc1155Token")
-            a.btn.btn-nft(:href="chosenCharacter.erc1155Token.uri.toString()")
-              span(v-if="chosenCharacter.collected.value") See NFT
-              span(v-else) Collect NFT to unlock
-            span.text-sm.text-gray-400(v-if="chosenCharacter.collected.value") {{ chosenCharacter.balance.value }} collected
+
+      CharacterCard(
+        v-if="selectedProtagonist"
+        :key="selectedProtagonist.id"
+        :character="selectedProtagonist"
+      )
+
+    h2.text-xl.leading-none Choose characters
+    .flex.flex-col.gap-3
+      .grid.grid-cols-6.gap-3
+        CharacterListItem(
+          v-for="character in allCharacters"
+          :key="character.id"
+          :character="character"
+          :selected="selectedCharactes.has(character)"
+          :disabled="selectedProtagonist === character"
+          @click="selectedProtagonist === character ? null : selectedCharactes.has(character) ? selectedCharactes.delete(character) : selectedCharactes.add(character)"
+        )
+
+      CharacterCard(
+        v-for="character in selectedCharactes"
+        :key="character.id"
+        :character="character"
+      )
 
     h2.text-xl Write fabula (optional)
 

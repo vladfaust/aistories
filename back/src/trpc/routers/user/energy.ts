@@ -19,7 +19,7 @@ export async function getEnergyBalance(userId: number, prismaClient = prisma) {
       },
     }),
 
-    prismaClient.userMessage.aggregate({
+    prismaClient.storyContent.aggregate({
       where: {
         userId,
       },
@@ -70,10 +70,13 @@ export default t.router({
             emit.next(+purchase.energy);
           }),
 
-          pg.listen("UserMessageChannel", async (payload: any) => {
-            const message = JSON.parse(payload);
-            if (message.userId != inputAuth.id) return;
-            emit.next(-message.energyCost);
+          pg.listen("StoryContentInsert", async (payload: any) => {
+            const content = JSON.parse(payload) satisfies {
+              userId: number;
+              energyCost: number;
+            };
+            if (content.userId != inputAuth.id) return;
+            emit.next(-content.energyCost);
           }),
         ];
 

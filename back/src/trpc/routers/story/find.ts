@@ -24,16 +24,31 @@ export default t.procedure
       },
       select: {
         id: true,
-        userId: true,
-        characterId: true,
+        userIds: true,
+        userMap: true,
+        charIds: true,
+        nextCharId: true,
         name: true,
+        fabula: true,
         updatedAt: true,
         createdAt: true,
+        Content: {
+          select: {
+            id: true,
+            charId: true,
+            content: true,
+            createdAt: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+        },
       },
     });
 
-    if (!story || story.userId !== inputAuth.id) {
-      throw new Error("Story not found.");
+    if (!story || !story.userIds.includes(inputAuth.id)) {
+      throw new Error("Story not found");
     }
 
     return story;

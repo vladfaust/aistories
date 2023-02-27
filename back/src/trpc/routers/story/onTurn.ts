@@ -8,7 +8,8 @@ import { observable } from "@trpc/server/observable";
 const prisma = new PrismaClient();
 
 /**
- * Subscribe to character message parts in a story.
+ * Subscribe to turns in a story.
+ * Immediately emits the current turn.
  */
 export default t.procedure
   .input(
@@ -22,41 +23,29 @@ export default t.procedure
 
     // Check that the user has access to the story.
     const story = await prisma.story.findUnique({
-      where: {
-        id: input.storyId,
-      },
-      select: {
-        userId: true,
-      },
+      where: { id: input.storyId },
+      select: { userIds: true, nextCharId: true },
     });
 
-    if (!story || story.userId !== inputAuth.id) {
-      throw new Error("Story not found.");
+    if (!story || !story.userIds.includes(inputAuth.id)) {
+      throw new Error("Story not found");
     }
 
     const redisClient = redis.client();
 
-    return observable<{
-      messageId: number;
-      token: string;
-    }>((emit) => {
-      redisClient.psubscribe(
-        redis.prefix + `story:${input.storyId}:messageToken:*`,
+    return observable<{ nextCharId: number }>((emit) => {
+      redisClient.subscribe(
+        redis.prefix + `story:${input.storyId}:turn`,
         (err, count) => {
-          if (err) {
-            throw err;
-          }
+          if (err) throw err;
         }
       );
 
-      redisClient.on(
-        "pmessage",
-        (pattern: string, channel: string, message: string) => {
-          const split = channel.toString().split(":");
-          const messageId = parseInt(split[split.length - 1]);
-          emit.next({ messageId, token: message });
-        }
-      );
+      redisClient.on("message", (channel: string, message: string) => {
+        emit.next({ nextCharId: parseInt(message) });
+      });
+
+      emit.next({ nextCharId: story.nextCharId });
 
       return () => {
         redisClient.unsubscribe();
