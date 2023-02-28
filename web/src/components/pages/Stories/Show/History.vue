@@ -2,7 +2,12 @@
 class Content {
   readonly id: number;
   readonly character: Deferred<Character>;
-  readonly content: Ref<string>;
+  readonly entries: ShallowRef<
+    {
+      type: "narration" | "utterance";
+      text: Ref<string>;
+    }[]
+  >;
   readonly createdAt: Date;
 
   constructor(data: {
@@ -13,7 +18,28 @@ class Content {
   }) {
     this.id = data.id;
     this.character = Character.findOrCreate(data.charId) as Deferred<Character>;
-    this.content = ref(data.content || "");
+
+    // Iterate through content. Narration is wrapped in [].
+    // For example, "Hello! [Waves.] Nice to meet you." would result in
+    // [{type: "utterance", content: "Hello!"}, {type: "narration", content: "Waves."}, {type: "utterance", content: "Nice to meet you."}]
+    this.entries = shallowRef(
+      data.content !== null
+        ? data.content.split(/(\[.+?\])/).map((c) => {
+            if (c.startsWith("[") && c.endsWith("]")) {
+              return {
+                type: "narration" as const,
+                text: ref(c.slice(1, -1)),
+              };
+            } else {
+              return {
+                type: "utterance" as const,
+                text: ref(c),
+              };
+            }
+          })
+        : []
+    );
+
     this.createdAt = new Date(data.createdAt);
   }
 }
@@ -30,6 +56,8 @@ import {
   markRaw,
   nextTick,
   onUnmounted,
+  shallowRef,
+  triggerRef,
 } from "vue";
 import * as web3Auth from "@/services/web3Auth";
 import { trpc } from "@/services/api";
@@ -37,12 +65,13 @@ import { useScroll } from "@vueuse/core";
 import { type Unsubscribable } from "@trpc/server/observable";
 import { Deferred } from "@/utils/deferred";
 import Character from "@/models/Character";
+import Spinner from "@/components/utility/Spinner.vue";
 
 const { story } = defineProps<{ story: Story }>();
 
 const main = ref<HTMLElement | null>(null);
 const mainScroll = useScroll(main);
-const content: ShallowRef<Content[]> = ref([]);
+const storyContent: ShallowRef<Content[]> = ref([]);
 let unsubscribables: Unsubscribable[] = [];
 
 function maybeScroll(force: boolean = false) {
@@ -54,8 +83,7 @@ function maybeScroll(force: boolean = false) {
 const watchStopHandle = watchEffect(async () => {
   unsubscribables.forEach((u) => u.unsubscribe());
   unsubscribables = [];
-
-  content.value = [];
+  storyContent.value = [];
 
   if (account.value) {
     const authToken = await web3Auth.ensure();
@@ -66,7 +94,7 @@ const watchStopHandle = watchEffect(async () => {
         storyId: story.id,
       })
       .then((data) => {
-        content.value.push(...data.map((d) => markRaw(new Content(d))));
+        storyContent.value.push(...data.map((d) => markRaw(new Content(d))));
 
         nextTick(() => {
           maybeScroll(true);
@@ -81,8 +109,7 @@ const watchStopHandle = watchEffect(async () => {
         },
         {
           onData: (data) => {
-            content.value.push(markRaw(new Content(data)));
-
+            storyContent.value.push(markRaw(new Content(data)));
             nextTick(maybeScroll);
           },
         }
@@ -97,14 +124,60 @@ const watchStopHandle = watchEffect(async () => {
         },
         {
           onData: async (data) => {
-            const found = content.value.find((c) => c.id === data.contentId);
+            const content = storyContent.value.find(
+              (c) => c.id === data.contentId
+            );
 
-            if (!found) {
+            if (!content) {
               console.error("Content not found: ", data.contentId);
               return;
             }
 
-            found.content.value += data.token;
+            for (const char of data.token) {
+              if (char === "\n") {
+                // TODO: Mark as completed.
+              } else if (char === "[") {
+                content.entries.value.push({
+                  type: "narration",
+                  text: ref(""),
+                });
+
+                triggerRef(content.entries);
+              } else if (char === "]") {
+                const latest =
+                  content.entries.value[content.entries.value.length - 1];
+
+                if (latest.type === "narration") {
+                  content.entries.value.push({
+                    type: "utterance",
+                    text: ref(""),
+                  });
+
+                  triggerRef(content.entries);
+                } else {
+                  console.error("Unexpected token: ", char);
+                }
+              } else {
+                let latest =
+                  content.entries.value[content.entries.value.length - 1];
+
+                if (!latest) {
+                  const index = content.entries.value.push({
+                    type: "utterance",
+                    text: ref(char),
+                  });
+
+                  triggerRef(content.entries);
+
+                  latest = content.entries.value[index - 1];
+                }
+
+                latest.text.value += char;
+                triggerRef(latest.text);
+              }
+            }
+
+            nextTick(maybeScroll);
           },
         }
       )
@@ -120,14 +193,20 @@ onUnmounted(() => {
 
 <template lang="pug">
 .box-border.flex.h-full.w-full.flex-col.gap-2.overflow-y-auto.p-3(ref="main")
-  p.bg-base-50.px-3.py-2.text-center.text-sm.font-medium.italic.text-base-400(
+  p.bg-base-50.px-3.py-2.text-sm.font-medium.italic.text-base-400(
     v-if="story.fabula"
   ) {{ story.fabula }}
-  template(v-for="message of content")
-    .flex.items-center.gap-2
-      img.box-border.aspect-square.w-9.rounded.border.object-cover(
-        v-if="message.character.ref.value"
-        :src="message.character.ref.value.imagePreviewUrl.toString()"
-      )
-      p.h-min.w-full.bg-base-50.px-3.py-2.text-sm.font-medium.leading-snug.text-base-700 {{ message.content.value }}
+  .flex.items-center.gap-2(v-for="content of storyContent")
+    img.box-border.aspect-square.w-9.rounded.border.object-cover(
+      v-if="content.character.ref.value"
+      :src="content.character.ref.value.imagePreviewUrl.toString()"
+    )
+    p.h-min.w-full.bg-base-50.px-3.py-2.text-sm.font-medium.leading-snug
+      template(v-if="content.entries.value.length === 0")
+        Spinner.h-5(:kind="'dots-fade'")
+      template(v-else v-for="entry of content.entries.value")
+        template(v-if="entry.type === 'narration'")
+          span.italic.text-base-400 {{ entry.text.value }}
+        template(v-else-if="entry.type === 'utterance'")
+          span.text-base-600 {{ entry.text.value }}
 </template>

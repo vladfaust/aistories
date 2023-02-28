@@ -35,17 +35,17 @@ async function* generateCharacterResponse({
 The following is a recording of a roleplaying chat game.
 
 [RULES]
-A message ALWAYS ends with a newline (\\n), no exceptions.
+A message ALWAYS ends with a new line (\\n).
 Player MAY skip their turn with a empty line.
-Player MUST skip if their character is currently absent.
-Third-person narration is ALWAYS wrapped in (), and ONLY in ().
-Emojis are allowed.
+Narration is ALWAYS wrapped in [], and ONLY in [].
+Narration MUST end with ".", "!", or "?".
+Narration MUST be in present tense, third-person, including the subject name.
 Any other formatting is NOT allowed.
 
 [[EXAMPLE]]
-Alice: Hey, you don't look like the other kids here, what's your story?
-Semyon: (Semyon's face lights up.) Well, I'm from the Moscow suburbs. You?
-Alisa: A music video star, don't you know? 😏 (Alice smiles.)
+<Alisa>: [Alisa pumping her fist in enthusiasm.] You can do it, Lena! Yes!
+<Lena>: [Lena grunts with determination, and after a few failed attempts she finally manages to ace that shot!]
+<Alisa>: [Alisa looks excitedly at Semyon and jokingly points her finger at him.] Now we know who's running naked! [Alice and Lena laugh as they hug each other.]
 
 ${setup ? "[SETUP]\n" + setup + "\n" : ""}
 
@@ -62,8 +62,8 @@ ${context ? "[CONTEXT]\n" + context + "\n" : ""}
 
 [RECORDING]
 ${recentLines
-  .map((l) => `${l.name}: ` + l.content)
-  .join("\n")}${currentCharacterName}:
+  .map((l) => `<${l.name}>: ` + l.content)
+  .join("\n")}\n<${currentCharacterName}>:
 `.trim();
 
   const tokenChannel = new Channel<Buffer>();
@@ -113,15 +113,14 @@ async function summarize({
 }): Promise<string> {
   const prompt = `
 Revise the summary for ${characterName}'s perspective, tailored to their personality and highlighting the key information relevant to their understanding of the story and relationships with other characters.
-The summary should be concise, under 512 tokens, and omit any irrelevant details
-.
+The summary should be concise, under 512 tokens, and omit any irrelevant details.
 DO NOT include the setup or characters in the new summary.
 ONLY include the story progression since the last summary revision.
 
 [GAME RULES]
-Messages are ALWAYS separated by newlines (\\n).
+A message ALWAYS ends with a new line (\\n).
 Player MAY skip their turn with a empty line.
-Third-person narration is ALWAYS wrapped in (), and ONLY in ().
+Third-person narration is ALWAYS wrapped in [], and ONLY in [].
 
 ${setup ? "[SETUP]\n" + setup + "\n" : ""}
 
@@ -136,7 +135,7 @@ ${characters
 ${oldSummary ? "[OLD SUMMARY]\n" + oldSummary + "\n" : ""}
 
 [NEW LINES]
-${newLines.map((l) => `${l.name}: ` + l.content).join("\n")}
+${newLines.map((l) => `<${l.name}>: ` + l.content).join("\n")}
 
 [NEW SUMMARY]
   `.trim();
@@ -435,6 +434,7 @@ async function mainLoop() {
             },
             data: {
               content: generatedline,
+              energyCost: 1,
             },
           }),
         ]);
