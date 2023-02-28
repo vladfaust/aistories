@@ -35,3 +35,8 @@ export async function ensure(): Promise<string> {
     return storage.value!;
   })());
 }
+
+export function cleanup() {
+  storage.value = null;
+  ensurePromise = null;
+}
