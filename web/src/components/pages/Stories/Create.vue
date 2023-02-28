@@ -2,7 +2,6 @@
 import Character from "@/models/Character";
 import { trpc } from "@/services/api";
 import { computed, onMounted, ref, type Ref, type ShallowRef } from "vue";
-import { tap } from "@/utils";
 import * as web3Auth from "@/services/web3Auth";
 import { useRouter } from "vue-router";
 import CharacterCard from "./Create/CharacterCard.vue";
@@ -26,10 +25,10 @@ const mayCreate = computed(() => {
 const createInProgress = ref(false);
 
 onMounted(() => {
-  trpc.character.getAll.query().then((datum) => {
-    allCharacters.value = datum.map((data) => {
-      return tap(Character.fromBackendModel(data), (c) => c.watchBalance());
-    });
+  trpc.character.index.query().then(async (ids) => {
+    allCharacters.value = (await Promise.all(
+      ids.map((id) => Character.findOrCreate(id).promise)
+    )) as Character[];
   });
 });
 
@@ -57,12 +56,10 @@ async function create() {
 
 <template lang="pug">
 .flex.w-full.justify-center.p-4
-  .flex.w-full.max-w-3xl.flex-col.gap-4.py-6
-    h1.text-3xl.font-extrabold.uppercase.leading-none.tracking-wider New story
-
-    h2.text-xl.leading-none Choose protagonist
+  .flex.w-full.max-w-3xl.flex-col.gap-3
+    h2.text-lg.leading-none 1. Choose protagonist
     .flex.flex-col.gap-3
-      .grid.grid-cols-6.gap-3
+      .grid.grid-cols-8.gap-3
         CharacterListItem(
           v-for="character in allCharacters"
           :key="character.id"
@@ -77,9 +74,9 @@ async function create() {
         :character="selectedProtagonist"
       )
 
-    h2.text-xl.leading-none Choose characters
+    h2.text-lg.leading-none 2. Choose characters
     .flex.flex-col.gap-3
-      .grid.grid-cols-6.gap-3
+      .grid.grid-cols-8.gap-3
         CharacterListItem(
           v-for="character in allCharacters"
           :key="character.id"
@@ -95,13 +92,12 @@ async function create() {
         :character="character"
       )
 
-    h2.text-xl Write fabula (optional)
-
-    textarea.w-full.rounded.border.p-4.leading-tight(
+    h2.text-lg.leading-none 3. Write fabula (optional)
+    textarea.w-full.rounded.border.p-3.leading-tight(
       v-model="fabula"
       rows=3
       placeholder="Write your story here..."
     )
 
-    button.btn.btn-primary.btn-lg(@click="create" :disabled="!mayCreate") Embark
+    button.btn.btn-primary.w-full(@click="create" :disabled="!mayCreate") Embark 🚀
 </template>

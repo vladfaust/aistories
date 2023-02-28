@@ -4,7 +4,7 @@
 
 @layer components {
   .btn {
-    @apply rounded py-2 px-4 text-base font-semibold leading-none;
+    @apply flex items-center justify-center rounded py-3 px-4 text-center font-semibold leading-none;
     @apply disabled_cursor-not-allowed disabled_opacity-50;
     @apply pressable cursor-pointer select-none transition;
   }
@@ -23,6 +23,10 @@
 
   .btn-success {
     @apply bg-emerald-500 text-white;
+  }
+
+  .btn-error {
+    @apply bg-red-500 text-white;
   }
 
   .btn-web3 {

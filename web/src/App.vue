@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import HeaderVue from "@/components/Header.vue";
+import FooterVue from "@/components/Footer.vue";
 import { autoConnect } from "@/services/eth";
 import { useRoute } from "vue-router";
 import "animate.css";
@@ -15,6 +16,7 @@ HeaderVue
 RouterView(v-slot="{ Component }")
   Transition(name="fade" mode="out-in")
     Component(:is="Component" :key="route.path")
+FooterVue
 </template>
 
 <style lang="scss">

@@ -18,9 +18,6 @@ module.exports = {
           "50%": { backgroundPosition: "100% 50%" },
         },
       },
-      fontFamily: {
-        sans: ["Montserrat", ...defaultTheme.fontFamily.sans],
-      },
     },
   },
   separator: "_",

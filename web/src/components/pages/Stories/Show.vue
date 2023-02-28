@@ -11,9 +11,9 @@ const { story } = defineProps<{
 </script>
 
 <template lang="pug">
-.flex.w-full.justify-center.p-4(style="height: calc(100vh - 5rem)")
+.flex.w-full.justify-center.p-4(style="height: calc(100vh - 8rem)")
   template(v-if="story.resolved")
-    .flex.w-full.max-w-3xl.flex-col.divide-y.overflow-hidden.rounded-lg.border(
+    .flex.w-full.max-w-3xl.flex-col.divide-y.overflow-hidden.rounded.border(
       v-if="story.ref.value"
     )
       Header(:story="story.ref.value")

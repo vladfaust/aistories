@@ -7,10 +7,10 @@ const { story } = defineProps<{
 </script>
 
 <template lang="pug">
-.flex.items-center.justify-between.p-4
-  .flex.items-center.gap-2.pl-5
+.box-border.flex.items-center.justify-between.p-3
+  .flex.items-center.gap-2.pl-6
     template(v-for="character in story.characters.slice().reverse()")
-      img.-ml-5.h-10.w-10.rounded-full.border.bg-base-50.object-cover(
+      img.-ml-7.h-8.w-8.rounded-full.border.bg-base-50.object-cover(
         v-if="character.ref.value"
         :src="character.ref.value.imagePreviewUrl.toString()"
       )

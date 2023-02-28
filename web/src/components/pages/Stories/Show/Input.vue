@@ -1,23 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { useLocalStorage } from "@vueuse/core";
 import Story from "@/models/Story";
 import { trpc } from "@/services/api";
 import * as web3Auth from "@/services/web3Auth";
-import Currency from "@/components/utility/Currency.vue";
-import { addRemoveClassAfterTimeout } from "@/utils";
 import { type Unsubscribable } from "@trpc/server/observable";
-
-const ENERGY_COST = 1;
 
 const { story } = defineProps<{
   story: Story;
 }>();
 
 const nextActorId = ref(0);
-
-const energy = useLocalStorage("energy", 0);
-const energyRef = ref<any | null>(null);
 
 const inputText = ref("");
 const textarea = ref<HTMLTextAreaElement | null>(null);
@@ -26,9 +18,7 @@ const inputLocked = ref(false);
 
 const inputDisabled = computed(() => {
   return (
-    inputLocked.value ||
-    userCharacter.value.ref.value?.id !== nextActorId.value ||
-    energy.value < ENERGY_COST
+    inputLocked.value || userCharacter.value.ref.value?.id !== nextActorId.value
   );
 });
 
@@ -40,22 +30,11 @@ const maySend = computed(() => {
   return (
     userCharacter.value.ref.value?.id === nextActorId.value &&
     inputText.value &&
-    inputText.value.trim().length > 0 &&
-    energy.value >= ENERGY_COST
+    inputText.value.trim().length > 0
   );
 });
 
 async function sendMessage() {
-  if (energy.value < ENERGY_COST) {
-    // Add a little animation to the energy button
-    addRemoveClassAfterTimeout(
-      energyRef.value!.$el,
-      ["animate__animated", "animate__headShake"],
-      1000
-    );
-  }
-
-  console.log("maySend", maySend.value);
   if (!maySend.value) return;
 
   inputLocked.value = true;
@@ -99,28 +78,22 @@ onUnmounted(() => {
 </script>
 
 <template lang="pug">
-.relative.flex.h-14.w-full
-  .absolute.top-2.left-2(v-if="userCharacter?.ref.value")
-    img.h-10.w-10.rounded-full.border.object-cover(
-      :src="userCharacter.ref.value.imagePreviewUrl.toString()"
-    )
-  textarea.h-full.w-full.resize-none.py-4.pl-14.pr-12.leading-tight(
+.box-border.flex.w-full.items-center.gap-2.p-3(
+  :class="{ 'bg-base-100': inputDisabled }"
+)
+  img.box-border.aspect-square.h-9.rounded.border.object-cover(
+    v-if="userCharacter?.ref.value"
+    :src="userCharacter.ref.value.imagePreviewUrl.toString()"
+  )
+  textarea.w-full.resize-none.bg-base-50.px-3.py-2.text-sm.leading-tight(
     ref="textarea"
     placeholder="Write a message..."
     @keypress.enter.prevent.exact="sendMessage"
     v-model="inputText"
     :disabled="inputDisabled"
+    :class="{ 'cursor-not-allowed': inputDisabled }"
     rows="1"
     @focus="textareaFocused = true"
     @blur="textareaFocused = false"
   )
-  .absolute.right-0.top-0.flex.h-full.items-center.justify-center.p-2
-    .flex.cursor-help.items-center.rounded-lg.bg-base-50.py-2.pl-4.pr-3.transition-colors(
-      ref="energyRef"
-      :title="`A message costs ${ENERGY_COST} energy`"
-    )
-      span.font-medium(
-        :class="energy >= ENERGY_COST ? 'text-base-500' : textareaFocused ? 'text-red-500' : 'text-base-500'"
-      ) {{ ENERGY_COST }}
-      Currency.h-5.w-5
 </template>

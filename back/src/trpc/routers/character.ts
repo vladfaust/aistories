@@ -5,19 +5,17 @@ import z from "zod";
 const prisma = new PrismaClient();
 
 export default t.router({
-  getAll: t.procedure.query(async () => {
-    return prisma.character.findMany({
-      select: {
-        id: true,
-        imagePreviewUrl: true,
-        name: true,
-        title: true,
-        about: true,
-        erc1155Address: true,
-        erc1155Id: true,
-        erc1155NftUri: true,
-      },
-    });
+  /**
+   * Returns a list of all character IDs.
+   */
+  index: t.procedure.query(async () => {
+    return (
+      await prisma.character.findMany({
+        select: {
+          id: true,
+        },
+      })
+    ).map((c) => c.id);
   }),
 
   find: t.procedure

@@ -9,15 +9,11 @@ const router = createRouter({
       component: () => import("@/components/pages/Stories/Index.vue"),
     },
     {
-      path: "/stories",
-      component: () => import("@/components/pages/Stories/Index.vue"),
-    },
-    {
-      path: "/stories/new",
+      path: "/new",
       component: () => import("@/components/pages/Stories/Create.vue"),
     },
     {
-      path: "/stories/:id",
+      path: "/:id",
       component: () => import("@/components/pages/Stories/Show.vue"),
       props: (route) => ({
         story: Story.findOrCreate(parseInt(route.params.id as string)),
@@ -26,6 +22,11 @@ const router = createRouter({
     {
       path: "/energy",
       component: () => import("@/components/pages/Energy.vue"),
+    },
+    {
+      path: "/user/:address",
+      component: () => import("@/components/pages/Profile.vue"),
+      props: true,
     },
   ],
 });

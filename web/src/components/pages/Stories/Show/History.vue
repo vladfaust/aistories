@@ -27,7 +27,6 @@ import {
   ref,
   type ShallowRef,
   watchEffect,
-  computed,
   markRaw,
   nextTick,
   onUnmounted,
@@ -35,8 +34,6 @@ import {
 import * as web3Auth from "@/services/web3Auth";
 import { trpc } from "@/services/api";
 import { useScroll } from "@vueuse/core";
-import Spinner from "@/components/utility/Spinner.vue";
-import Jdenticon from "@/components/utility/Jdenticon.vue";
 import { type Unsubscribable } from "@trpc/server/observable";
 import { Deferred } from "@/utils/deferred";
 import Character from "@/models/Character";
@@ -122,19 +119,15 @@ onUnmounted(() => {
 </script>
 
 <template lang="pug">
-.flex.h-full.w-full.flex-col.gap-3.overflow-y-auto.p-4(ref="main")
-  p.rounded-lg.bg-base-50.p-4.text-center.text-sm.font-medium.italic.text-base-500(
+.box-border.flex.h-full.w-full.flex-col.gap-2.overflow-y-auto.p-3(ref="main")
+  p.bg-base-50.px-3.py-2.text-center.text-sm.font-medium.italic.text-base-400(
     v-if="story.fabula"
   ) {{ story.fabula }}
   template(v-for="message of content")
-    .flex.gap-2
-      img.h-10.w-10.rounded-full.object-cover(
+    .flex.items-center.gap-2
+      img.box-border.aspect-square.w-9.rounded.border.object-cover(
         v-if="message.character.ref.value"
         :src="message.character.ref.value.imagePreviewUrl.toString()"
       )
-      p.rounded-lg.rounded-tl-none.bg-base-50.px-3.py-2.leading-snug
-        span(v-if="message.content.value.length > 0")
-          | {{ message.content.value }}
-        span.select-none(v-else)
-          Spinner.inline-block.h-4.w-4(kind="dots-fade")
+      p.h-min.w-full.bg-base-50.px-3.py-2.text-sm.font-medium.leading-snug.text-base-700 {{ message.content.value }}
 </template>
