@@ -32,16 +32,13 @@ onUnmounted(cancelWatch);
   .flex.w-full.max-w-3xl.flex-col.items-center.gap-3
     p.bg-nft.bg-x2.w-full.animate-bg-position.rounded.p-8.text-center.leading-none.text-white.shadow
       span.text-3xl.font-medium
-        span ai
-        span.font-semibold stories
-        span .xyz
+        | aistories.xyz
         span.select-none ™️
-        sup.select-none.text-white.text-opacity-50(title="beta") (β)
       br
       span.text-lg
         | is&nbsp;
         i the
-        | &nbsp;place to relive infinite stories in the company of AI.
+        | &nbsp;place to relive infinite stories with AI characters.
       br
       span.text-2xl ❤️💀🤖
 

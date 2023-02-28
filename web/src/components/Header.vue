@@ -52,11 +52,8 @@ header.flex.h-16.w-full.place-content-center.border-y.p-4
     ul._left.flex.items-center.gap-6
       li
         RouterLink.pressable.block.text-lg.transition-transform(to="/")
-          span ai
-          span.font-medium stories
-          span .xyz
+          | aistories.xyz
           span.select-none ™️
-          sup.select-none.text-base-400(title="beta") (β)
     .flex.items-center.justify-center
     ul.flex.items-center.justify-end.gap-2
       template(v-if="account")
