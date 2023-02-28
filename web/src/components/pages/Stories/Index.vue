@@ -4,9 +4,6 @@ import { ref, type ShallowRef, watchEffect, onUnmounted } from "vue";
 import * as web3Auth from "@/services/web3Auth";
 import { account } from "@/services/eth";
 import Story from "@/models/Story";
-import { useRouter } from "vue-router";
-
-const router = useRouter();
 
 const stories: ShallowRef<Story[]> = ref([]);
 
@@ -24,10 +21,6 @@ const cancelWatch = watchEffect(async () => {
         userMap: JSON.parse(data.userMap) as Record<number, number>,
       })
     );
-
-    if (stories.value.length === 0) {
-      router.push("/stories/new");
-    }
   }
 });
 
