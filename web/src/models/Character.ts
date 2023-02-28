@@ -1,11 +1,13 @@
 import { trpc } from "@/services/api";
 import { account, getErc1155Balance } from "@/services/eth";
+import { tap } from "@/utils";
 import { Deferred } from "@/utils/deferred";
 import { BigNumber, ethers } from "ethers";
 import { computed, markRaw, ref, Ref, watch } from "vue";
 
 export default class Character {
   static cache = new Map<number, Deferred<Character | null>>();
+
   private _fetchBalancePromise?: Promise<BigNumber | undefined>;
   readonly collected = computed(
     () => !this.erc1155Token || this.balance.value?.gt(0)
@@ -22,7 +24,9 @@ export default class Character {
 
       trpc.character.find.query({ id }).then((data) => {
         if (data) {
-          char!.resolve(Character.fromBackendModel(data));
+          char!.resolve(
+            tap(Character.fromBackendModel(data), (c) => c.watchBalance())
+          );
         } else {
           char!.resolve(null);
         }
@@ -74,11 +78,11 @@ export default class Character {
     readonly balance: Ref<BigNumber | undefined> = ref()
   ) {}
 
-  watchBalance() {
+  private watchBalance() {
     return watch(
       account,
       (account) => {
-        console.log("watchBalance", account);
+        console.debug("watchBalance", account);
         this.balance.value = undefined;
         this._fetchBalancePromise = undefined;
         if (account) this.fetchBalance(account);
