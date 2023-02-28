@@ -97,7 +97,7 @@ async function create() {
 
     h2.text-xl Write fabula (optional)
 
-    textarea.w-full.rounded.border.p-4(
+    textarea.w-full.rounded.border.p-4.leading-tight(
       v-model="fabula"
       rows=3
       placeholder="Write your story here..."

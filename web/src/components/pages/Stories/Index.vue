@@ -54,8 +54,11 @@ onUnmounted(cancelWatch);
               )
 
           .flex.flex-col.overflow-hidden
-            span.font-semibold.leading-tight {{ story.name || "Story with " + story.characters.map((c) => c.ref.value?.name).join(", ") }}
-            .flex.gap-1(v-if="story.latestContent")
+            RouterLink.link-hover.w-max.font-semibold.leading-tight(
+              :to="'/stories/' + story.id"
+            )
+              | {{ story.name || "Story with " + story.characters.map((c) => c.ref.value?.name).join(", ") }}
+            .flex.items-center.gap-1(v-if="story.latestContent")
               img.h-6.w-6.rounded-full.border.bg-base-50.object-cover(
                 v-if="story.latestContent.character.ref.value"
                 :src="story.latestContent.character.ref.value.imagePreviewUrl.toString()"
