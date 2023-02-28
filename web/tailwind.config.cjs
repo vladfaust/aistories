@@ -18,6 +18,9 @@ module.exports = {
           "50%": { backgroundPosition: "100% 50%" },
         },
       },
+      fontFamily: {
+        sans: ["Golos Text", ...defaultTheme.fontFamily.sans],
+      },
     },
   },
   separator: "_",
