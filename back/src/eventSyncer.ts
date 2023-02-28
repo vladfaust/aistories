@@ -6,6 +6,10 @@ import { BigNumber, ethers } from "ethers";
 import { OnChainEnergyPurchase, PrismaClient } from "@prisma/client";
 import { toBuffer } from "./utils";
 import { pipe, subscribe } from "wonka";
+import * as settings from "@/settings";
+
+const EXCHANGE_RATE = parseFloat(await settings.get("energyExchangeRate"));
+const MIN_VALUE = parseFloat(await settings.get("energyExchangeMinValue"));
 
 type Log = {
   block: {
@@ -72,10 +76,8 @@ async function logToOnChainEnergyPurchaseObject(
   return obj;
 }
 
-const EXCHANGE_RATE = 25; // X energy per 1 ETH
-const MIN_VALUE = 0.05; // In ETH
+const prisma = new PrismaClient();
 const minAmount = ethers.utils.parseEther(MIN_VALUE.toString());
-
 const iface = new ethers.utils.Interface(receiverAbi);
 const receiveEventTopic = iface.getEventTopic("Receive");
 
@@ -135,8 +137,6 @@ const SUBSCRIBE_TO_LOGS_GQL = gql`
       topics
     }
   }`;
-
-const prisma = new PrismaClient();
 
 let latestOnChainEnergyPurchaseBlock =
   (

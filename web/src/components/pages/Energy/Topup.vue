@@ -6,8 +6,16 @@ import config from "@/config";
 import { addRemoveClassAfterTimeout, sleep } from "@/utils";
 import Spinner from "@/components/utility/Spinner2.vue";
 import { createTreats } from "@/modules/treat";
+import { trpc } from "@/services/api";
 
-const EXCHANGE_RATE = 20; // X energy for 1 value
+const EXCHANGE_RATE = parseFloat(
+  await trpc.settings.get.query("energyExchangeRate")
+);
+
+const MIN_VALUE = parseFloat(
+  await trpc.settings.get.query("energyExchangeMinValue")
+);
+
 const PRECISION = 4;
 
 const inputValue = ref(5);
@@ -98,7 +106,7 @@ watch(inputValue, (val) => {
   button.btn.btn-web3.w-full.leading-none(
     ref="transferButtonRef"
     v-if="transferStage == TransferStage.None"
-    :disabled="inputEnergy <= 0 || !provider"
+    :disabled="inputEnergy < MIN_VALUE || !provider"
     @click="transfer"
   )
     | Purchase {{ inputEnergy || 0 }} energy for {{ ethers.utils.formatEther(finalCost) }} MATIC

@@ -10,6 +10,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Settings {
+  key         String   @id
+  value       String
+  description String
+  updatedAt   DateTime @updatedAt
+}
+
 model User {
   id Int @id @default(autoincrement())
 
