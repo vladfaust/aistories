@@ -18,27 +18,40 @@ model Settings {
 }
 
 model User {
-  id Int @id @default(autoincrement())
+  id Int @id @default(autoincrement()) // TODO: Nanoid
 
-  evmAddress Bytes @unique
+  createdAt DateTime @default(now())
 
-  OnChainEnergyPurchases OnChainEnergyPurchase[]
-  Stories                Story[] // Stories the user is participating in
-  Content                StoryContent[] // User-generated content
+  Stories Story[] // Stories the user is participating in
+  Content StoryContent[] // User-generated content
+
+  // NOTE: For now, only a single web3 identity per user is supported.
+  Web3Identities Web3Identity[]
 }
 
-model OnChainEnergyPurchase {
+model Web3Identity {
+  address Bytes @id
+  userId  Int
+
+  User            User                 @relation(fields: [userId], references: [id])
+  EnergyPurchases Web3EnergyPurchase[]
+
+  @@unique([address, userId])
+}
+
+model Web3EnergyPurchase {
+  address Bytes
+
   blockNumber Int
   logIndex    Int
 
   txHash    Bytes
   blockTime DateTime
 
-  userId Int
   energy Int
   value  Bytes // In native token
 
-  User User @relation(fields: [userId], references: [id])
+  Identity Web3Identity @relation(fields: [address], references: [address])
 
   @@id([blockNumber, logIndex])
 }

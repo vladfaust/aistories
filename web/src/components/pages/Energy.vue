@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useLocalStorage } from "@vueuse/core";
 import Spinner2 from "../utility/Spinner2.vue";
-import Topup from "./Energy/Topup.vue";
+import Web3Topup from "./Energy/Web3Topup.vue";
 
 const energy = useLocalStorage("energy", 0);
 </script>
@@ -19,7 +19,7 @@ const energy = useLocalStorage("energy", 0);
     | Your current balance is ⚡️{{ energy }}.
 
   Suspense
-    Topup.gap-2.rounded.border.p-3(class="mt-0.5")
+    Web3Topup.gap-2.rounded.border.p-3(class="mt-0.5")
     template(#fallback)
       .flex.justify-center
         Spinner2.h-5.animate-spin

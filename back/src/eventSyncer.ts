@@ -3,10 +3,12 @@ import { gql } from "@urql/core";
 import config from "@/config";
 import receiverAbi from "~/abi/receiver.json" assert { type: "json" };
 import { BigNumber, ethers } from "ethers";
-import { OnChainEnergyPurchase, PrismaClient } from "@prisma/client";
-import { toBuffer } from "./utils";
+import { Web3EnergyPurchase, PrismaClient } from "@prisma/client";
+import { toBuffer, toHex } from "./utils";
 import { pipe, subscribe } from "wonka";
 import * as settings from "@/settings";
+import pRetry from "p-retry";
+import konsole from "./services/konsole";
 
 const EXCHANGE_RATE = parseFloat(await settings.get("energyExchangeRate"));
 const MIN_VALUE = parseFloat(await settings.get("energyExchangeMinValue"));
@@ -24,10 +26,11 @@ type Log = {
   topics: string[];
 };
 
-async function logToOnChainEnergyPurchaseObject(
+const prisma = new PrismaClient();
+
+async function logToEnergyPurchaseObject(
   log: Log
-): Promise<OnChainEnergyPurchase | null> {
-  console.debug("Processing log", log);
+): Promise<Web3EnergyPurchase | null> {
   const amount = BigNumber.from(log.data);
 
   if (amount.lt(minAmount)) {
@@ -35,28 +38,35 @@ async function logToOnChainEnergyPurchaseObject(
     return null;
   }
 
-  const evmAddress = toBuffer("0x" + log.topics[1].slice(26));
+  const address = toBuffer("0x" + log.topics[1].slice(26));
 
-  let user;
+  // FIXME: Transaction fails on multiple concurrent requests,
+  // so had to wrap it in a retry.
+  const identity = await pRetry(() =>
+    prisma.$transaction(async (prisma) => {
+      let identity = await prisma.web3Identity.findUnique({
+        where: { address },
+        select: { address: true },
+      });
 
-  // OPTIMIZE: Upsert is not atomic, so we need to catch the error and try again.
-  try {
-    user = await prisma.user.upsert({
-      where: {
-        evmAddress,
-      },
-      update: {},
-      create: {
-        evmAddress,
-      },
-    });
-  } catch (e) {
-    user = await prisma.user.findUniqueOrThrow({
-      where: {
-        evmAddress,
-      },
-    });
-  }
+      if (!identity) {
+        const user = await prisma.user.create({
+          data: {},
+          select: { id: true },
+        });
+
+        identity = await prisma.web3Identity.create({
+          data: {
+            address,
+            userId: user.id,
+          },
+          select: { address: true },
+        });
+      }
+
+      return identity;
+    })
+  );
 
   const energy = amount
     .mul(EXCHANGE_RATE)
@@ -64,11 +74,11 @@ async function logToOnChainEnergyPurchaseObject(
     .toNumber();
 
   const obj = {
+    address: identity.address,
     blockNumber: log.block.number,
     logIndex: log.logIndex,
     txHash: toBuffer(log.transaction.hash),
     blockTime: new Date(log.block.timestamp * 1000),
-    userId: user.id,
     energy,
     value: toBuffer(amount._hex),
   };
@@ -76,7 +86,6 @@ async function logToOnChainEnergyPurchaseObject(
   return obj;
 }
 
-const prisma = new PrismaClient();
 const minAmount = ethers.utils.parseEther(MIN_VALUE.toString());
 const iface = new ethers.utils.Interface(receiverAbi);
 const receiveEventTopic = iface.getEventTopic("Receive");
@@ -138,15 +147,11 @@ const SUBSCRIBE_TO_LOGS_GQL = gql`
     }
   }`;
 
-let latestOnChainEnergyPurchaseBlock =
+let latestEnergyPurchaseBlock =
   (
-    await prisma.onChainEnergyPurchase.findFirst({
-      orderBy: {
-        blockNumber: "desc",
-      },
-      select: {
-        blockNumber: true,
-      },
+    await prisma.web3EnergyPurchase.findFirst({
+      orderBy: { blockNumber: "desc" },
+      select: { blockNumber: true },
     })
   )?.blockNumber ?? 0;
 
@@ -161,11 +166,14 @@ const { unsubscribe } = pipe(
     const log: Log | undefined = result.data?.log;
     if (!log) throw new Error("No data received");
 
-    const event = await logToOnChainEnergyPurchaseObject(log);
+    const event = await logToEnergyPurchaseObject(log);
     if (event) {
-      console.log(`Saving realtime event`, event);
+      konsole.log(["Web3EnergyPurchase"], `New purchase! 🤑`, {
+        address: toHex(event.address),
+        value: ethers.utils.formatEther(event.value),
+      });
 
-      return prisma.onChainEnergyPurchase.createMany({
+      return prisma.web3EnergyPurchase.createMany({
         data: [event],
         skipDuplicates: true,
       });
@@ -173,7 +181,7 @@ const { unsubscribe } = pipe(
   })
 );
 
-let fromBlock = latestOnChainEnergyPurchaseBlock;
+let fromBlock = latestEnergyPurchaseBlock;
 let logIndicesFromTheLatestBlock: number[] = [];
 
 // Query for all contract logs from the latest block to the current block.
@@ -204,18 +212,18 @@ while (fromBlock < latestChainBlockNumber) {
   }
 
   const events = (
-    await Promise.all(logs.map(logToOnChainEnergyPurchaseObject))
-  ).filter((x) => x) as OnChainEnergyPurchase[];
+    await Promise.all(logs.map(logToEnergyPurchaseObject))
+  ).filter((x) => x) as Web3EnergyPurchase[];
 
   if (events.length) {
-    console.log(`Saving ${events.length} historical events`, events);
+    console.log(`Saving ${events.length} historical events`);
 
-    await prisma.onChainEnergyPurchase.createMany({
+    await prisma.web3EnergyPurchase.createMany({
       data: events,
       skipDuplicates: true,
     });
 
-    latestOnChainEnergyPurchaseBlock = events[events.length - 1].blockNumber;
+    latestEnergyPurchaseBlock = events[events.length - 1].blockNumber;
   }
 
   fromBlock = logs[logs.length - 1].block.number;

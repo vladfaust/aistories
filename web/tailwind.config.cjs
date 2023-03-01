@@ -8,6 +8,7 @@ module.exports = {
     extend: {
       colors: {
         base: colors.slate,
+        primary: colors.blue,
       },
       animation: {
         "bg-position": "bg-position 4s ease infinite",

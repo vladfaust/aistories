@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import Story from "@/models/Story";
-import { trpc } from "@/services/api";
-import * as web3Auth from "@/services/web3Auth";
+import * as api from "@/services/api";
 import { type Unsubscribable } from "@trpc/server/observable";
 
 const { story } = defineProps<{
@@ -42,8 +41,7 @@ async function sendMessage() {
   const text = inputText.value.trim();
 
   try {
-    await trpc.story.addContent.mutate({
-      authToken: await web3Auth.ensure(),
+    await api.commands.story.addContent.mutate({
       storyId: story.id,
       content: text,
     });
@@ -59,11 +57,8 @@ let unsub: Unsubscribable;
 onMounted(async () => {
   textarea.value!.focus();
 
-  unsub = trpc.story.onTurn.subscribe(
-    {
-      authToken: await web3Auth.ensure(),
-      storyId: story.id,
-    },
+  unsub = api.subscriptions.story.onTurn.subscribe(
+    { storyId: story.id },
     {
       onData: (data) => {
         nextActorId.value = data.nextCharId;

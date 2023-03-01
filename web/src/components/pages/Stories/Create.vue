@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import Character from "@/models/Character";
-import { trpc } from "@/services/api";
+import * as api from "@/services/api";
+import { userId } from "@/store";
 import { computed, onMounted, ref, type Ref, type ShallowRef } from "vue";
-import * as web3Auth from "@/services/web3Auth";
 import { useRouter } from "vue-router";
 import CharacterCard from "./Create/CharacterCard.vue";
 import CharacterListItem from "./Create/CharacterListItem.vue";
@@ -25,7 +25,7 @@ const mayCreate = computed(() => {
 const createInProgress = ref(false);
 
 onMounted(() => {
-  trpc.character.index.query().then(async (ids) => {
+  api.commands.character.index.query().then(async (ids) => {
     allCharacters.value = (await Promise.all(
       ids.map((id) => Character.findOrCreate(id).promise)
     )) as Character[];
@@ -34,11 +34,16 @@ onMounted(() => {
 
 async function create() {
   if (!mayCreate.value) return;
+
+  if (!userId.value) {
+    alert("You must be logged in to create a story.");
+    return;
+  }
+
   createInProgress.value = true;
 
   try {
-    const storyId = await trpc.story.create.mutate({
-      authToken: await web3Auth.ensure(),
+    const storyId = await api.commands.story.create.mutate({
       nonUserCharacterIds: [...selectedCharactes.value.values()].map(
         (c) => c.id
       ),
@@ -93,8 +98,8 @@ async function create() {
 
   h2.text-lg.leading-none 3. Write fabula (optional)
   textarea.w-full.rounded.border.p-3.leading-tight(
+    class="min-h-[4rem]"
     v-model="fabula"
-    rows=3
     placeholder="Write your story here..."
   )
 

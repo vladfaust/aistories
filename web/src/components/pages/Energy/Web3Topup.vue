@@ -6,14 +6,14 @@ import config from "@/config";
 import { addRemoveClassAfterTimeout, sleep } from "@/utils";
 import Spinner from "@/components/utility/Spinner2.vue";
 import { createTreats } from "@/modules/treat";
-import { trpc } from "@/services/api";
+import * as api from "@/services/api";
 
 const EXCHANGE_RATE = parseFloat(
-  await trpc.settings.get.query("energyExchangeRate")
+  await api.commands.settings.get.query("energyExchangeRate")
 );
 
 const MIN_VALUE = parseFloat(
-  await trpc.settings.get.query("energyExchangeMinValue")
+  await api.commands.settings.get.query("energyExchangeMinValue")
 );
 
 const PRECISION = 4;

@@ -1,10 +1,9 @@
 import konsole from "@/services/konsole";
-import { upsertUser } from "@/trpc/context";
 import { chooseRandom } from "@/utils";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { t } from "../../index";
-import { getEnergyBalance } from "../user/energy";
+import { protectedProcedure } from "@/trpc/middleware/auth";
+import { getEnergyBalance } from "@/logic/getEnergyBalance";
 
 const prisma = new PrismaClient();
 
@@ -12,17 +11,14 @@ const prisma = new PrismaClient();
  * Send a message to a story.
  * Requires energy.
  */
-export default t.procedure
+export default protectedProcedure
   .input(
     z.object({
-      authToken: z.string(),
       storyId: z.number().positive(),
       content: z.string(),
     })
   )
-  .mutation(async ({ input }) => {
-    const inputAuth = await upsertUser(input.authToken);
-
+  .mutation(async ({ ctx, input }) => {
     const content = await prisma.$transaction(async (p) => {
       const story = await p.story.findUnique({
         where: {
@@ -39,7 +35,7 @@ export default t.procedure
       });
 
       // Check that the user has access to the story.
-      if (!story || !story.userIds.includes(inputAuth.id)) {
+      if (!story || !story.userIds.includes(ctx.user.id)) {
         throw new Error("Story not found");
       }
 
@@ -48,7 +44,7 @@ export default t.procedure
         throw new Error("Story is busy");
       }
 
-      const userCharId = JSON.parse(story.userMap)[inputAuth.id] as number;
+      const userCharId = JSON.parse(story.userMap)[ctx.user.id] as number;
 
       // Check that the user is the next actor.
       if (story.nextCharId !== userCharId) {
@@ -56,7 +52,7 @@ export default t.procedure
       }
 
       // @ts-expect-error 2345
-      const energy = await getEnergyBalance(inputAuth.id, p);
+      const energy = await getEnergyBalance(ctx.user.id, p);
 
       // Check that user has enough energy.
       if (energy < 1) {
@@ -67,7 +63,7 @@ export default t.procedure
         data: {
           storyId: input.storyId,
           charId: userCharId,
-          userId: inputAuth.id,
+          userId: ctx.user.id,
           energyCost: 1,
           content: input.content,
         },
@@ -94,7 +90,7 @@ export default t.procedure
 
     konsole.log(["story", "addContent"], "User content", {
       storyId: input.storyId,
-      userId: inputAuth.id,
+      userId: ctx.user.id,
       content: input.content,
     });
 

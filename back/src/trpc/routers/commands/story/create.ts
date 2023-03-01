@@ -1,9 +1,8 @@
 import { erc1155Balance } from "@/services/eth";
-import { upsertUser } from "@/trpc/context";
 import { chooseRandom, toHex } from "@/utils";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { t } from "../../../trpc/index";
+import { protectedProcedure } from "@/trpc/middleware/auth";
 
 const prisma = new PrismaClient();
 
@@ -12,10 +11,9 @@ const prisma = new PrismaClient();
  * Requires ownership of the character.
  * TODO: Multiple characters per story.
  */
-export default t.procedure
+export default protectedProcedure
   .input(
     z.object({
-      authToken: z.string(),
       userCharacterId: z.number().positive(),
 
       // FIXME: Use `zod.set`.
@@ -25,9 +23,7 @@ export default t.procedure
       fabula: z.string().optional(),
     })
   )
-  .mutation(async ({ input }) => {
-    const inputAuth = await upsertUser(input.authToken);
-
+  .mutation(async ({ ctx, input }) => {
     // 1. Check that the character exists.
     // 2. Check that the user owns the character.
     // 3. Create a new story.
@@ -64,10 +60,23 @@ export default t.procedure
       if (character.erc1155Address) {
         if (!character.erc1155Id) throw new Error("Invalid ERC1155 id");
 
+        const web3Identity = await prisma.web3Identity.findFirst({
+          where: {
+            userId: ctx.user.id,
+          },
+          select: {
+            address: true,
+          },
+        });
+
+        if (!web3Identity) {
+          throw new Error("User has no Web3 provider");
+        }
+
         const balance = await erc1155Balance(
           toHex(character.erc1155Address),
           toHex(character.erc1155Id),
-          toHex(inputAuth.evmAddress)
+          toHex(web3Identity.address)
         );
 
         if (balance.isZero()) {
@@ -79,8 +88,8 @@ export default t.procedure
     const story = await prisma.story.create({
       data: {
         charIds: [input.userCharacterId, ...nonUserCharacterIds],
-        userIds: [inputAuth.id],
-        userMap: JSON.stringify({ [inputAuth.id]: input.userCharacterId }),
+        userIds: [ctx.user.id],
+        userMap: JSON.stringify({ [ctx.user.id]: input.userCharacterId }),
         nextCharId: chooseRandom([...nonUserCharacterIds]),
         setup: input.setup,
         fabula: input.fabula,

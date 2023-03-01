@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { trpc } from "@/services/api";
+import * as api from "@/services/api";
 import { ref, type ShallowRef, watchEffect, onUnmounted } from "vue";
-import * as web3Auth from "@/services/web3Auth";
 import { account } from "@/services/eth";
 import Story from "@/models/Story";
 
@@ -11,11 +10,7 @@ const cancelWatch = watchEffect(async () => {
   stories.value = [];
 
   if (account.value) {
-    stories.value = (
-      await trpc.story.list.query({
-        authToken: await web3Auth.ensure(),
-      })
-    ).map((data) =>
+    stories.value = (await api.commands.story.list.query()).map((data) =>
       Story.fromBackendModel({
         ...data,
         userMap: JSON.parse(data.userMap) as Record<number, number>,

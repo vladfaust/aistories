@@ -6,10 +6,12 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 export async function get(key: string): Promise<string> {
-  const result = await prisma.settings.findUniqueOrThrow({
+  const result = await prisma.settings.findUnique({
     where: { key },
     select: { value: true },
   });
+
+  if (!result) throw new Error(`Setting "${key}" not found.`);
 
   return result.value;
 }

@@ -1,43 +1,47 @@
 <script setup lang="ts">
-import { trpc } from "@/services/api";
+import * as api from "@/services/api";
 import { type Unsubscribable } from "@trpc/server/observable";
-import { connect, account } from "@/services/eth";
 import { addRemoveClassAfterTimeout } from "@/utils";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import Jdenticon from "./utility/Jdenticon.vue";
-import * as web3Auth from "@/services/web3Auth";
 import { energy } from "@/store";
+import { userId } from "@/store";
 
 let energyUnsubscribable: Unsubscribable | undefined;
 let watchStopHandle: () => void;
 const energyRef = ref<any | null>(null);
 
 onMounted(() => {
-  watchStopHandle = watch(account, async (newAccount) => {
-    energyUnsubscribable?.unsubscribe();
+  watchStopHandle = watch(
+    userId,
+    async (newUserId) => {
+      console.log("userId changed", newUserId);
+      energyUnsubscribable?.unsubscribe();
 
-    if (newAccount) {
-      const authToken = await web3Auth.ensure();
+      if (newUserId) {
+        api.commands.user.getEnergy.query().then((res) => {
+          energy.value = res.energy;
+        });
 
-      trpc.user.energy.get.query({ authToken }).then((res) => {
-        energy.value = res.energy;
-      });
-
-      energyUnsubscribable = trpc.user.energy.onDelta.subscribe(
-        { authToken },
-        {
-          onData: (data) => {
-            energy.value! += data;
-            addRemoveClassAfterTimeout(
-              energyRef.value!.$el,
-              ["animate__animated", "animate__rubberBand", "animate__faster"],
-              1000
-            );
-          },
-        }
-      );
+        energyUnsubscribable = api.subscriptions.user.onEnergyDelta.subscribe(
+          undefined,
+          {
+            onData: (data) => {
+              energy.value! += data;
+              addRemoveClassAfterTimeout(
+                energyRef.value!.$el,
+                ["animate__animated", "animate__rubberBand", "animate__faster"],
+                1000
+              );
+            },
+          }
+        );
+      }
+    },
+    {
+      immediate: true,
     }
-  });
+  );
 });
 
 onUnmounted(() => {
@@ -47,7 +51,7 @@ onUnmounted(() => {
 </script>
 
 <template lang="pug">
-header.flex.h-16.w-full.place-content-center.border-y.p-4
+header.flex.h-16.w-full.place-content-center.border-y.px-4
   .grid.h-full.w-full.max-w-3xl.grid-cols-3
     ul._left.flex.items-center.gap-6
       li
@@ -56,7 +60,7 @@ header.flex.h-16.w-full.place-content-center.border-y.p-4
           span.select-none ™️
     .flex.items-center.justify-center
     ul.flex.items-center.justify-end.gap-2
-      template(v-if="account")
+      template(v-if="userId")
         li
           RouterLink.pressable.inline-block.transition-transform(
             ref="energyRef"
@@ -64,9 +68,9 @@ header.flex.h-16.w-full.place-content-center.border-y.p-4
           ) ⚡️{{ energy }}
         li
           RouterLink.pressable.flex.items-center.gap-2.transition-transform(
-            :to="'/user/' + account"
+            :to="'/user/' + userId"
           )
-            Jdenticon.h-8.w-8.rounded.border(:input="account")
+            Jdenticon.h-8.w-8.rounded.border(:input="userId")
       li(v-else)
-        button.btn-web3.btn.btn-sm(@click="connect") 🦊 Connect
+        RouterLink.btn-primary.btn-sm.btn(to="/login") Log in
 </template>

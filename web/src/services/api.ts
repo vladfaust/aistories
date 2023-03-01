@@ -1,17 +1,47 @@
 import {
-  createWSClient,
   createTRPCProxyClient,
-  wsLink,
+  createWSClient,
+  httpBatchLink,
   loggerLink,
+  wsLink,
 } from "@trpc/client";
-import type { AppRouter } from "@aiproject/back/trpc";
+import type { CommandsRouter, SubscriptionsRouter } from "@aiproject/back/trpc";
 import config from "../config";
 
-const wsClient = createWSClient({
-  url: config.trpcUrl.toString(),
+export const commands = createTRPCProxyClient<CommandsRouter>({
+  links: [
+    loggerLink({
+      enabled: (opts) =>
+        (process.env.NODE_ENV === "development" &&
+          typeof window !== "undefined") ||
+        (opts.direction === "down" && opts.result instanceof Error),
+    }),
+    httpBatchLink({
+      url: config.trpcHttpUrl.toString(),
+      fetch(url, options) {
+        return fetch(url, {
+          ...options,
+          credentials: "include",
+        });
+      },
+    }),
+  ],
 });
 
-const trpc = createTRPCProxyClient<AppRouter>({
+function doCreateWSClient() {
+  return createWSClient({
+    url: config.trpcWsUrl.toString(),
+  });
+}
+
+let wsClient = doCreateWSClient();
+
+export function recreateWSClient() {
+  console.log("Recreating TRPC WS client");
+  wsClient = doCreateWSClient();
+}
+
+export const subscriptions = createTRPCProxyClient<SubscriptionsRouter>({
   links: [
     loggerLink({
       enabled: (opts) =>
@@ -24,5 +54,3 @@ const trpc = createTRPCProxyClient<AppRouter>({
     }),
   ],
 });
-
-export { trpc };

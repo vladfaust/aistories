@@ -2,7 +2,7 @@
 import { type Ref, ref, onMounted, watch } from "vue";
 import * as jdenticon from "jdenticon";
 
-const props = defineProps<{ input: string }>();
+const props = defineProps<{ input: any }>();
 
 const svgRef: Ref<SVGElement | null> = ref(null);
 

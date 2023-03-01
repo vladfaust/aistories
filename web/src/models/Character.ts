@@ -1,4 +1,4 @@
-import { trpc } from "@/services/api";
+import * as api from "@/services/api";
 import { account, getErc1155Balance } from "@/services/eth";
 import { tap } from "@/utils";
 import { Deferred } from "@/utils/deferred";
@@ -22,7 +22,7 @@ export default class Character {
       char = new Deferred<Character | null>();
       Character.cache.set(id, char);
 
-      trpc.character.find.query({ id }).then((data) => {
+      api.commands.character.find.query({ id }).then((data) => {
         if (data) {
           char!.resolve(
             tap(Character.fromBackendModel(data), (c) => c.watchBalance())

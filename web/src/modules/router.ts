@@ -24,9 +24,17 @@ const router = createRouter({
       component: () => import("@/components/pages/Energy.vue"),
     },
     {
-      path: "/user/:address",
+      path: "/user/:id",
       component: () => import("@/components/pages/Profile.vue"),
-      props: true,
+      props: (route) => ({ id: parseInt(route.params.id as string) }),
+    },
+    {
+      path: "/login",
+      component: () => import("@/components/pages/LogIn.vue"),
+    },
+    {
+      path: "/signup",
+      component: () => import("@/components/pages/SignUp.vue"),
     },
   ],
 });

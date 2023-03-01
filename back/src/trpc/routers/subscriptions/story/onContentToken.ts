@@ -1,32 +1,28 @@
 import { z } from "zod";
-import { t } from "../../index";
 import * as redis from "@/services/redis";
-import { upsertUser } from "@/trpc/context";
 import { PrismaClient } from "@prisma/client";
 import { observable } from "@trpc/server/observable";
+import { protectedProcedure } from "@/trpc/middleware/auth";
 
 const prisma = new PrismaClient();
 
 /**
- * Subscribe to character message parts in a story.
+ * Subscribe to content tokens in a story.
  */
-export default t.procedure
+export default protectedProcedure
   .input(
     z.object({
-      authToken: z.string(),
       storyId: z.number().positive(),
     })
   )
-  .subscription(async ({ input }) => {
-    const inputAuth = await upsertUser(input.authToken);
-
+  .subscription(async ({ ctx, input }) => {
     // Check that the user has access to the story.
     const story = await prisma.story.findUnique({
       where: { id: input.storyId },
       select: { userIds: true },
     });
 
-    if (!story || !story.userIds.includes(inputAuth.id)) {
+    if (!story || !story.userIds.includes(ctx.user.id)) {
       throw new Error("Story not found");
     }
 

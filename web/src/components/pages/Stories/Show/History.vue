@@ -59,8 +59,7 @@ import {
   shallowRef,
   triggerRef,
 } from "vue";
-import * as web3Auth from "@/services/web3Auth";
-import { trpc } from "@/services/api";
+import * as api from "@/services/api";
 import { useScroll } from "@vueuse/core";
 import { type Unsubscribable } from "@trpc/server/observable";
 import { Deferred } from "@/utils/deferred";
@@ -86,27 +85,17 @@ const watchStopHandle = watchEffect(async () => {
   storyContent.value = [];
 
   if (account.value) {
-    const authToken = await web3Auth.ensure();
+    api.commands.story.getHistory.query({ storyId: story.id }).then((data) => {
+      storyContent.value.push(...data.map((d) => markRaw(new Content(d))));
 
-    trpc.story.getHistory
-      .query({
-        authToken,
-        storyId: story.id,
-      })
-      .then((data) => {
-        storyContent.value.push(...data.map((d) => markRaw(new Content(d))));
-
-        nextTick(() => {
-          maybeScroll(true);
-        });
+      nextTick(() => {
+        maybeScroll(true);
       });
+    });
 
     unsubscribables.push(
-      trpc.story.onContent.subscribe(
-        {
-          authToken,
-          storyId: story.id,
-        },
+      api.subscriptions.story.onContent.subscribe(
+        { storyId: story.id },
         {
           onData: (data) => {
             storyContent.value.push(markRaw(new Content(data)));
@@ -117,11 +106,8 @@ const watchStopHandle = watchEffect(async () => {
     );
 
     unsubscribables.push(
-      trpc.story.onContentToken.subscribe(
-        {
-          authToken,
-          storyId: story.id,
-        },
+      api.subscriptions.story.onContentToken.subscribe(
+        { storyId: story.id },
         {
           onData: async (data) => {
             const content = storyContent.value.find(

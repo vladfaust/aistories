@@ -1,5 +1,9 @@
 class Config {
-  constructor(readonly trpcUrl: URL, readonly receiverAddress: string) {}
+  constructor(
+    readonly trpcHttpUrl: URL,
+    readonly trpcWsUrl: URL,
+    readonly receiverAddress: string
+  ) {}
 }
 
 function requireEnv(id: string): string {
@@ -8,7 +12,8 @@ function requireEnv(id: string): string {
 }
 
 const config = new Config(
-  new URL(requireEnv("VITE_TRPC_URL")),
+  new URL(requireEnv("VITE_TRPC_HTTP_URL")),
+  new URL(requireEnv("VITE_TRPC_WS_URL")),
   requireEnv("VITE_RECEIVER_ADDRESS")
 );
 

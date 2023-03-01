@@ -1,11 +1,13 @@
 import { useLocalStorage } from "@vueuse/core";
-import { cleanup as web3AuthCleanup } from "@/services/web3Auth";
+import { computed, ComputedRef } from "vue";
 
 export const energy = useLocalStorage("energy", 0);
-export const web3Auth = useLocalStorage<string | null>("web3Auth", null);
+export const jwt = useLocalStorage<string | null>("jwt", null);
+export const userId: ComputedRef<number | null> = computed(() =>
+  jwt.value ? JSON.parse(atob(jwt.value!.split(".")[1])).uid : null
+);
 
 export function clearStore() {
-  web3Auth.value = null;
-  web3AuthCleanup(); // REFACTOR:
+  jwt.value = null;
   energy.value = 0;
 }

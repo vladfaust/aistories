@@ -1,7 +1,6 @@
-import { trpc } from "@/services/api";
+import * as api from "@/services/api";
 import { Deferred } from "@/utils/deferred";
 import Character from "./Character";
-import * as web3Auth from "@/services/web3Auth";
 import { markRaw } from "vue";
 
 export default class Story {
@@ -56,25 +55,22 @@ export default class Story {
     if (Story.cache.has(id)) {
       deferred.resolve(Story.cache.get(id));
     } else {
-      web3Auth.ensure().then((authToken) => {
-        trpc.story.find
-          .query({
-            authToken,
-            storyId: id,
-          })
-          .then((data) => {
-            if (data) {
-              deferred.resolve(
-                this.fromBackendModel({
-                  ...data,
-                  userMap: JSON.parse(data.userMap) as Record<number, number>,
-                })
-              );
-            } else {
-              deferred.resolve(undefined);
-            }
-          });
-      });
+      api.commands.story.find
+        .query({
+          storyId: id,
+        })
+        .then((data) => {
+          if (data) {
+            deferred.resolve(
+              this.fromBackendModel({
+                ...data,
+                userMap: JSON.parse(data.userMap) as Record<number, number>,
+              })
+            );
+          } else {
+            deferred.resolve(undefined);
+          }
+        });
     }
 
     return deferred;

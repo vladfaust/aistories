@@ -1,71 +1,64 @@
-import { IncomingMessage } from "http";
-import Web3Token from "web3-token";
-import { ethers } from "ethers";
-import { PrismaClient, User } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import config from "@/config";
-import { inferAsyncReturnType } from "@trpc/server";
-import { WebSocket } from "ws";
+import { TRPCError } from "@trpc/server";
+import { CreateExpressContextOptions } from "@trpc/server/dist/adapters/express";
+import * as jose from "jose";
+import { NodeHTTPCreateContextFnOptions } from "@trpc/server/dist/adapters/node-http";
+import cookie from "cookie";
 
 const prisma = new PrismaClient();
 
-function verifyWeb3Token(token: string) {
-  return Web3Token.verify(token, {
-    domain: config.prod ? config.server.host : undefined,
-  });
-}
+export type Context = {
+  user: {
+    id: number;
+  } | null;
+};
 
-/**
- * May be used explicitly.
- *
- * @param web3Token
- * @returns Upserted user
- */
-export async function upsertUser(web3Token: string): Promise<User> {
-  const { address } = verifyWeb3Token(web3Token);
-  const evmAddress = Buffer.from(ethers.utils.arrayify(address));
+async function createContext(
+  cookies: Record<string, string>
+): Promise<Context> {
+  const { jwt } = cookies;
 
-  // OPTIMIZE: Upsert is not atomic, so we need to catch the error and try again.
-  try {
-    return await prisma.user.upsert({
-      where: {
-        evmAddress,
-      },
-      update: {},
-      create: {
-        evmAddress,
-      },
-    });
-  } catch (e) {
-    return await prisma.user.findUniqueOrThrow({
-      where: {
-        evmAddress,
-      },
-    });
-  }
-}
+  if (jwt) {
+    try {
+      const { payload } = await jose.jwtVerify(jwt, config.jwt.secret);
 
-async function getAuthFromHeader(header: string): Promise<User | null> {
-  const raw = header.match(/^Web3-Token\s+([\w=]+)$/)?.[1];
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id: payload.uid as number },
+        select: { id: true },
+      });
 
-  if (raw) {
-    return await upsertUser(raw);
+      return { user };
+    } catch (e) {
+      if (e instanceof jose.errors.JOSEError) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: e.message });
+      } else {
+        throw e;
+      }
+    }
   } else {
-    return null;
+    return { user: null };
   }
 }
 
-export async function createContext({
+export async function createExpressContext({
   req,
-  res,
-}: {
-  req: IncomingMessage;
-  res: WebSocket;
-}) {
-  return {
-    auth: req.headers.authorization
-      ? await getAuthFromHeader(req.headers.authorization)
-      : null,
-  };
+}: CreateExpressContextOptions): Promise<Context> {
+  if (req.cookies) {
+    return await createContext(req.cookies);
+  } else {
+    return { user: null };
+  }
 }
 
-export type Context = inferAsyncReturnType<typeof createContext>;
+export async function createWsContext({
+  req,
+}: NodeHTTPCreateContextFnOptions<any, any>): Promise<Context> {
+  const cookies = cookie.parse(req.headers.cookie ?? "");
+
+  if (cookies) {
+    return await createContext(cookies);
+  } else {
+    return { user: null };
+  }
+}

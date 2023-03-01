@@ -4,7 +4,7 @@
 
 @layer components {
   .btn {
-    @apply flex items-center justify-center rounded py-3 px-4 text-center font-semibold leading-none;
+    @apply flex items-center justify-center rounded border border-black border-opacity-10 py-3 px-4 text-center font-semibold leading-none;
     @apply disabled_cursor-not-allowed disabled_opacity-50;
     @apply pressable cursor-pointer select-none transition;
   }
@@ -38,11 +38,11 @@
   }
 
   .btn-sm {
-    @apply py-1.5 px-3 text-sm;
+    @apply py-2 px-3 text-sm leading-none;
   }
 
   .btn-lg {
-    @apply text-lg;
+    @apply text-lg leading-none;
   }
 }
 
@@ -71,6 +71,10 @@
 
   .absolute-centered {
     @apply absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
+  }
+
+  .link {
+    @apply underline;
   }
 
   .link-hover {

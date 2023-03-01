@@ -1,1 +1,1 @@
-export { type AppRouter } from "./trpc/routers/app";
+export { type CommandsRouter, type SubscriptionsRouter } from "./trpc/routers";

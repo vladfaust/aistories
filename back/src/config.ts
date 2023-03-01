@@ -3,12 +3,24 @@ import { random } from "nanoid";
 
 dotenv.config();
 
-class Server {
+class HttpServer {
+  constructor(
+    readonly host: string,
+    readonly port: number,
+    readonly corsOrigin: string
+  ) {}
+}
+
+class WsServer {
   constructor(readonly host: string, readonly port: number) {}
 }
 
 class Ethereum {
   constructor(readonly chainId: number, readonly httpRpcUrl: URL) {}
+}
+
+class Jwt {
+  constructor(readonly secret: Buffer) {}
 }
 
 class Config {
@@ -21,8 +33,10 @@ class Config {
     readonly offchainCafeEndpoint: URL,
     readonly openaiApiKey: string,
     readonly receiverAddress: string,
-    readonly server: Server,
-    readonly eth: Ethereum
+    readonly httpServer: HttpServer,
+    readonly wsServer: WsServer,
+    readonly eth: Ethereum,
+    readonly jwt: Jwt
   ) {}
 }
 
@@ -38,11 +52,20 @@ const config = new Config(
   new URL(requireEnv("OFFCHAIN_CAFE_ENDPOINT")),
   requireEnv("OPENAI_API_KEY"),
   requireEnv("RECEIVER_ADDRESS"),
-  new Server(requireEnv("SERVER_HOST"), parseInt(requireEnv("SERVER_PORT"))),
+  new HttpServer(
+    requireEnv("HTTP_SERVER_HOST"),
+    parseInt(requireEnv("HTTP_SERVER_PORT")),
+    requireEnv("HTTP_SERVER_CORS_ORIGIN")
+  ),
+  new WsServer(
+    requireEnv("WS_SERVER_HOST"),
+    parseInt(requireEnv("WS_SERVER_PORT"))
+  ),
   new Ethereum(
     parseInt(requireEnv("ETH_CHAIN_ID")),
     new URL(requireEnv("ETH_HTTP_RPC_URL"))
-  )
+  ),
+  new Jwt(Buffer.from(requireEnv("JWT_SECRET")))
 );
 
 export default config;

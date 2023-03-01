@@ -1,28 +1,23 @@
-import { upsertUser } from "@/trpc/context";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { t } from "../../index";
+import { protectedProcedure } from "@/trpc/middleware/auth";
 
 const prisma = new PrismaClient();
 
 /**
- * List the stories the user is a part of,
- * and the latest content of each.
+ * Find a story by its ID.
+ * TODO: Public stories.
  */
-export default t.procedure
+export default protectedProcedure
   .input(
     z.object({
-      authToken: z.string(),
+      storyId: z.number().positive(),
     })
   )
-  .query(async ({ input }) => {
-    const inputAuth = await upsertUser(input.authToken);
-
-    return prisma.story.findMany({
+  .query(async ({ ctx, input }) => {
+    const story = await prisma.story.findUnique({
       where: {
-        userIds: {
-          has: inputAuth.id,
-        },
+        id: input.storyId,
       },
       select: {
         id: true,
@@ -32,6 +27,8 @@ export default t.procedure
         nextCharId: true,
         name: true,
         fabula: true,
+        updatedAt: true,
+        createdAt: true,
         Content: {
           select: {
             id: true,
@@ -45,8 +42,11 @@ export default t.procedure
           take: 1,
         },
       },
-      orderBy: {
-        createdAt: "desc",
-      },
     });
+
+    if (!story || !story.userIds.includes(ctx.user.id)) {
+      throw new Error("Story not found");
+    }
+
+    return story;
   });
