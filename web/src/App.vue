@@ -13,9 +13,10 @@ onMounted(autoConnect);
 
 <template lang="pug">
 HeaderVue
-RouterView(v-slot="{ Component }")
-  Transition(name="fade" mode="out-in")
-    Component(:is="Component" :key="route.path")
+.flex.justify-center.p-4(style="min-height: calc(100vh - 8rem)")
+  RouterView(v-slot="{ Component }")
+    Transition(name="fade" mode="out-in")
+      Component(:is="Component" :key="route.path")
 FooterVue
 </template>
 

@@ -55,49 +55,48 @@ async function create() {
 </script>
 
 <template lang="pug">
-.flex.w-full.justify-center.p-4
-  .flex.w-full.max-w-3xl.flex-col.gap-3
-    h2.text-lg.leading-none 1. Choose protagonist
-    .flex.flex-col.gap-3
-      .grid.grid-cols-8.gap-3
-        CharacterListItem(
-          v-for="character in allCharacters"
-          :key="character.id"
-          :character="character"
-          :selected="character === selectedProtagonist"
-          @click="selectedProtagonist = character; selectedCharactes.delete(character)"
-        )
-
-      CharacterCard(
-        v-if="selectedProtagonist"
-        :key="selectedProtagonist.id"
-        :character="selectedProtagonist"
-      )
-
-    h2.text-lg.leading-none 2. Choose characters
-    .flex.flex-col.gap-3
-      .grid.grid-cols-8.gap-3
-        CharacterListItem(
-          v-for="character in allCharacters"
-          :key="character.id"
-          :character="character"
-          :selected="selectedCharactes.has(character)"
-          :disabled="selectedProtagonist === character"
-          @click="selectedProtagonist === character ? null : selectedCharactes.has(character) ? selectedCharactes.delete(character) : selectedCharactes.add(character)"
-        )
-
-      CharacterCard(
-        v-for="character in selectedCharactes"
+.flex.h-full.w-full.max-w-3xl.flex-col.gap-3.overflow-y-auto
+  h2.text-lg.leading-none 1. Choose protagonist
+  .flex.flex-col.gap-3
+    .grid.grid-cols-8.gap-3
+      CharacterListItem(
+        v-for="character in allCharacters"
         :key="character.id"
         :character="character"
+        :selected="character === selectedProtagonist"
+        @click="selectedProtagonist = character; selectedCharactes.delete(character)"
       )
 
-    h2.text-lg.leading-none 3. Write fabula (optional)
-    textarea.w-full.rounded.border.p-3.leading-tight(
-      v-model="fabula"
-      rows=3
-      placeholder="Write your story here..."
+    CharacterCard(
+      v-if="selectedProtagonist"
+      :key="selectedProtagonist.id"
+      :character="selectedProtagonist"
     )
 
-    button.btn.btn-primary.w-full(@click="create" :disabled="!mayCreate") Embark 🚀
+  h2.text-lg.leading-none 2. Choose characters
+  .flex.flex-col.gap-3
+    .grid.grid-cols-8.gap-3
+      CharacterListItem(
+        v-for="character in allCharacters"
+        :key="character.id"
+        :character="character"
+        :selected="selectedCharactes.has(character)"
+        :disabled="selectedProtagonist === character"
+        @click="selectedProtagonist === character ? null : selectedCharactes.has(character) ? selectedCharactes.delete(character) : selectedCharactes.add(character)"
+      )
+
+    CharacterCard(
+      v-for="character in selectedCharactes"
+      :key="character.id"
+      :character="character"
+    )
+
+  h2.text-lg.leading-none 3. Write fabula (optional)
+  textarea.w-full.rounded.border.p-3.leading-tight(
+    v-model="fabula"
+    rows=3
+    placeholder="Write your story here..."
+  )
+
+  button.btn.btn-primary.w-full(@click="create" :disabled="!mayCreate") Embark 🚀
 </template>

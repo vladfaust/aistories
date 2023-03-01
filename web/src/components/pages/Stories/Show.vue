@@ -11,14 +11,12 @@ const { story } = defineProps<{
 </script>
 
 <template lang="pug">
-.flex.w-full.justify-center.p-4(style="height: calc(100vh - 8rem)")
-  template(v-if="story.resolved")
-    .flex.w-full.max-w-3xl.flex-col.divide-y.overflow-hidden.rounded.border(
-      v-if="story.ref.value"
-    )
-      Header(:story="story.ref.value")
-      History(:story="story.ref.value")
-      Input(:story="story.ref.value")
-    p.w-full.max-w-3xl(v-else) Story not found
-  p.w-full.max-w-3xl(v-else) Loading...
+.flex.w-full.max-w-3xl.flex-col.divide-y.overflow-hidden.rounded.border(
+  v-if="story.resolved && story.ref.value"
+)
+  Header(:story="story.ref.value")
+  History(:story="story.ref.value")
+  Input(:story="story.ref.value")
+p.w-full.max-w-3xl(v-else-if="story.resolved") Story not found
+p.w-full.max-w-3xl(v-else) Loading...
 </template>
