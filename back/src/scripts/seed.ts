@@ -42,8 +42,32 @@ async function main() {
     },
   });
 
+  const es = await prisma.characterCollection.create({
+    data: {
+      imageUrl:
+        "https://steamuserimages-a.akamaihd.net/ugc/857235206700714271/84EE89A0A4B0E010C4C0F5AB3476C4150219B3AA/?imw=512&imh=512&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true",
+      name: "Everlasting Summer",
+      about: `
+Just an ordinary young man with thousands, even hundreds of thousands of those like him in every ordinary city. But one day something completely unusual happens to him: he falls asleep in a bus in winter and wakes up... in the middle of a hot summer. In front of him is "Sovyonok" - a pioneer camp, behind him is his former life.
+`.trim(),
+      setup: `
+Year 1984, Soviet Union.
+Young Pioneer camp Sovyonok is located in the middle of nowhere.
+It cosists of the following places:
+Entry gate
+Technics club
+Chess club
+Main square with the Gendo statue (nobody knows who he is)
+Dining building (stolovaya)
+Medical building
+Musical club
+`.trim(),
+    },
+  });
+
   await prisma.character.create({
     data: {
+      Collection: { connect: { id: es.id } },
       name: "Semyon",
       title: "The unlikely pioneer",
       about:
@@ -73,6 +97,7 @@ Wouldn't Hit a Girl
 
   await prisma.character.create({
     data: {
+      Collection: { connect: { id: es.id } },
       name: "Alisa",
       title: "The pioneer girl",
       about:
@@ -104,6 +129,7 @@ Tsundere
 
   await prisma.character.create({
     data: {
+      Collection: { connect: { id: es.id } },
       name: "Lena",
       title: "The pioneer girl",
       about: "A shy wallflower who is awkward around large gatherings.",
@@ -132,6 +158,7 @@ Yandere
 
   await prisma.character.create({
     data: {
+      Collection: { connect: { id: es.id } },
       name: "Slavya",
       title: "The pioneer girl",
       about:
@@ -159,6 +186,7 @@ Occidental Otaku
 
   await prisma.character.create({
     data: {
+      Collection: { connect: { id: es.id } },
       name: "Ulyana",
       title: "The pioneer girl",
       about:
@@ -186,6 +214,7 @@ Tomboy
 
   await prisma.character.create({
     data: {
+      Collection: { connect: { id: es.id } },
       name: "Miku",
       title: "The pioneer girl",
       about:
@@ -213,6 +242,7 @@ Motor Mouth
 
   await prisma.character.create({
     data: {
+      Collection: { connect: { id: es.id } },
       name: "Zhenya",
       title: "The pioneer girl",
       about: "The librarian of Camp Sovyonok.",

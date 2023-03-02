@@ -69,8 +69,26 @@ model OAuth2Identity {
   @@id([providerId, userId])
 }
 
+model CharacterCollection {
+  id Int @id @default(autoincrement())
+
+  imageUrl String
+  name     String
+  about    String
+
+  setup String // The initial setup of the story, present in all prompts
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Characters Character[]
+  Stories    Story[]
+}
+
 model Character {
   id Int @id @default(autoincrement())
+
+  collectionId Int
 
   // TODO: Rename to avatarUrl
   imagePreviewUrl String
@@ -86,21 +104,22 @@ model Character {
   erc1155Id      Bytes?
   erc1155NftUri  String?
 
-  Stories  Story[] // Stories the character is participating in
-  Memories StoryMemory[] // Memories of the character
-  Content  StoryContent[] // Content created by the character (user-controlled or not)
+  Collection CharacterCollection @relation(fields: [collectionId], references: [id])
+  Stories    Story[] // Stories the character is participating in
+  Memories   StoryMemory[] // Memories of the character
+  Content    StoryContent[] // Content created by the character (user-controlled or not)
 }
 
 model Story {
   id Int @id @default(autoincrement())
 
-  userId     Int // Id of the user who owns the story
-  charIds    Int[] // All characters in the story (including user-controlled ones)
-  userCharId Int // Mapping from a user ID to their character ID
-  nextCharId Int // Id of the next character to act
+  userId       Int // Id of the user who owns the story
+  collectionId Int // Id of the character collection used in the story
+  charIds      Int[] // All characters in the story (including user-controlled ones)
+  userCharId   Int // Mapping from a user ID to their character ID
+  nextCharId   Int // Id of the next character to act
 
   name   String? // Display name of the story
-  setup  String? // The initial setup of the story, present in all prompts
   fabula String? // The initial context of the story, augmented by memories
   buffer Int[]   @default([]) // Recent content buffer
 
@@ -111,7 +130,8 @@ model Story {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  Owner      User           @relation(fields: [userId], references: [id])
+  Owner      User                @relation(fields: [userId], references: [id])
+  Collection CharacterCollection @relation(fields: [collectionId], references: [id])
   Characters Character[]
   Content    StoryContent[]
   Memories   StoryMemory[]

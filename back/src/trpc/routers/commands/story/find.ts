@@ -21,6 +21,7 @@ export default protectedProcedure
       },
       select: {
         id: true,
+        collectionId: true,
         userId: true,
         userCharId: true,
         charIds: true,

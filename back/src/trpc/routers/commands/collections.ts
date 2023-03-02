@@ -6,39 +6,31 @@ const prisma = new PrismaClient();
 
 export default t.router({
   /**
-   * Returns a list of all character IDs.
+   * Returns a list of all collection IDs.
    */
   index: t.procedure.query(async () => {
     return (
-      await prisma.character.findMany({
-        select: {
-          id: true,
-        },
+      await prisma.characterCollection.findMany({
+        select: { id: true },
       })
     ).map((c) => c.id);
   }),
 
+  /**
+   * Find a collection by ID.
+   */
   find: t.procedure
-    .input(
-      z.object({
-        id: z.number(),
-      })
-    )
+    .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
-      return prisma.character.findUnique({
+      return prisma.characterCollection.findUnique({
         where: {
           id: input.id,
         },
         select: {
           id: true,
-          collectionId: true,
-          imagePreviewUrl: true,
+          imageUrl: true,
           name: true,
-          title: true,
           about: true,
-          erc1155Address: true,
-          erc1155Id: true,
-          erc1155NftUri: true,
         },
       });
     }),

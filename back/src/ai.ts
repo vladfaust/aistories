@@ -184,6 +184,11 @@ async function mainLoop() {
           },
           select: {
             id: true,
+            Collection: {
+              select: {
+                setup: true,
+              },
+            },
             Owner: {
               select: {
                 id: true,
@@ -193,7 +198,6 @@ async function mainLoop() {
             userCharId: true,
             charIds: true,
             nextCharId: true,
-            setup: true,
             fabula: true,
             buffer: true,
           },
@@ -315,7 +319,7 @@ async function mainLoop() {
         let tokenLength = 0;
         for await (const token of generateCharacterResponse({
           openAIApiKey: story.Owner.openAiApiKey,
-          setup: story.setup,
+          setup: story.Collection.setup,
           characters,
           context: memory?.memory || story.fabula || null,
           currentCharacterName: characters.find(
@@ -408,7 +412,7 @@ async function mainLoop() {
 
                 const newMemory = await summarize({
                   openAIApiKey: story.Owner.openAiApiKey!,
-                  setup: story.setup,
+                  setup: story.Collection.setup,
                   characterName: char.name,
                   characters,
                   oldSummary: previousMemory?.memory || story.fabula || null,

@@ -3,6 +3,7 @@ import { chooseRandom, toHex } from "@/utils";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { protectedProcedure } from "@/trpc/middleware/auth";
+import { TRPCError } from "@trpc/server";
 
 const prisma = new PrismaClient();
 
@@ -14,12 +15,12 @@ const prisma = new PrismaClient();
 export default protectedProcedure
   .input(
     z.object({
+      collectionId: z.number().positive(),
       userCharacterId: z.number().positive(),
 
       // FIXME: Use `zod.set`.
       nonUserCharacterIds: z.array(z.number().positive()),
 
-      setup: z.string().optional(),
       fabula: z.string().optional(),
     })
   )
@@ -37,6 +38,18 @@ export default protectedProcedure
 
     if (nonUserCharacterIds.size === 0) {
       throw new Error("Empty character list");
+    }
+
+    const collection = await prisma.characterCollection.findUnique({
+      where: { id: input.collectionId },
+      select: { id: true },
+    });
+
+    if (!collection) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Collection not found",
+      });
     }
 
     const characters = await prisma.character.findMany({
@@ -87,11 +100,11 @@ export default protectedProcedure
 
     const story = await prisma.story.create({
       data: {
+        collectionId: input.collectionId,
         charIds: [input.userCharacterId, ...nonUserCharacterIds],
         userId: ctx.user.id,
         userCharId: input.userCharacterId,
         nextCharId: chooseRandom([...nonUserCharacterIds]),
-        setup: input.setup,
         fabula: input.fabula,
         busy: true, // The first actor is a character.
       },

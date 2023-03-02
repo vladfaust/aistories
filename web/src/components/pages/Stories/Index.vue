@@ -39,7 +39,12 @@ onUnmounted(cancelWatch);
     .flex.w-full.items-center.justify-between.gap-2.rounded.border.p-3(
       v-for="story in stories"
     )
-      .flex.shrink-0.pl-6
+      .flex.shrink-0.gap-1
+        img.mr-6.box-content.h-10.w-10.rounded.border.bg-base-50.object-cover(
+          v-if="story.collection.ref.value?.imageUrl"
+          :src="story.collection.ref.value?.imageUrl.toString()"
+        )
+
         template(v-for="character in story.characters.slice().reverse()")
           img.-ml-6.box-content.h-10.w-10.rounded-full.border.bg-base-50.object-cover(
             v-if="character.ref.value"
@@ -50,7 +55,7 @@ onUnmounted(cancelWatch);
         RouterLink.link-hover.w-max.font-semibold.leading-none(
           :to="'/' + story.id"
         )
-          | {{ story.name || "Story with " + story.characters.map((c) => c.ref.value?.name).join(", ") }}
+          | {{ story.name || story.collection.ref.value?.name + " with " + story.characters.map((c) => c.ref.value?.name).join(", ") }}
         .flex.items-center.gap-1(v-if="story.latestContent")
           img.aspect-square.h-5.shrink-0.rounded.border.bg-base-50.object-cover(
             v-if="story.latestContent.character.ref.value"

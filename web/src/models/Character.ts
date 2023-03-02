@@ -4,6 +4,7 @@ import { tap } from "@/utils";
 import { Deferred } from "@/utils/deferred";
 import { BigNumber, ethers } from "ethers";
 import { computed, markRaw, ref, Ref, watch } from "vue";
+import Collection from "./Collection";
 
 export default class Character {
   static cache = new Map<number, Deferred<Character | null>>();
@@ -38,6 +39,7 @@ export default class Character {
 
   static fromBackendModel(data: {
     id: number;
+    collectionId: number;
     name: string;
     title: string;
     about: string;
@@ -49,6 +51,7 @@ export default class Character {
     return markRaw(
       new Character(
         data.id,
+        Collection.findOrCreate(data.collectionId) as Deferred<Collection>,
         data.name,
         data.title,
         data.about,
@@ -66,6 +69,7 @@ export default class Character {
 
   constructor(
     readonly id: number,
+    readonly collection: Deferred<Collection>,
     readonly name: string,
     readonly title: string,
     readonly about: string,
