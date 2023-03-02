@@ -4,6 +4,7 @@ import z from "zod";
 import config from "@/config";
 import * as jose from "jose";
 import konsole from "@/services/konsole";
+import pRetry from "p-retry";
 
 const prisma = new PrismaClient();
 
@@ -17,7 +18,7 @@ export default t.procedure
   )
   .output(z.object({ jwt: z.string() }))
   .mutation(async ({ input }) => {
-    let url, data;
+    let url: string, data: FormData;
 
     switch (input.provider) {
       case "discord": {
@@ -43,10 +44,12 @@ export default t.procedure
       url,
       data: [...data],
     });
-    const response = (await fetch(url, {
-      method: "POST",
-      body: data,
-    }).then((r) => r.json())) satisfies {
+    const response = (await pRetry(() =>
+      fetch(url, {
+        method: "POST",
+        body: data,
+      }).then((r) => r.json())
+    )) satisfies {
       access_token: string;
       token_type: string;
       expires_in: number;
@@ -56,11 +59,13 @@ export default t.procedure
     console.debug(response);
 
     konsole.log(["oauth", input.provider], "/@me request...");
-    const me = await fetch("https://discord.com/api/v10/oauth2/@me", {
-      headers: {
-        Authorization: `${response.token_type} ${response.access_token}`,
-      },
-    }).then((r) => r.json());
+    const me = await pRetry(() =>
+      fetch("https://discord.com/api/v10/oauth2/@me", {
+        headers: {
+          Authorization: `${response.token_type} ${response.access_token}`,
+        },
+      })
+    ).then((r) => r.json());
     console.debug(me);
 
     const id = me.user?.id;
