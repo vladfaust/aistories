@@ -1,24 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { protectedProcedure } from "@/trpc/middleware/auth";
+import { t } from "@/trpc/index";
+import { TRPCError } from "@trpc/server";
 
 const prisma = new PrismaClient();
 
 /**
  * Find a story by its ID.
- * TODO: Public stories.
  */
-export default protectedProcedure
-  .input(
-    z.object({
-      storyId: z.number().positive(),
-    })
-  )
-  .query(async ({ ctx, input }) => {
+export default t.procedure
+  .input(z.object({ storyId: z.string() }))
+  .query(async ({ input }) => {
     const story = await prisma.story.findUnique({
-      where: {
-        id: input.storyId,
-      },
+      where: { id: input.storyId },
       select: {
         id: true,
         collectionId: true,
@@ -46,8 +40,8 @@ export default protectedProcedure
       },
     });
 
-    if (!story || story.userId !== ctx.user.id) {
-      throw new Error("Story not found");
+    if (!story) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Story not found" });
     }
 
     return story;

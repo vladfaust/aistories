@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { protectedProcedure } from "@/trpc/middleware/auth";
 import { encode } from "gpt-3-encoder";
+import { TRPCError } from "@trpc/server";
 
 const prisma = new PrismaClient();
 
@@ -14,16 +15,14 @@ const prisma = new PrismaClient();
 export default protectedProcedure
   .input(
     z.object({
-      storyId: z.number().positive(),
+      storyId: z.string(),
       content: z.string(),
     })
   )
   .mutation(async ({ ctx, input }) => {
     const content = await prisma.$transaction(async (p) => {
       const story = await p.story.findUnique({
-        where: {
-          id: input.storyId,
-        },
+        where: { id: input.storyId },
         select: {
           charIds: true,
           userId: true,
@@ -34,9 +33,13 @@ export default protectedProcedure
         },
       });
 
+      if (!story) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Story not found" });
+      }
+
       // Check that the user has access to the story.
-      if (!story || story.userId !== ctx.user.id) {
-        throw new Error("Story not found");
+      if (story.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Not your story" });
       }
 
       // Check that the story is not busy.

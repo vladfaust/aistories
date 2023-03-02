@@ -64,7 +64,7 @@ async function create() {
       fabula: fabula.value,
     });
 
-    router.push(`/${storyId}`);
+    router.push(`/story/${storyId}`);
   } finally {
     createInProgress.value = false;
   }

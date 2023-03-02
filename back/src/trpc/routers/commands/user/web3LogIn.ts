@@ -6,6 +6,7 @@ import config from "@/config";
 import { toBuffer } from "@/utils";
 import * as jose from "jose";
 import konsole from "@/services/konsole";
+import { nanoid } from "nanoid";
 
 const prisma = new PrismaClient();
 
@@ -32,9 +33,7 @@ export default t.procedure
 
         identity = await prisma.web3Identity.create({
           data: {
-            User: {
-              create: {},
-            },
+            User: { create: { id: nanoid() } },
             address,
           },
           select: { userId: true },

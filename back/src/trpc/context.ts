@@ -10,7 +10,7 @@ const prisma = new PrismaClient();
 
 export type Context = {
   user: {
-    id: number;
+    id: string;
   } | null;
 };
 
@@ -24,7 +24,7 @@ async function createContext(
       const { payload } = await jose.jwtVerify(jwt, config.jwt.secret);
 
       const user = await prisma.user.findUniqueOrThrow({
-        where: { id: payload.uid as number },
+        where: { id: payload.uid as string },
         select: { id: true },
       });
 

@@ -5,6 +5,7 @@ import config from "@/config";
 import * as jose from "jose";
 import konsole from "@/services/konsole";
 import pRetry from "p-retry";
+import { nanoid } from "nanoid";
 
 const prisma = new PrismaClient();
 
@@ -90,9 +91,7 @@ export default t.procedure
                 id: input.provider,
               },
             },
-            User: {
-              create: {},
-            },
+            User: { create: { id: nanoid() } },
             externalId: id,
             accessToken: response.access_token,
             tokenType: response.token_type,

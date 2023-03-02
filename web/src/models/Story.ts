@@ -5,13 +5,13 @@ import { markRaw } from "vue";
 import Collection from "./Collection";
 
 export default class Story {
-  static cache = new Map<number, Story>();
+  static cache = new Map<string, Story>();
 
   static fromBackendModel(data: {
-    id: number;
+    id: string;
     collectionId: number;
     charIds: number[];
-    userId: number;
+    userId: string;
     userCharId: number;
     name: string | null;
     fabula: string | null;
@@ -29,7 +29,7 @@ export default class Story {
 
         {
           id: data.userId,
-          char: Character.findOrCreate(data.userId) as Deferred<Character>,
+          char: Character.findOrCreate(data.userCharId) as Deferred<Character>,
         },
 
         data.charIds.map(
@@ -53,32 +53,28 @@ export default class Story {
     );
   }
 
-  static findOrCreate(id: number): Deferred<Story | undefined> {
+  static findOrCreate(id: string): Deferred<Story | undefined> {
     const deferred = new Deferred<Story | undefined>();
 
     if (Story.cache.has(id)) {
       deferred.resolve(Story.cache.get(id));
     } else {
-      api.commands.story.find
-        .query({
-          storyId: id,
-        })
-        .then((data) => {
-          if (data) {
-            deferred.resolve(this.fromBackendModel(data));
-          } else {
-            deferred.resolve(undefined);
-          }
-        });
+      api.commands.story.find.query({ storyId: id }).then((data) => {
+        if (data) {
+          deferred.resolve(this.fromBackendModel(data));
+        } else {
+          deferred.resolve(undefined);
+        }
+      });
     }
 
     return deferred;
   }
 
   private constructor(
-    readonly id: number,
+    readonly id: string,
     readonly collection: Deferred<Collection>,
-    readonly user: { id: number; char: Deferred<Character> },
+    readonly user: { id: string; char: Deferred<Character> },
     readonly characters: Deferred<Character>[],
     readonly name: string | null,
     readonly fabula: string | null,

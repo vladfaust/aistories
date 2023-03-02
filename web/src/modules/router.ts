@@ -9,14 +9,14 @@ const router = createRouter({
       component: () => import("@/components/pages/Stories/Index.vue"),
     },
     {
-      path: "/new",
+      path: "/story/new",
       component: () => import("@/components/pages/Stories/Create.vue"),
     },
     {
-      path: "/:id",
+      path: "/story/:id",
       component: () => import("@/components/pages/Stories/Show.vue"),
       props: (route) => ({
-        story: Story.findOrCreate(parseInt(route.params.id as string)),
+        story: Story.findOrCreate(route.params.id as string),
       }),
     },
     {

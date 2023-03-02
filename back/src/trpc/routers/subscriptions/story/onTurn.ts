@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { t } from "@/trpc/index";
 import * as redis from "@/services/redis";
 import { PrismaClient } from "@prisma/client";
 import { observable } from "@trpc/server/observable";
-import { protectedProcedure } from "@/trpc/middleware/auth";
+import { TRPCError } from "@trpc/server";
 
 const prisma = new PrismaClient();
 
@@ -10,21 +11,17 @@ const prisma = new PrismaClient();
  * Subscribe to turns in a story.
  * Immediately emits the current turn.
  */
-export default protectedProcedure
-  .input(
-    z.object({
-      storyId: z.number().positive(),
-    })
-  )
-  .subscription(async ({ ctx, input }) => {
+export default t.procedure
+  .input(z.object({ storyId: z.string() }))
+  .subscription(async ({ input }) => {
     // Check that the user has access to the story.
     const story = await prisma.story.findUnique({
       where: { id: input.storyId },
       select: { userId: true, nextCharId: true },
     });
 
-    if (!story || story.userId !== ctx.user.id) {
-      throw new Error("Story not found");
+    if (!story) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Story not found" });
     }
 
     const redisClient = redis.client();

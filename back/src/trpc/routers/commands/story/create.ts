@@ -4,6 +4,7 @@ import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { protectedProcedure } from "@/trpc/middleware/auth";
 import { TRPCError } from "@trpc/server";
+import { nanoid } from "nanoid";
 
 const prisma = new PrismaClient();
 
@@ -100,6 +101,7 @@ export default protectedProcedure
 
     const story = await prisma.story.create({
       data: {
+        id: nanoid(),
         collectionId: input.collectionId,
         charIds: [input.userCharacterId, ...nonUserCharacterIds],
         userId: ctx.user.id,

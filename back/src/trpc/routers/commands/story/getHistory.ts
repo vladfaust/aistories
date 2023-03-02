@@ -1,29 +1,25 @@
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { protectedProcedure } from "@/trpc/middleware/auth";
+import { t } from "@/trpc/index";
+import { TRPCError } from "@trpc/server";
 
 const prisma = new PrismaClient();
 
 /**
  * Get the content history of a story, in descending order, sorted by timestamp.
  * TODO: Pagination.
- * TODO: Public stories.
  */
-export default protectedProcedure
-  .input(
-    z.object({
-      storyId: z.number().positive(),
-    })
-  )
-  .query(async ({ ctx, input }) => {
+export default t.procedure
+  .input(z.object({ storyId: z.string() }))
+  .query(async ({ input }) => {
     // Ensure that the user has access to the story.
     const story = await prisma.story.findUnique({
       where: { id: input.storyId },
       select: { userId: true },
     });
 
-    if (!story || story.userId !== ctx.user.id) {
-      throw new Error("Story not found");
+    if (!story) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Story not found" });
     }
 
     return prisma.storyContent.findMany({

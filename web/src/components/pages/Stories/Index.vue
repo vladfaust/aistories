@@ -33,7 +33,7 @@ onUnmounted(cancelWatch);
     br
     span.text-2xl ❤️💀🤖
 
-  RouterLink.btn.btn-primary.w-full(to="/new") Embark new story ✨
+  RouterLink.btn.btn-primary.w-full(to="/story/new") Embark new story ✨
 
   .flex.w-full.flex-col.gap-2.overflow-y-auto(v-if="stories.length > 0")
     .flex.w-full.items-center.justify-between.gap-2.rounded.border.p-3(
@@ -53,7 +53,7 @@ onUnmounted(cancelWatch);
 
       .flex.grow.flex-col.gap-1.overflow-hidden
         RouterLink.link-hover.w-max.font-semibold.leading-none(
-          :to="'/' + story.id"
+          :to="'/story/' + story.id"
         )
           | {{ story.name || story.collection.ref.value?.name + " with " + story.characters.map((c) => c.ref.value?.name).join(", ") }}
         .flex.items-center.gap-1(v-if="story.latestContent")
@@ -65,5 +65,5 @@ onUnmounted(cancelWatch);
             | {{ story.latestContent.content }}
 
       .flex.shrink-0.flex-col.items-end
-        RouterLink.btn.btn-square.border(:to="'/' + story.id") ➡️
+        RouterLink.btn.btn-square.border(:to="'/story/' + story.id") ➡️
 </template>
