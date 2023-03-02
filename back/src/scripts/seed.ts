@@ -1,3 +1,9 @@
+import config from "@/config";
+
+if (config.prod) {
+  throw new Error("This script is not for production");
+}
+
 import { PrismaClient } from "@prisma/client";
 import { encode as gpt3Encode } from "gpt-3-encoder";
 
@@ -25,6 +31,14 @@ async function main() {
       key: "energyExchangeMinValue",
       value: "0.05",
       description: "Minimum ETH of energy purchase",
+    },
+  });
+
+  await prisma.oAuth2Provider.create({
+    data: {
+      id: "discord",
+      clientId: "1080849681321558058",
+      redirectUri: "http://localhost:5173/auth/discord/redirect",
     },
   });
 

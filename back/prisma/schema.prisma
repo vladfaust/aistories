@@ -26,7 +26,8 @@ model User {
   Content StoryContent[] // User-generated content
 
   // NOTE: For now, only a single web3 identity per user is supported.
-  Web3Identities Web3Identity[]
+  Web3Identities   Web3Identity[]
+  OAuth2Identities OAuth2Identity[]
 }
 
 model Web3Identity {
@@ -54,6 +55,34 @@ model Web3EnergyPurchase {
   Identity Web3Identity @relation(fields: [address], references: [address])
 
   @@id([blockNumber, logIndex])
+}
+
+model OAuth2Provider {
+  id String @id
+
+  clientId    String
+  redirectUri String
+
+  OAuth2Identities OAuth2Identity[]
+}
+
+model OAuth2Identity {
+  providerId String
+  userId     Int
+
+  externalId String
+
+  accessToken String
+  tokenType   String
+  scope       String?
+
+  expiresAt    DateTime
+  refreshToken String?
+
+  User     User           @relation(fields: [userId], references: [id])
+  Provider OAuth2Provider @relation(fields: [providerId], references: [id])
+
+  @@id([providerId, userId])
 }
 
 model Character {

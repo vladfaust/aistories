@@ -23,6 +23,10 @@ class Jwt {
   constructor(readonly secret: Buffer) {}
 }
 
+class Discord {
+  constructor(readonly clientSecret: string) {}
+}
+
 class Config {
   readonly pid = Buffer.from(random(32));
 
@@ -36,7 +40,8 @@ class Config {
     readonly httpServer: HttpServer,
     readonly wsServer: WsServer,
     readonly eth: Ethereum,
-    readonly jwt: Jwt
+    readonly jwt: Jwt,
+    readonly discord: Discord
   ) {}
 }
 
@@ -65,7 +70,8 @@ const config = new Config(
     parseInt(requireEnv("ETH_CHAIN_ID")),
     new URL(requireEnv("ETH_HTTP_RPC_URL"))
   ),
-  new Jwt(Buffer.from(requireEnv("JWT_SECRET")))
+  new Jwt(Buffer.from(requireEnv("JWT_SECRET"))),
+  new Discord(requireEnv("DISCORD_CLIENT_SECRET"))
 );
 
 export default config;

@@ -1,8 +1,8 @@
 import Story from "@/models/Story";
-import { createRouter, createWebHashHistory } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
-  history: createWebHashHistory(),
+  history: createWebHistory(),
   routes: [
     {
       path: "/",
@@ -35,6 +35,11 @@ const router = createRouter({
     {
       path: "/signup",
       component: () => import("@/components/pages/SignUp.vue"),
+    },
+    {
+      path: "/auth/:provider/redirect",
+      component: () => import("@/components/pages/Auth/Callback.vue"),
+      props: true,
     },
   ],
 });

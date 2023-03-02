@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /// <reference types="vite-svg-loader" />
-// import DiscordLogo from "@/assets/discord.svg?component";
+import DiscordLogo from "@/assets/discord.svg?component";
 import MetamaskLogo from "@/assets/metamask.svg?component";
 import config from "@/config";
 import * as api from "@/services/api";
@@ -8,6 +8,7 @@ import * as eth from "@/services/eth";
 import { jwt, userId } from "@/store";
 import Web3Token from "web3-token";
 import { useRouter } from "vue-router";
+import * as auth from "@/services/auth";
 
 const router = useRouter();
 
@@ -50,9 +51,12 @@ async function logInMetamask() {
 <template lang="pug">
 .flex.w-full.max-w-xs.flex-col.gap-2.place-self-center.rounded.border.p-4
   .flex.flex-col.gap-2
-    //- button.btn.gap-2.text-white(class="bg-[#5865F2]")
-    //-   | Log in with Discord
-    //-   DiscordLogo.h-5.fill-white
+    a.btn.gap-2.text-white(
+      class="bg-[#5865F2]"
+      :href="auth.url(auth.Provider.Discord)"
+    )
+      | Log in with Discord
+      DiscordLogo.h-5.fill-white
     button.btn.gap-2.text-white(class="bg-[#E8831D]" @click="logInMetamask")
       | Log in with Metamask
       MetamaskLogo.h-5.fill-white

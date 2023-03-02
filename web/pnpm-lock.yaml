@@ -14,6 +14,7 @@ specifiers:
   date-fns: ^2.29.3
   ethers: '5'
   jdenticon: ^3.2.0
+  nanoid: ^4.0.1
   postcss: ^8.4.21
   prettier: ^2.8.4
   prettier-plugin-tailwindcss: ^0.2.2
@@ -38,6 +39,7 @@ dependencies:
   date-fns: 2.29.3
   ethers: 5.7.2
   jdenticon: 3.2.0
+  nanoid: 4.0.1
   sass: 1.58.3
   splitpanes: 3.1.5
   vue: 3.2.47
@@ -1677,6 +1679,12 @@ packages:
     resolution: {integrity: sha512-MqBkQh/OHTS2egovRtLk45wEyNXwF+cokD+1YPf9u5VfJiRdAiRwB2froX5Co9Rh20xs4siNPm8naNotSD6RBw==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
+
+  /nanoid/4.0.1:
+    resolution: {integrity: sha512-udKGtCCUafD3nQtJg9wBhRP3KMbPglUsgV5JVsXhvyBs/oefqb4sqMEhKBBgqZncYowu58p1prsZQBYvAj/Gww==}
+    engines: {node: ^14 || ^16 || >=18}
+    hasBin: true
+    dev: false
 
   /node-addon-api/2.0.2:
     resolution: {integrity: sha512-Ntyt4AIXyaLIuMHF6IOoTakB3K+RWxwtsHNRxllEoA6vPwP9o4866g6YWDLUdnucilZhmkxiHwHr11gAENw+QA==}
