@@ -1,1 +1,2 @@
-export { type CommandsRouter, type SubscriptionsRouter } from "./trpc/routers";
+export { type CommandsRouter } from "./trpc/commands";
+export { type SubscriptionsRouter } from "./trpc/subscriptions";
