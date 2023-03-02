@@ -29,16 +29,8 @@ const router = createRouter({
       props: (route) => ({ id: parseInt(route.params.id as string) }),
     },
     {
-      path: "/login",
-      component: () => import("@/components/pages/LogIn.vue"),
-    },
-    {
-      path: "/signup",
-      component: () => import("@/components/pages/SignUp.vue"),
-    },
-    {
       path: "/auth/:provider/redirect",
-      component: () => import("@/components/pages/Auth/Callback.vue"),
+      component: () => import("@/components/pages/Auth/Provider/Redirect.vue"),
       props: true,
     },
   ],
