@@ -9,10 +9,11 @@ export default class Story {
   static fromBackendModel(data: {
     id: number;
     charIds: number[];
-    userIds: number[];
-    userMap: Record<number, number>;
+    userId: number;
+    userCharId: number;
     name: string | null;
     fabula: string | null;
+    reason: string | null;
     Content: {
       charId: number;
       content: string | null;
@@ -23,12 +24,10 @@ export default class Story {
       new Story(
         data.id,
 
-        data.userIds.map((userId) => ({
-          userId,
-          char: Character.findOrCreate(
-            data.userMap[userId]
-          ) as Deferred<Character>,
-        })),
+        {
+          id: data.userId,
+          char: Character.findOrCreate(data.userId) as Deferred<Character>,
+        },
 
         data.charIds.map(
           (c) => Character.findOrCreate(c) as Deferred<Character>
@@ -36,6 +35,8 @@ export default class Story {
 
         data.name,
         data.fabula,
+        data.reason,
+
         data.Content.length > 0
           ? {
               character: Character.findOrCreate(
@@ -61,12 +62,7 @@ export default class Story {
         })
         .then((data) => {
           if (data) {
-            deferred.resolve(
-              this.fromBackendModel({
-                ...data,
-                userMap: JSON.parse(data.userMap) as Record<number, number>,
-              })
-            );
+            deferred.resolve(this.fromBackendModel(data));
           } else {
             deferred.resolve(undefined);
           }
@@ -78,10 +74,11 @@ export default class Story {
 
   private constructor(
     readonly id: number,
-    readonly users: { userId: number; char: Deferred<Character> }[],
+    readonly user: { id: number; char: Deferred<Character> },
     readonly characters: Deferred<Character>[],
     readonly name: string | null,
     readonly fabula: string | null,
+    readonly reason: string | null,
     readonly latestContent: {
       character: Deferred<Character>;
       content: string | null;

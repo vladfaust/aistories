@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as api from "@/services/api";
 import { ref, type ShallowRef, watchEffect, onUnmounted } from "vue";
-import { account } from "@/services/eth";
+import { userId } from "@/store";
 import Story from "@/models/Story";
 
 const stories: ShallowRef<Story[]> = ref([]);
@@ -9,12 +9,9 @@ const stories: ShallowRef<Story[]> = ref([]);
 const cancelWatch = watchEffect(async () => {
   stories.value = [];
 
-  if (account.value) {
+  if (userId.value) {
     stories.value = (await api.commands.story.list.query()).map((data) =>
-      Story.fromBackendModel({
-        ...data,
-        userMap: JSON.parse(data.userMap) as Record<number, number>,
-      })
+      Story.fromBackendModel(data)
     );
   }
 });

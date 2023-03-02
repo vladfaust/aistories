@@ -19,10 +19,10 @@ export default protectedProcedure
     // Check that the user has access to the story.
     const story = await prisma.story.findUnique({
       where: { id: input.storyId },
-      select: { userIds: true },
+      select: { userId: true },
     });
 
-    if (!story || !story.userIds.includes(ctx.user.id)) {
+    if (!story || story.userId !== ctx.user.id) {
       throw new Error("Story not found");
     }
 

@@ -20,13 +20,8 @@ const router = createRouter({
       }),
     },
     {
-      path: "/energy",
-      component: () => import("@/components/pages/Energy.vue"),
-    },
-    {
-      path: "/user/:id",
-      component: () => import("@/components/pages/Profile.vue"),
-      props: (route) => ({ id: parseInt(route.params.id as string) }),
+      path: "/user",
+      component: () => import("@/components/pages/User/Me.vue"),
     },
     {
       path: "/auth/:provider/redirect",

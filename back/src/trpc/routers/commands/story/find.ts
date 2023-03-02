@@ -21,12 +21,13 @@ export default protectedProcedure
       },
       select: {
         id: true,
-        userIds: true,
-        userMap: true,
+        userId: true,
+        userCharId: true,
         charIds: true,
         nextCharId: true,
         name: true,
         fabula: true,
+        reason: true,
         updatedAt: true,
         createdAt: true,
         Content: {
@@ -44,7 +45,7 @@ export default protectedProcedure
       },
     });
 
-    if (!story || !story.userIds.includes(ctx.user.id)) {
+    if (!story || story.userId !== ctx.user.id) {
       throw new Error("Story not found");
     }
 

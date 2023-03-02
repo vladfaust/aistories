@@ -17,17 +17,13 @@ const inputLocked = ref(false);
 
 const inputDisabled = computed(() => {
   return (
-    inputLocked.value || userCharacter.value.ref.value?.id !== nextActorId.value
+    inputLocked.value || story.user.char.ref.value?.id !== nextActorId.value
   );
-});
-
-const userCharacter = computed(() => {
-  return story.users[0].char;
 });
 
 const maySend = computed(() => {
   return (
-    userCharacter.value.ref.value?.id === nextActorId.value &&
+    story.user.char.ref.value?.id === nextActorId.value &&
     inputText.value &&
     inputText.value.trim().length > 0
   );
@@ -77,8 +73,8 @@ onUnmounted(() => {
   :class="{ 'bg-base-100': inputDisabled }"
 )
   img.box-border.aspect-square.h-9.rounded.border.object-cover(
-    v-if="userCharacter?.ref.value"
-    :src="userCharacter.ref.value.imagePreviewUrl.toString()"
+    v-if="story.user.char?.ref.value"
+    :src="story.user.char.ref.value.imagePreviewUrl.toString()"
   )
   textarea.w-full.resize-none.bg-base-50.px-3.py-2.text-sm.leading-tight(
     ref="textarea"

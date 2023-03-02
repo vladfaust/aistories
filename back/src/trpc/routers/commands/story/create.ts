@@ -88,8 +88,8 @@ export default protectedProcedure
     const story = await prisma.story.create({
       data: {
         charIds: [input.userCharacterId, ...nonUserCharacterIds],
-        userIds: [ctx.user.id],
-        userMap: JSON.stringify({ [ctx.user.id]: input.userCharacterId }),
+        userId: ctx.user.id,
+        userCharId: input.userCharacterId,
         nextCharId: chooseRandom([...nonUserCharacterIds]),
         setup: input.setup,
         fabula: input.fabula,

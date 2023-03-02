@@ -5,9 +5,7 @@ import Header from "./Show/Header.vue";
 import History from "./Show/History.vue";
 import Input from "./Show/Input.vue";
 
-const { story } = defineProps<{
-  story: Deferred<Story>;
-}>();
+const { story } = defineProps<{ story: Deferred<Story> }>();
 </script>
 
 <template lang="pug">

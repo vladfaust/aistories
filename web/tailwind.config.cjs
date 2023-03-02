@@ -9,6 +9,8 @@ module.exports = {
       colors: {
         base: colors.slate,
         primary: colors.blue,
+        error: colors.red,
+        success: colors.emerald,
       },
       animation: {
         "bg-position": "bg-position 4s ease infinite",

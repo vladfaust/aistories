@@ -8,19 +8,18 @@ const prisma = new PrismaClient();
  */
 export default protectedProcedure.query(async ({ ctx }) => {
   return prisma.story.findMany({
-    where: {
-      userIds: {
-        has: ctx.user.id,
-      },
-    },
+    where: { userId: ctx.user.id },
     select: {
       id: true,
-      userIds: true,
-      userMap: true,
+      userId: true,
+      userCharId: true,
       charIds: true,
       nextCharId: true,
       name: true,
       fabula: true,
+      reason: true,
+      createdAt: true,
+      updatedAt: true,
       Content: {
         select: {
           id: true,

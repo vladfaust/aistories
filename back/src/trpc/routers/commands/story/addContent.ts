@@ -3,7 +3,7 @@ import { chooseRandom } from "@/utils";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { protectedProcedure } from "@/trpc/middleware/auth";
-import { getEnergyBalance } from "@/logic/getEnergyBalance";
+import { encode } from "gpt-3-encoder";
 
 const prisma = new PrismaClient();
 
@@ -26,8 +26,8 @@ export default protectedProcedure
         },
         select: {
           charIds: true,
-          userIds: true,
-          userMap: true,
+          userId: true,
+          userCharId: true,
           nextCharId: true,
           busy: true,
           buffer: true,
@@ -35,7 +35,7 @@ export default protectedProcedure
       });
 
       // Check that the user has access to the story.
-      if (!story || !story.userIds.includes(ctx.user.id)) {
+      if (!story || story.userId !== ctx.user.id) {
         throw new Error("Story not found");
       }
 
@@ -44,27 +44,17 @@ export default protectedProcedure
         throw new Error("Story is busy");
       }
 
-      const userCharId = JSON.parse(story.userMap)[ctx.user.id] as number;
-
       // Check that the user is the next actor.
-      if (story.nextCharId !== userCharId) {
+      if (story.nextCharId !== story.userCharId) {
         throw new Error("Not your turn");
-      }
-
-      // @ts-expect-error 2345
-      const energy = await getEnergyBalance(ctx.user.id, p);
-
-      // Check that user has enough energy.
-      if (energy < 1) {
-        throw new Error("Not enough energy");
       }
 
       const content = await p.storyContent.create({
         data: {
           storyId: input.storyId,
-          charId: userCharId,
+          charId: story.userCharId,
           userId: ctx.user.id,
-          energyCost: 1,
+          tokenLength: encode(input.content).length,
           content: input.content,
         },
         select: {
@@ -80,7 +70,7 @@ export default protectedProcedure
           busy: true,
           buffer: story.buffer.concat(content.id),
           nextCharId: chooseRandom(
-            story.charIds.filter((id) => id !== userCharId)
+            story.charIds.filter((id) => id !== story.userCharId)
           ),
         },
       });

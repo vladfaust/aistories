@@ -1,4 +1,3 @@
-import "./eventSyncer"; // TODO: Import function
 import * as health from "./health";
 import * as ai from "./ai";
 import * as http from "./server/http";

@@ -47,7 +47,6 @@ class Content {
 
 <script setup lang="ts">
 import Story from "@/models/Story";
-import { account } from "@/services/eth";
 import {
   type Ref,
   ref,
@@ -65,6 +64,7 @@ import { type Unsubscribable } from "@trpc/server/observable";
 import { Deferred } from "@/utils/deferred";
 import Character from "@/models/Character";
 import Spinner from "@/components/utility/Spinner.vue";
+import { userId } from "@/store";
 
 const { story } = defineProps<{ story: Story }>();
 
@@ -84,7 +84,7 @@ const watchStopHandle = watchEffect(async () => {
   unsubscribables = [];
   storyContent.value = [];
 
-  if (account.value) {
+  if (userId.value) {
     api.commands.story.getHistory.query({ storyId: story.id }).then((data) => {
       storyContent.value.push(...data.map((d) => markRaw(new Content(d))));
 
@@ -195,4 +195,13 @@ onUnmounted(() => {
           span.italic.text-base-400 {{ entry.text.value }}
         template(v-else-if="entry.type === 'utterance'")
           span.text-base-600 {{ entry.text.value }}
+  p.rounded.bg-base-50.p-2.text-center.leading-snug.text-error-500(
+    v-if="story.reason == 'noOpenAiApiKey'"
+  )
+    | The story can not progress due to the lack of OpenAI API key.
+    br
+    | Set the key in your
+    |
+    RouterLink.link(to="/user") profile settings
+    | .
 </template>

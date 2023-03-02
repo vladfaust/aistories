@@ -19,12 +19,14 @@ const prisma = new PrismaClient();
  * @yields Tokens
  */
 async function* generateCharacterResponse({
+  openAIApiKey,
   setup,
   characters,
   context,
   recentLines,
   currentCharacterName,
 }: {
+  openAIApiKey: string;
   setup: string | null;
   characters: { name: string; about: string; personality: string }[];
   context: string | null;
@@ -82,6 +84,7 @@ ${recentLines
         tokenChannel.close();
       },
     },
+    openAIApiKey,
   });
 
   openai.generate([prompt], ["\n"]);
@@ -99,12 +102,14 @@ ${recentLines
  * @returns The new summary
  */
 async function summarize({
+  openAIApiKey,
   setup,
   characterName,
   characters,
   oldSummary,
   newLines,
 }: {
+  openAIApiKey: string;
   setup: string | null;
   characterName: string;
   characters: { name: string; about: string; personality: string }[];
@@ -143,6 +148,7 @@ ${newLines.map((l) => `<${l.name}>: ` + l.content).join("\n")}
   const openai = new OpenAI({
     maxTokens: 512,
     temperature: 0.9,
+    openAIApiKey,
   });
 
   const response = await openai.generate([prompt]);
@@ -178,8 +184,13 @@ async function mainLoop() {
           },
           select: {
             id: true,
-            userIds: true,
-            userMap: true,
+            Owner: {
+              select: {
+                id: true,
+                openAiApiKey: true,
+              },
+            },
+            userCharId: true,
             charIds: true,
             nextCharId: true,
             setup: true,
@@ -226,7 +237,7 @@ async function mainLoop() {
           data: {
             storyId: story.id,
             charId: story.nextCharId,
-            energyCost: 0,
+            tokenLength: 0,
           },
           select: {
             id: true,
@@ -239,6 +250,22 @@ async function mainLoop() {
       if (!latestContent.content) {
         // If the latest content is empty, generate it.
         //
+
+        // But only if the user has OpenAI API key set.
+        // TODO: Continue the story generation after the key is set.
+        if (!story.Owner.openAiApiKey) {
+          await prisma.story.update({
+            where: { id: story.id },
+            data: { busy: false, pid: null, reason: "noOpenAiApiKey" },
+          });
+
+          konsole.log(["ai"], "No OpenAI API key set for story", {
+            userId: story.Owner.id,
+            storyId: story.id,
+          });
+
+          continue;
+        }
 
         const [characters, contentBuffer, memory] = await Promise.all([
           prisma.character.findMany({
@@ -285,7 +312,9 @@ async function mainLoop() {
         const pubChannel =
           redis.prefix + `story:${story.id}:contentToken:${latestContent.id}`;
         let generatedline = "";
+        let tokenLength = 0;
         for await (const token of generateCharacterResponse({
+          openAIApiKey: story.Owner.openAiApiKey,
           setup: story.setup,
           characters,
           context: memory?.memory || story.fabula || null,
@@ -298,6 +327,7 @@ async function mainLoop() {
           })),
         })) {
           await redis.default.publish(pubChannel, token);
+          tokenLength += 1;
           generatedline += token.toString();
         }
         generatedline = generatedline.trim();
@@ -348,8 +378,6 @@ async function mainLoop() {
           }
         }
 
-        const userMap = JSON.parse(story.userMap) as Record<number, number>;
-
         if (linesToSummarize.length > 0) {
           console.debug("Would summarize", {
             bufferTokenLength,
@@ -360,7 +388,7 @@ async function mainLoop() {
           // For all non-user characters, update their memories.
           await Promise.all(
             characters
-              .filter((c) => !Object.values(userMap).includes(c.id))
+              .filter((c) => c.id !== story.userCharId)
               .map(async (char) => {
                 const previousMemory = await prisma.storyMemory.findUnique({
                   where: {
@@ -379,6 +407,7 @@ async function mainLoop() {
                 if (previousMemory?.checkpoint == latestContent!.id) return;
 
                 const newMemory = await summarize({
+                  openAIApiKey: story.Owner.openAiApiKey!,
                   setup: story.setup,
                   characterName: char.name,
                   characters,
@@ -421,7 +450,7 @@ async function mainLoop() {
               nextCharId,
 
               // If the next actor is a character, mark the story as busy.
-              busy: !Object.values(userMap).includes(nextCharId),
+              busy: nextCharId !== story.userCharId,
 
               pid: null,
               buffer: story.buffer,
@@ -434,7 +463,7 @@ async function mainLoop() {
             },
             data: {
               content: generatedline,
-              energyCost: 1,
+              tokenLength,
             },
           }),
         ]);
