@@ -162,7 +162,11 @@ Example messages would be:
   console.debug(messages);
 
   const chatCompletion = await pRetry(() =>
-    openai.createChatCompletion(openAiApiKey, messages, 256)
+    openai.createChatCompletion(openAiApiKey, messages, 256, {
+      temperature: 1.05,
+      presencePenalty: 0.5,
+      frequencyPenalty: 0.25,
+    })
   );
 
   console.debug(chatCompletion, chatCompletion.choices[0]?.message);

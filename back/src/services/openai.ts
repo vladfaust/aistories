@@ -9,7 +9,16 @@ import {
 export async function createChatCompletion(
   apiKey: string,
   messages: ChatCompletionRequestMessage[],
-  maxTokens: number
+  maxTokens: number,
+  {
+    temperature = 1,
+    presencePenalty = 0,
+    frequencyPenalty = 0,
+  }: {
+    temperature?: number;
+    presencePenalty?: number;
+    frequencyPenalty?: number;
+  }
 ): Promise<CreateChatCompletionResponse> {
   const openai = new OpenAIApi(new Configuration({ apiKey }));
 
@@ -17,6 +26,9 @@ export async function createChatCompletion(
     model: "gpt-3.5-turbo-0301",
     messages,
     max_tokens: maxTokens,
+    temperature,
+    presence_penalty: presencePenalty,
+    frequency_penalty: frequencyPenalty,
   });
 
   return response.data;
