@@ -40,6 +40,13 @@ async function sendMessage() {
   }
 }
 
+function addNewline() {
+  if (!textareaFocused.value) return;
+
+  const text = inputText.value ?? "";
+  inputText.value = text + "\n";
+}
+
 onMounted(async () => {
   textarea.value!.focus();
 });
@@ -53,10 +60,11 @@ onMounted(async () => {
     v-if="story.user.char?.ref.value"
     :src="story.user.char.ref.value.imagePreviewUrl.toString()"
   )
-  textarea.w-full.resize-none.bg-base-50.px-3.py-2.text-sm.leading-tight(
+  textarea.w-full.bg-base-50.px-3.py-2.text-sm.leading-tight(
     ref="textarea"
     placeholder="Write a message..."
     @keypress.enter.prevent.exact="sendMessage"
+    @keypress.shift.enter.prevent.exact="addNewline"
     v-model="inputText"
     :disabled="inputDisabled"
     :class="{ 'cursor-not-allowed': inputDisabled }"
