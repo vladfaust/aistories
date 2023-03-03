@@ -19,7 +19,6 @@ export default t.procedure
         userId: true,
         userCharId: true,
         charIds: true,
-        nextCharId: true,
         name: true,
         fabula: true,
         reason: true,

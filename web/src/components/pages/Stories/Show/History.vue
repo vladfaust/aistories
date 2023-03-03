@@ -66,15 +66,18 @@ import Character from "@/models/Character";
 import Spinner from "@/components/utility/Spinner.vue";
 import { userId } from "@/store";
 
-const { story } = defineProps<{ story: Story }>();
+const { story, busy } = defineProps<{
+  story: Story;
+  busy: boolean;
+}>();
 
 const main = ref<HTMLElement | null>(null);
 const mainScroll = useScroll(main);
 const storyContent: ShallowRef<Content[]> = ref([]);
 let unsubscribables: Unsubscribable[] = [];
 
-function maybeScroll(force: boolean = false) {
-  if (force || mainScroll.arrivedState.bottom) {
+function maybeScroll() {
+  if (mainScroll.arrivedState.bottom) {
     mainScroll.y.value = main.value?.scrollHeight || 0;
   }
 }
@@ -87,10 +90,7 @@ const watchStopHandle = watchEffect(async () => {
   if (userId.value) {
     api.commands.story.getHistory.query({ storyId: story.id }).then((data) => {
       storyContent.value.push(...data.map((d) => markRaw(new Content(d))));
-
-      nextTick(() => {
-        maybeScroll(true);
-      });
+      nextTick(maybeScroll);
     });
 
     unsubscribables.push(
@@ -99,70 +99,6 @@ const watchStopHandle = watchEffect(async () => {
         {
           onData: (data) => {
             storyContent.value.push(markRaw(new Content(data)));
-            nextTick(maybeScroll);
-          },
-        }
-      )
-    );
-
-    unsubscribables.push(
-      api.subscriptions.story.onContentToken.subscribe(
-        { storyId: story.id },
-        {
-          onData: async (data) => {
-            const content = storyContent.value.find(
-              (c) => c.id === data.contentId
-            );
-
-            if (!content) {
-              console.error("Content not found: ", data.contentId);
-              return;
-            }
-
-            for (const char of data.token) {
-              if (char === "\n") {
-                // TODO: Mark as completed.
-              } else if (char === "[") {
-                content.entries.value.push({
-                  type: "narration",
-                  text: ref(""),
-                });
-
-                triggerRef(content.entries);
-              } else if (char === "]") {
-                const latest =
-                  content.entries.value[content.entries.value.length - 1];
-
-                if (latest.type === "narration") {
-                  content.entries.value.push({
-                    type: "utterance",
-                    text: ref(""),
-                  });
-
-                  triggerRef(content.entries);
-                } else {
-                  console.error("Unexpected token: ", char);
-                }
-              } else {
-                let latest =
-                  content.entries.value[content.entries.value.length - 1];
-
-                if (!latest) {
-                  const index = content.entries.value.push({
-                    type: "utterance",
-                    text: ref(char),
-                  });
-
-                  triggerRef(content.entries);
-
-                  latest = content.entries.value[index - 1];
-                }
-
-                latest.text.value += char;
-                triggerRef(latest.text);
-              }
-            }
-
             nextTick(maybeScroll);
           },
         }
@@ -178,16 +114,18 @@ onUnmounted(() => {
 </script>
 
 <template lang="pug">
-.box-border.flex.h-full.w-full.flex-col.gap-2.overflow-y-auto.p-3(ref="main")
+.box-border.flex.w-full.flex-col.gap-2.p-3(ref="main")
   p.bg-base-50.px-3.py-2.text-sm.font-medium.italic.text-base-400(
     v-if="story.fabula"
   ) {{ story.fabula }}
   .flex.items-center.gap-2(v-for="content of storyContent")
-    img.box-border.aspect-square.w-9.rounded.border.object-cover(
+    img.box-border.aspect-square.w-9.select-none.rounded.border.object-cover(
       v-if="content.character.ref.value"
       :src="content.character.ref.value.imagePreviewUrl.toString()"
     )
-    p.h-min.w-full.bg-base-50.px-3.py-2.text-sm.font-medium.leading-snug
+    p.h-min.w-full.bg-base-50.px-3.py-2.text-sm.font-medium.leading-tight
+      span.font-semibold {{ content.character.ref.value?.name }}
+      br
       template(v-if="content.entries.value.length === 0")
         Spinner.h-5(:kind="'dots-fade'")
       template(v-else v-for="entry of content.entries.value")
@@ -195,6 +133,7 @@ onUnmounted(() => {
           span.italic.text-base-400 {{ entry.text.value }}
         template(v-else-if="entry.type === 'utterance'")
           span.text-base-600 {{ entry.text.value }}
+      br
   p.rounded.bg-base-50.p-2.text-center.leading-snug.text-error-500(
     v-if="story.reason == 'noOpenAiApiKey'"
   )

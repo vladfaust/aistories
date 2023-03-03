@@ -42,6 +42,29 @@ async function main() {
     },
   });
 
+  const metaCollection = await prisma.characterCollection.create({
+    data: {
+      id: 0,
+      name: "Meta",
+      about: "",
+      imageUrl:
+        "https://psychonautwiki.org/w/images/8/8e/Namaste_%28Trifoliata_Mystica%29_by_Luke_Brown.jpg",
+      setup: "",
+    },
+  });
+
+  const ai = await prisma.character.create({
+    data: {
+      Collection: { connect: { id: metaCollection.id } },
+      name: "AI",
+      title: "The AI",
+      about: "The AI that runs the game",
+      imagePreviewUrl:
+        "https://ichef.bbci.co.uk/news/976/cpsprodpb/7727/production/_103330503_musk3.jpg.webp",
+      personality: "What personality?",
+    },
+  });
+
   const es = await prisma.characterCollection.create({
     data: {
       imageUrl:
@@ -50,18 +73,40 @@ async function main() {
       about: `
 Just an ordinary young man with thousands, even hundreds of thousands of those like him in every ordinary city. But one day something completely unusual happens to him: he falls asleep in a bus in winter and wakes up... in the middle of a hot summer. In front of him is "Sovyonok" - a pioneer camp, behind him is his former life.
 `.trim(),
-      setup: `
-Year 1984, Soviet Union.
-Young Pioneer camp Sovyonok is located in the middle of nowhere.
-It cosists of the following places:
-Entry gate
-Technics club
-Chess club
-Main square with the Gendo statue (nobody knows who he is)
-Dining building (stolovaya)
-Medical building
-Musical club
+      setup: limitText(
+        `
+Soviet Union, year undefined.
+
+Young Pioneer camp Sovyonok is located in the middle of nowhere beside an unidentified sea.
+
+When trying to leave the camp, you'll always return to it, but everyone acts like everything is normal and they can leave the camp whenever they want.
+They think that they are leaving the camp, but in reality they are just walking in circles.
+If you ask anyone about the exact place or year, they'll give you a vague answer.
+They just won't admit that they are stuck in a time loop.
+
+It is Soviet Union indeed, and the inhabitants are only aware of the technology of the time.
+
+The camp is filled with pine trees.
+It has many benches, is clean and well-kept.
+
+[POINTS OF INTEREST]
+[[Entry gate]]
+[[Technics club]]
+[[Main square]]
+With the Gendo statue (nobody knows who he is)
+[[Dining building]]
+Pioneers have breakfast, lunch and dinner here.
+The serving is classical for a Pioneer camp: porridge, soup, meat, potatoes, vegetables, bread, tea, etc.
+[[Medical building]]
+[[Musical club]]
+The only member of this club is Miku, who spends most of her time there.
+[[Jetty]]
+Never used, but is well-maintained.
+[[Beach]]
+The beach has volleybal court, but no sunbeds.
 `.trim(),
+        768
+      ),
     },
   });
 
@@ -76,7 +121,9 @@ Musical club
         "https://avatars.dzeninfra.ru/get-zen_doc/1714257/pub_5df3849704af1f00ad05de67_5df38533bb892c00aec608c4/scale_2400",
       personality: limitText(
         `
-Semyon, the protagonist and narrator of Everlasting Summer, is a 25-year-old freelance worker with no distinctive features or hobbies. His life changes dramatically when he accidentally travels to the pioneer camp Sovionok, where he mysteriously transforms into an 18-year-old boy and must unravel the camp's secrets.
+Semyon is a 25-year-old freelance worker with no distinctive features or hobbies. His life changes dramatically when he accidentally travels to the pioneer camp Sovionok, where he mysteriously transforms into an 18-year-old boy and must unravel the camp's secrets.
+
+He is the only one aware of the nature of the camp and the time loop, and he is the only one who can leave the camp. He is also the only one who can remember the past and the future, and he is the only one who can change the course of events.
 
 [[[Traits]]]
 Accidental Pervert

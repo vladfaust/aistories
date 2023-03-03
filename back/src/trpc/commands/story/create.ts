@@ -106,9 +106,7 @@ export default protectedProcedure
         charIds: [input.userCharacterId, ...nonUserCharacterIds],
         userId: ctx.user.id,
         userCharId: input.userCharacterId,
-        nextCharId: chooseRandom([...nonUserCharacterIds]),
         fabula: input.fabula,
-        busy: true, // The first actor is a character.
       },
     });
 

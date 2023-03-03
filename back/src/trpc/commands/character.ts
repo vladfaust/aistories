@@ -11,9 +11,8 @@ export default t.router({
   index: t.procedure.query(async () => {
     return (
       await prisma.character.findMany({
-        select: {
-          id: true,
-        },
+        where: { id: { gt: 0 } },
+        select: { id: true },
       })
     ).map((c) => c.id);
   }),
@@ -26,9 +25,7 @@ export default t.router({
     )
     .query(async ({ input }) => {
       return prisma.character.findUnique({
-        where: {
-          id: input.id,
-        },
+        where: { id: input.id },
         select: {
           id: true,
           collectionId: true,

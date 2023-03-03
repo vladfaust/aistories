@@ -1,32 +1,24 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, type Ref, ref } from "vue";
 import Story from "@/models/Story";
 import * as api from "@/services/api";
-import { type Unsubscribable } from "@trpc/server/observable";
 
-const { story } = defineProps<{
+const { story, busy } = defineProps<{
   story: Story;
+  busy: boolean;
 }>();
 
-const nextActorId = ref(0);
-
-const inputText = ref("");
 const textarea = ref<HTMLTextAreaElement | null>(null);
 const textareaFocused = ref(false);
 const inputLocked = ref(false);
+const inputText: Ref<string | undefined> = ref();
 
 const inputDisabled = computed(() => {
-  return (
-    inputLocked.value || story.user.char.ref.value?.id !== nextActorId.value
-  );
+  return busy || inputLocked.value;
 });
 
 const maySend = computed(() => {
-  return (
-    story.user.char.ref.value?.id === nextActorId.value &&
-    inputText.value &&
-    inputText.value.trim().length > 0
-  );
+  return !busy;
 });
 
 async function sendMessage() {
@@ -34,37 +26,22 @@ async function sendMessage() {
 
   inputLocked.value = true;
 
-  const text = inputText.value.trim();
+  const text = inputText.value?.trim();
 
   try {
-    await api.commands.story.addContent.mutate({
+    await api.commands.story.advance.mutate({
       storyId: story.id,
-      content: text,
+      userMessage: text,
     });
 
-    inputText.value = "";
+    inputText.value = undefined;
   } finally {
     inputLocked.value = false;
   }
 }
 
-let unsub: Unsubscribable;
-
 onMounted(async () => {
   textarea.value!.focus();
-
-  unsub = api.subscriptions.story.onTurn.subscribe(
-    { storyId: story.id },
-    {
-      onData: (data) => {
-        nextActorId.value = data.nextCharId;
-      },
-    }
-  );
-});
-
-onUnmounted(() => {
-  unsub.unsubscribe();
 });
 </script>
 

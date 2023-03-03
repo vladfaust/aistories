@@ -8,16 +8,14 @@ import { TRPCError } from "@trpc/server";
 const prisma = new PrismaClient();
 
 /**
- * Subscribe to turns in a story.
- * Immediately emits the current turn.
+ * Subscribe to the story business status.
+ * Immediately emits the current status.
  */
 export default t.procedure
   .input(z.object({ storyId: z.string() }))
   .subscription(async ({ input }) => {
-    // Check that the user has access to the story.
     const story = await prisma.story.findUnique({
       where: { id: input.storyId },
-      select: { userId: true, nextCharId: true },
     });
 
     if (!story) {
@@ -26,19 +24,25 @@ export default t.procedure
 
     const redisClient = redis.client();
 
-    return observable<{ nextCharId: number }>((emit) => {
+    return observable<{ busy: boolean }>((emit) => {
       redisClient.subscribe(
-        redis.prefix + `story:${input.storyId}:turn`,
+        redis.prefix + `story:${input.storyId}:busy`,
         (err, count) => {
           if (err) throw err;
         }
       );
 
       redisClient.on("message", (channel: string, message: string) => {
-        emit.next({ nextCharId: parseInt(message) });
+        emit.next({ busy: !!parseInt(message) });
       });
 
-      emit.next({ nextCharId: story.nextCharId });
+      redis.default.get(
+        redis.prefix + `story:${input.storyId}:busy`,
+        (err, res) => {
+          if (err) throw err;
+          emit.next({ busy: !!parseInt(res || "") });
+        }
+      );
 
       return () => {
         redisClient.unsubscribe();
