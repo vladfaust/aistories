@@ -53,6 +53,7 @@ export async function advance(
       select: {
         charId: true,
         content: true,
+        createdAt: true,
       },
       orderBy: {
         id: "asc",
@@ -95,7 +96,7 @@ The following is a turn-based roleplaying chat game.
   }
 
   if (contents.length > 0) {
-    for (const { charId, content } of contents) {
+    for (const { charId, content, createdAt } of contents) {
       if (charId === 0) {
         messages.push({
           role: "assistant",
@@ -105,7 +106,9 @@ The following is a turn-based roleplaying chat game.
         messages.push({
           role: "user",
           name: characters.find((c) => c.id === charId)!.name,
-          content,
+          content: `(unix time ${(createdAt.valueOf() / 1000).toFixed(
+            0
+          )}) ${content}`,
         });
       }
     }
@@ -218,6 +221,7 @@ Example messages would be:
         id: true,
         tokenLength: true,
         content: true,
+        createdAt: true,
         Character: {
           select: {
             name: true,
@@ -252,6 +256,7 @@ DO NOT include the story setup, characters' personalities and relationships from
 ONLY include the story progression since the previous revision.
 
 The summary should be concise (under 512 tokens), coherent, and omit any irrelevant details.
+Characters are aware of time, and the time is a crucial part of the summary.
 
 Make special effort to highlight the current story progression and relationships between characters happening in the new messages.
 Pay attention to details which could be important later.
@@ -272,7 +277,14 @@ ${
     : ""
 }
 [NEW LINES]
-${toSummarize.map((s) => `<${s.Character.name}>: ` + s.content).join("\n")}
+${toSummarize
+  .map(
+    (s) =>
+      `<${s.Character.name}> (unix time ${(
+        s.createdAt.valueOf() / 1000
+      ).toFixed(0)}): ` + s.content
+  )
+  .join("\n")}
 [NEW SUMMARY]
 `;
 
