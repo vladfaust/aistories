@@ -10,6 +10,10 @@ const SOFT_BUFFER_LIMIT = 384;
 const HARD_BUFFER_LIMIT = 768;
 assert(SOFT_BUFFER_LIMIT < HARD_BUFFER_LIMIT);
 
+function time(date: Date) {
+  return date.toISOString();
+}
+
 const prisma = new PrismaClient();
 
 /**
@@ -106,9 +110,7 @@ The following is a turn-based roleplaying chat game.
         messages.push({
           role: "user",
           name: characters.find((c) => c.id === charId)!.name,
-          content: `(unix time ${(createdAt.valueOf() / 1000).toFixed(
-            0
-          )}) ${content}`,
+          content: `(${time(createdAt)}) ${content}`,
         });
       }
     }
@@ -141,6 +143,9 @@ NEVER include knowledge that <${
       mainCharacter.name
     }> can not hear.
 
+Characters are aware of time.
+Current time is ${time(new Date())}.
+
 Keep the story engaging, consistent, coherent, and life-like.
 Include characters' interests, desires, and goals.
 
@@ -150,6 +155,7 @@ Start the message with the character's name in angle brackets, followed by a col
 Narrations are wrapped in [], and ONLY in [].
 Any other formatting is NOT allowed.
 The message MUST NOT contain newlines.
+The message MUST NOT contain timestamps.
 Keep the message fairly short (under 256 tokens).
 
 Example messages would be:
@@ -282,12 +288,7 @@ ${
 }
 [NEW LINES]
 ${toSummarize
-  .map(
-    (s) =>
-      `<${s.Character.name}> (unix time ${(
-        s.createdAt.valueOf() / 1000
-      ).toFixed(0)}): ` + s.content
-  )
+  .map((s) => `<${s.Character.name}> (${time(s.createdAt)}): ` + s.content)
   .join("\n")}
 [NEW SUMMARY]
 `;
