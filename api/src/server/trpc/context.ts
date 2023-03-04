@@ -3,8 +3,8 @@ import config from "@/config";
 import { TRPCError } from "@trpc/server";
 import { CreateExpressContextOptions } from "@trpc/server/dist/adapters/express";
 import * as jose from "jose";
-import { NodeHTTPCreateContextFnOptions } from "@trpc/server/dist/adapters/node-http";
 import cookie from "cookie";
+import { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
 
 const prisma = new PrismaClient();
 
@@ -53,7 +53,8 @@ export async function createExpressContext({
 
 export async function createWsContext({
   req,
-}: NodeHTTPCreateContextFnOptions<any, any>): Promise<Context> {
+  res,
+}: CreateWSSContextFnOptions): Promise<Context> {
   const cookies = cookie.parse(req.headers.cookie ?? "");
 
   if (cookies) {

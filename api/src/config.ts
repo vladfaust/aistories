@@ -3,16 +3,12 @@ import { random } from "nanoid";
 
 dotenv.config();
 
-class HttpServer {
+class Server {
   constructor(
     readonly host: string,
     readonly port: number,
     readonly corsOrigin: string
   ) {}
-}
-
-class WsServer {
-  constructor(readonly host: string, readonly port: number) {}
 }
 
 class Jwt {
@@ -30,8 +26,7 @@ class Config {
     readonly prod: boolean,
     readonly databaseUrl: URL,
     readonly redisUrl: URL,
-    readonly httpServer: HttpServer,
-    readonly wsServer: WsServer,
+    readonly server: Server,
     readonly jwt: Jwt,
     readonly discord: Discord
   ) {}
@@ -46,14 +41,10 @@ const config = new Config(
   process.env.NODE_ENV === "production",
   new URL(requireEnv("DATABASE_URL")),
   new URL(requireEnv("REDIS_URL")),
-  new HttpServer(
-    requireEnv("HTTP_SERVER_HOST"),
-    parseInt(requireEnv("HTTP_SERVER_PORT")),
-    requireEnv("HTTP_SERVER_CORS_ORIGIN")
-  ),
-  new WsServer(
-    requireEnv("WS_SERVER_HOST"),
-    parseInt(requireEnv("WS_SERVER_PORT"))
+  new Server(
+    requireEnv("SERVER_HOST"),
+    parseInt(requireEnv("SERVER_PORT")),
+    requireEnv("SERVER_CORS_ORIGIN")
   ),
   new Jwt(Buffer.from(requireEnv("JWT_SECRET"))),
   new Discord(requireEnv("DISCORD_CLIENT_SECRET"))
