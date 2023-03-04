@@ -6,13 +6,16 @@
   "license": "UNLICENSED",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aistories/api": "1.0.0-beta.1",
+    "@aistories/api": "1.0.0-beta.2",
     "@heroicons/vue": "^2.0.16",
     "@trpc/client": "^10.11.1",
     "@trpc/server": "^10.11.1",

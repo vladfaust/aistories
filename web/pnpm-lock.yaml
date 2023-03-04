@@ -1,7 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@aistories/api': 1.0.0-beta.1
+  '@aistories/api': 1.0.0-beta.2
   '@heroicons/vue': ^2.0.16
   '@prettier/plugin-pug': ^2.4.1
   '@trpc/client': ^10.11.1
@@ -32,7 +32,7 @@ specifiers:
   web3-token: ^1.0.4
 
 dependencies:
-  '@aistories/api': 1.0.0-beta.1
+  '@aistories/api': 1.0.0-beta.2
   '@heroicons/vue': 2.0.16_vue@3.2.47
   '@trpc/client': 10.11.1_@trpc+server@10.11.1
   '@trpc/server': 10.11.1
@@ -66,12 +66,13 @@ devDependencies:
 
 packages:
 
-  /@aistories/api/1.0.0-beta.1:
-    resolution: {integrity: sha512-wb0Z1gpClWkUmWTuaDVfEhOh5Cat+G9MSPWcfbwx+NXho8b+x5zCFXXCSI6A92GZPy/do8jb2jCugzc4lDOWZw==, tarball: download/@aistories/api/1.0.0-beta.1/37733df90ce9595bfe8acda6f49a916ee49d24b4}
+  /@aistories/api/1.0.0-beta.2:
+    resolution: {integrity: sha512-2kKEonO2w4Gr0epzEQe5RCUcEyAcuqYhtXdYD3onkPt+t51d49C1+JK6cyVsn9CyWI1iDD7pscilxitZp1C8KA==, tarball: download/@aistories/api/1.0.0-beta.2/ba349ca59f457a45bd82ee628a24d3c93fb6285d}
+    engines: {node: '18'}
     dependencies:
       '@eyalsh/async_channels': 1.0.0-rc8
       '@graphql-yoga/urql-exchange': 1.6.1_qy6aqlbz4dfay6synfqtvut7jy
-      '@prisma/client': 4.11.0
+      '@prisma/client': 4.11.0_prisma@4.11.0
       '@trpc/server': 10.11.1
       '@urql/core': 3.1.1_graphql@16.6.0
       chalk: 5.2.0
@@ -89,6 +90,7 @@ packages:
       openai: 3.2.1
       p-retry: 5.1.2
       pg: 8.9.0
+      prisma: 4.11.0
       web3-token: 1.0.4
       wonka: 6.2.3
       ws: 8.12.1
@@ -99,7 +101,6 @@ packages:
       - bufferutil
       - debug
       - pg-native
-      - prisma
       - supports-color
       - utf-8-validate
     dev: false
@@ -786,7 +787,7 @@ packages:
       pug-lexer: 5.0.1
     dev: true
 
-  /@prisma/client/4.11.0:
+  /@prisma/client/4.11.0_prisma@4.11.0:
     resolution: {integrity: sha512-0INHYkQIqgAjrt7NzhYpeDQi8x3Nvylc2uDngKyFDDj1tTRQ4uV1HnVmd1sQEraeVAN63SOK0dgCKQHlvjL0KA==}
     engines: {node: '>=14.17'}
     requiresBuild: true
@@ -797,10 +798,16 @@ packages:
         optional: true
     dependencies:
       '@prisma/engines-version': 4.11.0-57.8fde8fef4033376662cad983758335009d522acb
+      prisma: 4.11.0
     dev: false
 
   /@prisma/engines-version/4.11.0-57.8fde8fef4033376662cad983758335009d522acb:
     resolution: {integrity: sha512-3Vd8Qq06d5xD8Ch5WauWcUUrsVPdMC6Ge8ILji8RFfyhUpqon6qSyGM0apvr1O8n8qH8cKkEFqRPsYjuz5r83g==}
+    dev: false
+
+  /@prisma/engines/4.11.0:
+    resolution: {integrity: sha512-0AEBi2HXGV02cf6ASsBPhfsVIbVSDC9nbQed4iiY5eHttW9ZtMxHThuKZE1pnESbr8HRdgmFSa/Kn4OSNYuibg==}
+    requiresBuild: true
     dev: false
 
   /@repeaterjs/repeater/3.0.4:
@@ -2645,6 +2652,15 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: true
+
+  /prisma/4.11.0:
+    resolution: {integrity: sha512-4zZmBXssPUEiX+GeL0MUq/Yyie4ltiKmGu7jCJFnYMamNrrulTBc+D+QwAQSJ01tyzeGHlD13kOnqPwRipnlNw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+    requiresBuild: true
+    dependencies:
+      '@prisma/engines': 4.11.0
+    dev: false
 
   /promise/7.3.1:
     resolution: {integrity: sha512-nolQXZ/4L+bP/UGlkfaIujX9BKxGwmQ9OT4mOt5yvy8iK1h3wqTEJCijzGANTCCl9nWjY41juyAn2K3Q1hLLTg==}
