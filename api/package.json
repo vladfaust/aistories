@@ -1,12 +1,10 @@
 {
   "name": "@aistories/api",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.1",
   "description": "AIStories API server",
   "author": "Vlad Faust <hey@vladfaust.com>",
   "license": "UNLICENSED",
-  "private": true,
   "type": "module",
-  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf dist",
@@ -57,7 +55,10 @@
     "zod": "^3.20.6"
   },
   "files": [
-    "dist/trpc"
+    "dist/trpc.d.ts",
+    "dist/server/trpc/commands.d.ts",
+    "dist/server/trpc/subscriptions.d.ts",
+    "dist/server/trpc/context.d.ts"
   ],
   "exports": {
     "./trpc": "./dist/trpc"
