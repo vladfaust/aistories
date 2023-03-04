@@ -1,7 +1,11 @@
 {
-  "name": "@aiproject/api",
+  "name": "@aistories/api",
   "version": "1.0.0",
-  "description": "",
+  "description": "AIStories API server",
+  "author": "Vlad Faust <hey@vladfaust.com>",
+  "license": "UNLICENSED",
+  "private": true,
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,10 +15,6 @@
     "start": "node dist/index.js",
     "seed": "node dist/scripts/seed.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module",
   "devDependencies": {
     "@types/cookie": "^0.5.1",
     "@types/cookie-parser": "^1.4.3",

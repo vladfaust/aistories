@@ -1,17 +1,10 @@
 {
-  "name": "vite-vue3-tsc-tailwind-pug-template",
+  "name": "@aistories/web",
   "version": "1.0.0",
+  "description": "AIStories web client",
   "author": "Vlad Faust <hey@vladfaust.com>",
-  "description": "Vite + Vue 3 + TypeScript + TailwindCSS + Pug template",
-  "license": "MIT",
-  "keywords": [
-    "vite-template",
-    "vue",
-    "vue3",
-    "typescript",
-    "tailwindcss",
-    "pug"
-  ],
+  "license": "UNLICENSED",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
