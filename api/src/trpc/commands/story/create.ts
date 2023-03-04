@@ -1,5 +1,3 @@
-import { erc1155Balance } from "@/services/eth";
-import { chooseRandom, toHex } from "@/utils";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { protectedProcedure } from "@/trpc/middleware/auth";
@@ -26,11 +24,6 @@ export default protectedProcedure
     })
   )
   .mutation(async ({ ctx, input }) => {
-    // 1. Check that the character exists.
-    // 2. Check that the user owns the character.
-    // 3. Create a new story.
-    // 4. Ensure that a character is selected to start the story.
-
     const nonUserCharacterIds = new Set(input.nonUserCharacterIds);
 
     if (nonUserCharacterIds.size !== input.nonUserCharacterIds.length) {
@@ -59,44 +52,11 @@ export default protectedProcedure
           in: [input.userCharacterId, ...nonUserCharacterIds],
         },
       },
-      select: {
-        id: true,
-        erc1155Address: true,
-        erc1155Id: true,
-      },
+      select: { id: true },
     });
 
     if (characters.length !== 1 + nonUserCharacterIds.size) {
       throw new Error("Character not found");
-    }
-
-    for (const character of characters) {
-      if (character.erc1155Address) {
-        if (!character.erc1155Id) throw new Error("Invalid ERC1155 id");
-
-        const web3Identity = await prisma.web3Identity.findFirst({
-          where: {
-            userId: ctx.user.id,
-          },
-          select: {
-            address: true,
-          },
-        });
-
-        if (!web3Identity) {
-          throw new Error("User has no Web3 provider");
-        }
-
-        const balance = await erc1155Balance(
-          toHex(character.erc1155Address),
-          toHex(character.erc1155Id),
-          toHex(web3Identity.address)
-        );
-
-        if (balance.isZero()) {
-          throw new Error("Insufficient character token balance");
-        }
-      }
     }
 
     const story = await prisma.story.create({

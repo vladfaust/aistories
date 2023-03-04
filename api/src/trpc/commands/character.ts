@@ -33,9 +33,6 @@ export default t.router({
           name: true,
           title: true,
           about: true,
-          erc1155Address: true,
-          erc1155Id: true,
-          erc1155NftUri: true,
         },
       });
     }),

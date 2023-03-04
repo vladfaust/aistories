@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import { onMounted } from "vue";
 import HeaderVue from "@/components/Header.vue";
 import FooterVue from "@/components/Footer.vue";
-import { autoConnect } from "@/services/eth";
 import { useRoute } from "vue-router";
 import "animate.css";
 
 const route = useRoute();
-
-onMounted(autoConnect);
 </script>
 
 <template lang="pug">

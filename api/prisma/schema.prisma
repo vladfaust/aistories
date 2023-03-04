@@ -27,18 +27,7 @@ model User {
   Stories Story[] // Stories the user owns
   Content StoryContent[] // User-generated content
 
-  // NOTE: For now, only a single web3 identity per user is supported.
-  Web3Identities   Web3Identity[]
   OAuth2Identities OAuth2Identity[]
-}
-
-model Web3Identity {
-  address Bytes  @id
-  userId  String
-
-  User User @relation(fields: [userId], references: [id])
-
-  @@unique([address, userId])
 }
 
 model OAuth2Provider {
@@ -99,10 +88,6 @@ model Character {
   about String // Short description
 
   personality String // Used in a prompt, should be hidden from the user
-
-  erc1155Address Bytes?
-  erc1155Id      Bytes?
-  erc1155NftUri  String?
 
   Collection CharacterCollection @relation(fields: [collectionId], references: [id])
   Stories    Story[] // Stories the character is participating in

@@ -2,14 +2,14 @@
   "name": "@aiproject/api",
   "version": "1.0.0",
   "description": "",
-  "main": "dist/src/index.js",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf dist",
-    "build": "tsc && resolve-tspaths --src .",
+    "build": "tsc && resolve-tspaths",
     "dev": "nodemon",
-    "start": "node dist/src/index.js",
-    "seed": "node dist/src/scripts/seed.js"
+    "start": "node dist/index.js",
+    "seed": "node dist/scripts/seed.js"
   },
   "keywords": [],
   "author": "",
@@ -57,15 +57,15 @@
     "zod": "^3.20.6"
   },
   "files": [
-    "dist/src/trpc"
+    "dist/trpc"
   ],
   "exports": {
-    "./trpc": "./dist/src/trpc"
+    "./trpc": "./dist/trpc"
   },
   "typesVersions": {
     "*": {
       "trpc": [
-        "dist/src/trpc.d.ts"
+        "dist/trpc.d.ts"
       ]
     }
   }

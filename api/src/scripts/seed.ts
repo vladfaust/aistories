@@ -18,22 +18,6 @@ function limitText(text: string, limit: number): string {
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.settings.create({
-    data: {
-      key: "energyExchangeRate",
-      value: "20.0",
-      description: "Energy exchange rate for 1 ETH",
-    },
-  });
-
-  await prisma.settings.create({
-    data: {
-      key: "energyExchangeMinValue",
-      value: "0.05",
-      description: "Minimum ETH of energy purchase",
-    },
-  });
-
   await prisma.oAuth2Provider.create({
     data: {
       id: "discord",
