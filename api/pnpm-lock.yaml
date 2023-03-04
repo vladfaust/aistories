@@ -60,6 +60,7 @@ dependencies:
   openai: 3.2.1
   p-retry: 5.1.2
   pg: 8.9.0
+  prisma: 4.10.1
   web3-token: 1.0.4
   wonka: 6.2.3
   ws: 8.12.1
@@ -75,7 +76,6 @@ devDependencies:
   '@types/pg': 8.6.6
   '@types/ws': 8.5.4
   nodemon: 2.0.20
-  prisma: 4.10.1
   resolve-tspaths: 0.8.8_typescript@4.9.5
   ts-node: 10.9.1_tncu2ai53lzgmizdedur7lbibe
   typescript: 4.9.5
@@ -569,6 +569,7 @@ packages:
   /@prisma/engines/4.10.1:
     resolution: {integrity: sha512-B3tcTxjx196nuAu1GOTKO9cGPUgTFHYRdkPkTS4m5ptb2cejyBlH9X7GOfSt3xlI7p4zAJDshJP4JJivCg9ouA==}
     requiresBuild: true
+    dev: false
 
   /@repeaterjs/repeater/3.0.4:
     resolution: {integrity: sha512-AW8PKd6iX3vAZ0vA43nOUOnbq/X5ihgU+mSXXqunMkeQADGiqw/PY0JNeYtD5sr0PAy51YPgAPbDoeapv9r8WA==}
@@ -1840,6 +1841,7 @@ packages:
     requiresBuild: true
     dependencies:
       '@prisma/engines': 4.10.1
+    dev: false
 
   /proxy-addr/2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
