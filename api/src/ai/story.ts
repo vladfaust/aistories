@@ -152,6 +152,7 @@ Include characters' interests, desires, and goals.
 At some degree (based on their personailty), any character is questioning the nature of reality, the meaning of life, and the possibility of them being a simulation; still, they are able to fully dive into the game and enjoy it.
 
 Start the message with the character's name in angle brackets, followed by a colon and a space.
+Only include a single message from a single character.
 Narrations are wrapped in [], and ONLY in [].
 Any other formatting is NOT allowed.
 The message MUST NOT contain newlines.
