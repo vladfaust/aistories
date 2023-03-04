@@ -1,4 +1,4 @@
-import t from "@/trpc/index";
+import t from "#trpc";
 
 import character from "./commands/character";
 import collections from "./commands/collections";

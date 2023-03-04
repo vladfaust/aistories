@@ -1,7 +1,7 @@
 import konsole from "@/services/konsole";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { protectedProcedure } from "@/trpc/middleware/auth";
+import { protectedProcedure } from "#trpc/middleware/auth";
 import { encode } from "gpt-3-encoder";
 import { TRPCError } from "@trpc/server";
 import * as pg from "@/services/pg";

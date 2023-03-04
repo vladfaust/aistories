@@ -1,4 +1,4 @@
-import { t } from "@/trpc/index";
+import { t } from "#trpc";
 
 import oAuth2LogIn from "./user/oAuth2LogIn";
 import settings from "./user/settings";

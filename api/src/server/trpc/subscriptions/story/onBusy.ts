@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { t } from "@/trpc/index";
+import { t } from "#trpc";
 import * as redis from "@/services/redis";
 import { PrismaClient } from "@prisma/client";
 import { observable } from "@trpc/server/observable";

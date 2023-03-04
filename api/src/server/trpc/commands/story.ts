@@ -1,4 +1,4 @@
-import { t } from "@/trpc/index";
+import { t } from "#trpc";
 
 import advance from "./story/advance";
 import create from "./story/create";

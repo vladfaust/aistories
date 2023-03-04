@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { t } from "../index";
+import { t } from "../../trpc";
 
 const reqUser = t.middleware(({ next, ctx }) => {
   if (!ctx.user) {

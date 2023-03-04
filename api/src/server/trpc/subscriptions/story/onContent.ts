@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { t } from "@/trpc/index";
+import { t } from "#trpc";
 import * as pg from "@/services/pg";
 import { observable } from "@trpc/server/observable";
 import { PrismaClient } from "@prisma/client";

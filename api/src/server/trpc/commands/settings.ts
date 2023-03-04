@@ -1,4 +1,4 @@
-import { t } from "@/trpc/index";
+import { t } from "#trpc";
 import { z } from "zod";
 import * as settings from "@/settings";
 

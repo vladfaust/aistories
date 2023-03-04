@@ -1,4 +1,4 @@
-import { t } from "@/trpc/index";
+import { t } from "#trpc";
 import { PrismaClient } from "@prisma/client";
 import z from "zod";
 import config from "@/config";

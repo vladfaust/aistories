@@ -1,5 +1,5 @@
-import { subscriptionsRouter } from "@/trpc/subscriptions";
-import { createWsContext } from "@/trpc/context.js";
+import { subscriptionsRouter } from "#trpc/subscriptions";
+import { createWsContext } from "#trpc/context.js";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { WebSocketServer } from "ws";
 import konsole from "@/services/konsole";

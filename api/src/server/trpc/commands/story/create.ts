@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { protectedProcedure } from "@/trpc/middleware/auth";
+import { protectedProcedure } from "#trpc/middleware/auth";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 

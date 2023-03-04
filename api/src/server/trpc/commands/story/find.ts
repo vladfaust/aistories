@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { t } from "@/trpc/index";
+import { t } from "#trpc";
 import { TRPCError } from "@trpc/server";
 
 const prisma = new PrismaClient();

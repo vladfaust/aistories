@@ -1,5 +1,5 @@
 import { PrismaClient } from "@prisma/client";
-import { protectedProcedure } from "@/trpc/middleware/auth";
+import { protectedProcedure } from "#trpc/middleware/auth";
 
 const prisma = new PrismaClient();
 
