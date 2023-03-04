@@ -5,7 +5,7 @@ import {
   loggerLink,
   wsLink,
 } from "@trpc/client";
-import type { CommandsRouter, SubscriptionsRouter } from "@aiproject/back/trpc";
+import type { CommandsRouter, SubscriptionsRouter } from "@aiproject/api/trpc";
 import config from "../config";
 
 export const commands = createTRPCProxyClient<CommandsRouter>({
