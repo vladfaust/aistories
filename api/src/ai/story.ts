@@ -184,10 +184,10 @@ Example messages would be:
   const chatCompletion = await pRetry(
     () =>
       openai.createChatCompletion(openAiApiKey, messages, 256, {
-        temperature: 1.05,
-        topP: 0.75,
-        presencePenalty: 0.75,
-        frequencyPenalty: 0.75,
+        temperature: 1.75,
+        topP: 0.5,
+        presencePenalty: 1,
+        frequencyPenalty: 1,
       }),
     {
       retries: 5,
