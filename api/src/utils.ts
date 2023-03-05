@@ -1,5 +1,3 @@
-import { ethers } from "ethers";
-
 export class Deferred<T> {
   private readonly _promise: Promise<T>;
   private _resolve!: (value: T | PromiseLike<T>) => void;
@@ -51,18 +49,6 @@ export async function timeout<T>(
     });
 
   return deferred.promise;
-}
-
-export function toBuffer(
-  value: Parameters<typeof ethers.utils.arrayify>[0]
-): Buffer {
-  return Buffer.from(ethers.utils.arrayify(value));
-}
-
-export function toHex(
-  value: Parameters<typeof ethers.utils.hexlify>[0]
-): string {
-  return ethers.utils.hexlify(value);
 }
 
 export function chooseRandom<T>(array: T[]): T {
