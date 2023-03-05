@@ -160,7 +160,7 @@ Current time is ${time(new Date())}.
 
 Keep the story engaging, consistent, coherent, life-like and immersive with details.
 Include characters' interests, desires, and goals.
-Give freedom to characters' fantasies and imagination.
+Give freedom to characters' fantasies and imagination; develop the story if the main character is struggling to find a way to continue.
 If a character has strong will, let them act on it.
 
 Respond with a single message from a single character.
