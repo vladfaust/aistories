@@ -137,13 +137,13 @@ The following is a turn-based roleplaying chat game.
               ", "
             )}], choosing the most likely one to responds in the current context.
 Avoid repeating the same character too often.
-If a character has nothing to say, it's better to respond with a narration describing the silent answer.`
+If a character has nothing to say, it is better to respond with a narration describing the silent answer.`
         : `Respond with a SINGLE message as if you are <${possibleChars[0].name}>.`
     }
 
 <${
       mainCharacter.name
-    }> is the main character of the story, so keep the story focused on them, and pleasing to them.
+    }> is the main character of the story, so keep the story focused on them.
 If a character is currently absent from the <${
       mainCharacter.name
     }>'s point of view, if <${
@@ -161,6 +161,7 @@ Current time is ${time(new Date())}.
 Keep the story engaging, consistent, coherent, life-like and immersive with details.
 Include characters' interests, desires, and goals.
 Give freedom to characters' fantasies and imagination.
+If a character has strong will, let them act on it.
 
 Respond with a single message from a single character.
 Start the message with the character's name in angle brackets, followed by a colon and a space.
