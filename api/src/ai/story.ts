@@ -136,6 +136,7 @@ The following is a turn-based roleplaying chat game.
             .join(", ")}], choosing the most appropriate for the situation.`
         : `Respond with a SINGLE message as if you are <${possibleChars[0].name}>.`
     } If the character has nothing to say, make them respond with a narration.
+AVOID REPETITION.
 
 <${
       mainCharacter.name
