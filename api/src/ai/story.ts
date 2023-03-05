@@ -127,7 +127,9 @@ The following is a turn-based roleplaying chat game.
 Respond with a SINGLE message as if you are one of the following characters: ${characters
       .filter((c) => c.id !== story.userCharId && c.id !== 0)
       .map((c) => `<${c.name}>`)
-      .join(", ")}.
+      .join(
+        ", "
+      )}, choosing the most likely one to responds in the current context.
 
 <${
       mainCharacter.name
@@ -148,7 +150,6 @@ Current time is ${time(new Date())}.
 
 Keep the story engaging, consistent, coherent, life-like and immersive with details.
 Include characters' interests, desires, and goals.
-Include juicy details about sex, violence, and other adult themes; the players gave consent to see them, and they are expecting them.
 
 Respond with a single message from a single character.
 Start the message with the character's name in angle brackets, followed by a colon and a space.
