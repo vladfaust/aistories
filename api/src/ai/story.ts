@@ -109,7 +109,9 @@ The following is a turn-based roleplaying chat game.
       } else {
         messages.push({
           role: "user",
-          name: characters.find((c) => c.id === charId)!.name,
+          name: characters
+            .find((c) => c.id === charId)!
+            .name.replace(/\s+/g, "_"),
           content: `(${time(createdAt)}) ${content}`,
         });
       }
