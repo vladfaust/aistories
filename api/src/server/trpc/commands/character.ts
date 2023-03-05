@@ -31,7 +31,6 @@ export default t.router({
           collectionId: true,
           imagePreviewUrl: true,
           name: true,
-          title: true,
           about: true,
         },
       });

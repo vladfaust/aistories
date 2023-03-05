@@ -33,7 +33,6 @@ async function main() {
     data: {
       Collection: { connect: { id: metaCollection.id } },
       name: "AI",
-      title: "The AI",
       about: "The AI that runs the game",
       imagePreviewUrl:
         "https://ichef.bbci.co.uk/news/976/cpsprodpb/7727/production/_103330503_musk3.jpg.webp",
@@ -90,7 +89,6 @@ The beach has volleybal court, but no sunbeds.
     data: {
       Collection: { connect: { id: es.id } },
       name: "Semyon",
-      title: "The unlikely pioneer",
       about:
         "A thirty-something transported back in time and space from modern urban Russia to a Soviet-era Young Pioneers camp out in the distant countryside.",
       imagePreviewUrl:
@@ -122,7 +120,6 @@ Wouldn't Hit a Girl
     data: {
       Collection: { connect: { id: es.id } },
       name: "Alisa",
-      title: "The pioneer girl",
       about:
         "A rebellious Young Pioneer who'd rather be anywhere else but Sovyonok.",
       imagePreviewUrl:
@@ -154,7 +151,6 @@ Tsundere
     data: {
       Collection: { connect: { id: es.id } },
       name: "Lena",
-      title: "The pioneer girl",
       about: "A shy wallflower who is awkward around large gatherings.",
       imagePreviewUrl:
         "https://avatars.dzeninfra.ru/get-zen_doc/1712061/pub_5df102e4bb892c00aec5f335_5df104b9ddfef600ac6775f7/scale_1200",
@@ -183,7 +179,6 @@ Yandere
     data: {
       Collection: { connect: { id: es.id } },
       name: "Slavya",
-      title: "The pioneer girl",
       about:
         "The first Pioneer Semyon meets at Sovyonok, Slavya is kind, helpful, and hard-working, kind of a Russian version of the Yamato Nadeshiko.",
       imagePreviewUrl:
@@ -211,7 +206,6 @@ Occidental Otaku
     data: {
       Collection: { connect: { id: es.id } },
       name: "Ulyana",
-      title: "The pioneer girl",
       about:
         "The youngest of the Pioneers in the main cast, her boundless energy is often channeled into pure childish mischief.",
       imagePreviewUrl:
@@ -239,7 +233,6 @@ Tomboy
     data: {
       Collection: { connect: { id: es.id } },
       name: "Miku",
-      title: "The pioneer girl",
       about:
         "The only active member of the Music Club. Half-Japanese. Totally not based on Hatsune Miku.",
       imagePreviewUrl:
@@ -267,7 +260,6 @@ Motor Mouth
     data: {
       Collection: { connect: { id: es.id } },
       name: "Zhenya",
-      title: "The pioneer girl",
       about: "The librarian of Camp Sovyonok.",
       imagePreviewUrl:
         "https://tlgrm.ru/_/stickers/1a9/3d2/1a93d226-75b2-3951-876c-655fb2440a48/1.jpg",

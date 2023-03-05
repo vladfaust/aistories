@@ -32,7 +32,6 @@ export default class Character {
     id: number;
     collectionId: number;
     name: string;
-    title: string;
     about: string;
     imagePreviewUrl: string;
   }): Character {
@@ -41,7 +40,6 @@ export default class Character {
         data.id,
         Collection.findOrCreate(data.collectionId) as Deferred<Collection>,
         data.name,
-        data.title,
         data.about,
         new URL(data.imagePreviewUrl)
       )
@@ -52,7 +50,6 @@ export default class Character {
     readonly id: number,
     readonly collection: Deferred<Collection>,
     readonly name: string,
-    readonly title: string,
     readonly about: string,
     readonly imagePreviewUrl: URL,
     readonly erc1155Token?: {

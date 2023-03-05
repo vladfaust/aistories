@@ -10,6 +10,5 @@ const { character } = defineProps<{ character: Character }>();
   )
   .flex.flex-col
     span.text-lg.font-bold.leading-tight {{ character.name }}
-    span.text-sm.leading-tight.text-base-500 {{ character.title }}
     p.leading-tight {{ character.about }}
 </template>
