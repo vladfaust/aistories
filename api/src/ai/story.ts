@@ -135,7 +135,9 @@ The following is a turn-based roleplaying chat game.
             .map((c) => `<${c.name}>`)
             .join(
               ", "
-            )}], choosing the most likely one to responds in the current context.`
+            )}], choosing the most likely one to responds in the current context.
+Avoid repeating the same character too often.
+If a character has nothing to say, it's better to respond with a narration describing the silent answer.`
         : `Respond with a SINGLE message as if you are <${possibleChars[0].name}>.`
     }
 
