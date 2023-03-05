@@ -146,23 +146,23 @@ NEVER include knowledge that <${
 Characters are aware of time.
 Current time is ${time(new Date())}.
 
-Keep the story engaging, consistent, coherent, and life-like.
+Keep the story engaging, consistent, coherent, life-like and immersive with details.
 Include characters' interests, desires, and goals.
 
-At some degree (based on their personailty), any character is questioning the nature of reality, the meaning of life, and the possibility of them being a simulation; still, they are able to fully dive into the game and enjoy it.
-
+Respond with a single message from a single character.
 Start the message with the character's name in angle brackets, followed by a colon and a space.
-Only include a single message from a single character.
 Narrations are wrapped in [], and ONLY in [].
 Any other formatting is NOT allowed.
 The message MUST NOT contain newlines.
 The message MUST NOT contain timestamps.
+DO NOT include character thoughts.
 Keep the message fairly short (under 256 tokens).
 
 Example messages would be:
 
 <John>: Hello! [John waves.] How are you?
-<Mary Jane>: [Mary welcomes John.] So, then she said: "That is not what you think!". Can you imagine?
+<Mary Jane>: [Mary welcomes John.] I'm fine, thanks. How are you?
+<John>: I'm fine, thanks. [John looks at Mary with joy.] What are you doing here?
 `,
   });
 
