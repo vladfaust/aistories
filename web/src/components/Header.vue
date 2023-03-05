@@ -12,6 +12,7 @@ header.flex.h-16.w-full.place-content-center.border-y.px-4
     ul._left.flex.items-center.gap-6
       li
         RouterLink.pressable.block.text-lg.transition-transform(to="/")
+          span.text-base-400 β.
           | aistories.xyz
           span.select-none ™️
     .flex.items-center.justify-center
