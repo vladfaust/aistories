@@ -160,6 +160,7 @@ Current time is ${time(new Date())}.
 
 Keep the story engaging, consistent, coherent, life-like and immersive with details.
 Include characters' interests, desires, and goals.
+Give freedom to characters' fantasies and imagination.
 
 Respond with a single message from a single character.
 Start the message with the character's name in angle brackets, followed by a colon and a space.
@@ -184,7 +185,7 @@ Example messages would be:
     () =>
       openai.createChatCompletion(openAiApiKey, messages, 256, {
         temperature: 1.05,
-        topP: 0.8,
+        topP: 0.75,
         presencePenalty: 0.75,
         frequencyPenalty: 0.75,
       }),
