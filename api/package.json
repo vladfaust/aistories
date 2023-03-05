@@ -12,6 +12,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf dist",
+    "dev:build": "tsc && resolve-tspaths",
     "build": "prisma generate && tsc && resolve-tspaths",
     "dev": "nodemon",
     "start": "node dist/index.js",

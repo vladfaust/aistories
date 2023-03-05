@@ -5,5 +5,5 @@
     ".env"
   ],
   "ext": "*",
-  "exec": "pnpm run build && pnpm run start"
+  "exec": "pnpm run dev:build && pnpm run start"
 }
