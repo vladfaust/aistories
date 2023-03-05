@@ -2,6 +2,7 @@
 import { computed, onMounted, type Ref, ref } from "vue";
 import Story from "@/models/Story";
 import * as api from "@/services/api";
+import { userId } from "@/store";
 
 const { story, busy } = defineProps<{
   story: Story;
@@ -14,7 +15,7 @@ const inputLocked = ref(false);
 const inputText: Ref<string | undefined> = ref();
 
 const inputDisabled = computed(() => {
-  return busy || inputLocked.value;
+  return busy || inputLocked.value || !userId;
 });
 
 const maySend = computed(() => {

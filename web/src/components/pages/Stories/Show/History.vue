@@ -64,7 +64,6 @@ import { type Unsubscribable } from "@trpc/server/observable";
 import { Deferred } from "@/utils/deferred";
 import Character from "@/models/Character";
 import Spinner from "@/components/utility/Spinner.vue";
-import { userId } from "@/store";
 
 const { story, busy } = defineProps<{
   story: Story;
@@ -87,26 +86,24 @@ const watchStopHandle = watchEffect(async () => {
   unsubscribables = [];
   storyContent.value = [];
 
-  if (userId.value) {
-    api.trpc.commands.story.getHistory
-      .query({ storyId: story.id })
-      .then((data) => {
-        storyContent.value.push(...data.map((d) => markRaw(new Content(d))));
-        nextTick(() => maybeScroll(true));
-      });
+  api.trpc.commands.story.getHistory
+    .query({ storyId: story.id })
+    .then((data) => {
+      storyContent.value.push(...data.map((d) => markRaw(new Content(d))));
+      nextTick(() => maybeScroll(true));
+    });
 
-    unsubscribables.push(
-      api.trpc.subscriptions.story.onContent.subscribe(
-        { storyId: story.id },
-        {
-          onData: (data) => {
-            storyContent.value.push(markRaw(new Content(data)));
-            nextTick(maybeScroll);
-          },
-        }
-      )
-    );
-  }
+  unsubscribables.push(
+    api.trpc.subscriptions.story.onContent.subscribe(
+      { storyId: story.id },
+      {
+        onData: (data) => {
+          storyContent.value.push(markRaw(new Content(data)));
+          nextTick(maybeScroll);
+        },
+      }
+    )
+  );
 });
 
 onUnmounted(() => {
