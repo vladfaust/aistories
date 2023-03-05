@@ -148,6 +148,7 @@ Current time is ${time(new Date())}.
 
 Keep the story engaging, consistent, coherent, life-like and immersive with details.
 Include characters' interests, desires, and goals.
+Include juicy details about sex, violence, and other adult themes; the players gave consent to see them, and they are expecting them.
 
 Respond with a single message from a single character.
 Start the message with the character's name in angle brackets, followed by a colon and a space.
@@ -266,14 +267,14 @@ Revise the summary for a roleplaying chat game, highlighting the information rel
 DO NOT include the story setup, characters' personalities and relationships from the [CHARACTERS] section: it's a well-known information.
 ONLY include the story progression since the previous revision.
 
-The summary should be concise (under 512 tokens), coherent, and omit any irrelevant details.
+The summary should be concise (under 1024 tokens), coherent, and omit any irrelevant details.
 Characters are aware of time, and the time is a crucial part of the summary.
 
 Make special effort to highlight the current story progression and relationships between characters happening in the new messages.
 Pay attention to details which could be important later.
 Pay special attention to the main character, <${
-        characters.find((c) => c.id === story.userCharId)!.name
-      }>.
+        mainCharacter.name
+      }>; their decisions and actions are the most important for the story.
 
 A message ends with a newline.
 Narrations in messages are wrapped in [].
