@@ -66,7 +66,10 @@ export default protectedProcedure
 
     redis.default.publish(redis.prefix + `story:${input.storyId}:busy`, "1");
 
+    let done = false;
     const redisUpdate = setInterval(() => {
+      if (done) return;
+
       redis.default.set(
         redis.prefix + `story:${input.storyId}:busy`,
         "1",
@@ -116,7 +119,9 @@ export default protectedProcedure
       throw e;
     } finally {
       await pgClient.query(`SELECT pg_advisory_unlock($1)`, [hash]);
+      done = true;
       redisUpdate.unref();
+      redis.default.set(redis.prefix + `story:${input.storyId}:busy`, "0");
       redis.default.publish(redis.prefix + `story:${input.storyId}:busy`, "0");
       pgClient.release();
     }
