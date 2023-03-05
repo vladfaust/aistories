@@ -12,10 +12,12 @@ export async function createChatCompletion(
   maxTokens: number,
   {
     temperature = 1,
+    topP = 1,
     presencePenalty = 0,
     frequencyPenalty = 0,
   }: {
     temperature?: number;
+    topP?: number;
     presencePenalty?: number;
     frequencyPenalty?: number;
   }
@@ -27,6 +29,7 @@ export async function createChatCompletion(
     messages,
     max_tokens: maxTokens,
     temperature,
+    top_p: topP,
     presence_penalty: presencePenalty,
     frequency_penalty: frequencyPenalty,
   });
