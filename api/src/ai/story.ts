@@ -123,15 +123,21 @@ The following is a turn-based roleplaying chat game.
     });
   }
 
+  const possibleChars = characters.filter(
+    (c) => c.id !== story.userCharId && c.id !== 0
+  );
+
   messages.push({
     role: "system",
-    content: `
-Respond with a SINGLE message as if you are one of the following characters: ${characters
-      .filter((c) => c.id !== story.userCharId && c.id !== 0)
-      .map((c) => `<${c.name}>`)
-      .join(
-        ", "
-      )}, choosing the most likely one to responds in the current context.
+    content: `${
+      possibleChars.length > 1
+        ? `Respond with a SINGLE message as if you are one of the following characters: [${possibleChars
+            .map((c) => `<${c.name}>`)
+            .join(
+              ", "
+            )}], choosing the most likely one to responds in the current context.`
+        : `Respond with a SINGLE message as if you are <${possibleChars[0].name}>.`
+    }
 
 <${
       mainCharacter.name
