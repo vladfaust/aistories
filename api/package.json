@@ -1,10 +1,11 @@
 {
   "name": "@aistories/api",
-  "version": "1.0.0-beta.2",
+  "version": "1.0.0-beta.5",
   "description": "AIStories API server",
   "author": "Vlad Faust <hey@vladfaust.com>",
   "license": "UNLICENSED",
   "type": "module",
+  "private": true,
   "engines": {
     "node": "18"
   },
@@ -48,21 +49,5 @@
     "ws": "^8.12.1",
     "xxh3-ts": "^1.0.6",
     "zod": "^3.20.6"
-  },
-  "files": [
-    "dist/trpc.d.ts",
-    "dist/server/trpc/commands.d.ts",
-    "dist/server/trpc/subscriptions.d.ts",
-    "dist/server/trpc/context.d.ts"
-  ],
-  "exports": {
-    "./trpc": "./dist/trpc"
-  },
-  "typesVersions": {
-    "*": {
-      "trpc": [
-        "dist/trpc.d.ts"
-      ]
-    }
   }
 }
