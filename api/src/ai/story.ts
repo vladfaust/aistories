@@ -123,7 +123,7 @@ The following is a turn-based roleplaying chat game.
     });
   }
 
-  const possibleChars = characters.filter(
+  let possibleChars = characters.filter(
     (c) => c.id !== story.userCharId && c.id !== 0
   );
 
@@ -133,27 +133,17 @@ The following is a turn-based roleplaying chat game.
       possibleChars.length > 1
         ? `Respond with a SINGLE message as if you are one of the following characters: [${possibleChars
             .map((c) => `<${c.name}>`)
-            .join(
-              ", "
-            )}], choosing the most likely one to responds in the current context.
-Avoid repeating the same character too often.
-If a character has nothing to say, it is better to respond with a narration describing the silent answer.`
+            .join(", ")}], choosing the most appropriate for the situation.`
         : `Respond with a SINGLE message as if you are <${possibleChars[0].name}>.`
-    }
+    } If the character has nothing to say, make them respond with a narration.
 
 <${
       mainCharacter.name
     }> is the main character of the story, so keep the story focused on them.
 If a character is currently absent from the <${
       mainCharacter.name
-    }>'s point of view, if <${
-      mainCharacter.name
-    }> can not interact them in current scene, do NOT chose them.
-NEVER include knowledge that <${
-      mainCharacter.name
-    }> does not possess, or utterances that <${
-      mainCharacter.name
-    }> can not hear.
+    }>'s point of view, do NOT chose them.
+NEVER include utterances that <${mainCharacter.name}> can not hear.
 
 Characters are aware of time.
 Current time is ${time(new Date())}.
@@ -176,6 +166,7 @@ Example messages would be:
 <John>: Hello! [John waves.] How are you?
 <Mary Jane>: [Mary welcomes John.] I'm fine, thanks. How are you?
 <John>: I'm fine, thanks. [John looks at Mary with joy.] What are you doing here?
+<Mary Jane>: [Mary looks at John with a blank expression.]
 `,
   });
 
