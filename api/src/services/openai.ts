@@ -5,6 +5,7 @@ import {
   CreateCompletionResponse,
   OpenAIApi,
 } from "openai";
+import konsole from "./konsole";
 
 export async function createChatCompletion(
   apiKey: string,
@@ -24,17 +25,29 @@ export async function createChatCompletion(
 ): Promise<CreateChatCompletionResponse> {
   const openai = new OpenAIApi(new Configuration({ apiKey }));
 
-  const response = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo-0301",
-    messages,
-    max_tokens: maxTokens,
-    temperature,
-    top_p: topP,
-    presence_penalty: presencePenalty,
-    frequency_penalty: frequencyPenalty,
-  });
+  try {
+    const response = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo-0301",
+      messages,
+      max_tokens: maxTokens,
+      temperature,
+      top_p: topP,
+      presence_penalty: presencePenalty,
+      frequency_penalty: frequencyPenalty,
+    });
 
-  return response.data;
+    return response.data;
+  } catch (e: any) {
+    if (e.response) {
+      konsole.warn(["ai", "openai"], "OpenAI API error", {
+        status: e.response.status,
+        statusText: e.response.statusText,
+        data: e.response.data,
+      });
+    }
+
+    throw e;
+  }
 }
 
 export async function createCompletion(
@@ -44,11 +57,23 @@ export async function createCompletion(
 ): Promise<CreateCompletionResponse> {
   const openai = new OpenAIApi(new Configuration({ apiKey }));
 
-  const response = await openai.createCompletion({
-    model: "text-davinci-003",
-    prompt,
-    max_tokens: maxTokens,
-  });
+  try {
+    const response = await openai.createCompletion({
+      model: "text-davinci-003",
+      prompt,
+      max_tokens: maxTokens,
+    });
 
-  return response.data;
+    return response.data;
+  } catch (e: any) {
+    if (e.response) {
+      konsole.warn(["ai", "openai"], "OpenAI API error", {
+        status: e.response.status,
+        statusText: e.response.statusText,
+        data: e.response.data,
+      });
+    }
+
+    throw e;
+  }
 }
