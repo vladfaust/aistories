@@ -76,8 +76,8 @@ const mainScroll = useScroll(main);
 const storyContent: ShallowRef<Content[]> = ref([]);
 let unsubscribables: Unsubscribable[] = [];
 
-function maybeScroll() {
-  if (mainScroll.arrivedState.bottom) {
+function maybeScroll(force: boolean = false) {
+  if (force || mainScroll.arrivedState.bottom) {
     mainScroll.y.value = main.value?.scrollHeight || 0;
   }
 }
@@ -92,7 +92,7 @@ const watchStopHandle = watchEffect(async () => {
       .query({ storyId: story.id })
       .then((data) => {
         storyContent.value.push(...data.map((d) => markRaw(new Content(d))));
-        nextTick(maybeScroll);
+        nextTick(() => maybeScroll(true));
       });
 
     unsubscribables.push(
@@ -137,7 +137,7 @@ onUnmounted(() => {
           span.text-base-600 {{ entry.text.value }}
       br
   p.rounded.bg-base-50.p-2.text-center.leading-snug.text-error-500(
-    v-if="story.reason == 'noOpenAiApiKey'"
+    v-if="story.reason == 'OpenAI API key is not set'"
   )
     | The story can not progress due to the lack of OpenAI API key.
     br
