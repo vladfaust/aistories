@@ -181,8 +181,7 @@ Example messages would be:
   const chatCompletion = await pRetry(
     () =>
       openai.createChatCompletion(openAiApiKey, messages, 256, {
-        temperature: 1.75,
-        topP: 0.5,
+        temperature: 1.075,
         presencePenalty: 1,
         frequencyPenalty: 1,
       }),
