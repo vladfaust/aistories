@@ -31,13 +31,13 @@ const mayCreate = computed(() => {
 const createInProgress = ref(false);
 
 onMounted(() => {
-  api.commands.collections.index.query().then(async (ids) => {
+  api.trpc.commands.collections.index.query().then(async (ids) => {
     collections.value = (await Promise.all(
       ids.map((id) => Collection.findOrCreate(id).promise)
     )) as Collection[];
   });
 
-  api.commands.character.index.query().then(async (ids) => {
+  api.trpc.commands.character.index.query().then(async (ids) => {
     characters.value = (await Promise.all(
       ids.map((id) => Character.findOrCreate(id).promise)
     )) as Character[];
@@ -55,7 +55,7 @@ async function create() {
   createInProgress.value = true;
 
   try {
-    const storyId = await api.commands.story.create.mutate({
+    const storyId = await api.trpc.commands.story.create.mutate({
       collectionId: chosenCollection.value!.id,
       nonUserCharacterIds: [...selectedCharactes.value.values()].map(
         (c) => c.id

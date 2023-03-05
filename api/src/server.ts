@@ -10,6 +10,7 @@ import config from "@/config";
 import { subscriptionsRouter } from "#trpc/subscriptions";
 import { createWsContext } from "#trpc/context.js";
 import { WebSocketServer } from "ws";
+import rest from "./server/rest";
 
 export function listen() {
   const app = express();
@@ -22,6 +23,8 @@ export function listen() {
   );
 
   app.use(cookieParser());
+
+  app.use("/rest", rest);
 
   app.use(
     "/trpc/commands",

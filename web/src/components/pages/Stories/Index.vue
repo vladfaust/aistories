@@ -10,7 +10,7 @@ const cancelWatch = watchEffect(async () => {
   stories.value = [];
 
   if (userId.value) {
-    stories.value = (await api.commands.story.list.query()).map((data) =>
+    stories.value = (await api.trpc.commands.story.list.query()).map((data) =>
       Story.fromBackendModel(data)
     );
   }

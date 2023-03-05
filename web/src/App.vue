@@ -3,8 +3,19 @@ import HeaderVue from "@/components/Header.vue";
 import FooterVue from "@/components/Footer.vue";
 import { useRoute } from "vue-router";
 import "animate.css";
+import { onMounted } from "vue";
+import * as api from "@/services/api";
+import { userId } from "./store";
 
 const route = useRoute();
+
+onMounted(() => {
+  api.trpc.commands.user.me.query().then((user) => {
+    if (user) {
+      userId.value = user.id;
+    }
+  });
+});
 </script>
 
 <template lang="pug">

@@ -1,5 +1,6 @@
 class Config {
   constructor(
+    readonly restApiUrl: URL,
     readonly trpcHttpUrl: URL,
     readonly trpcWsUrl: URL,
     readonly discordClientId: string,
@@ -13,6 +14,7 @@ function requireEnv(id: string): string {
 }
 
 const config = new Config(
+  new URL(requireEnv("VITE_REST_API_URL")),
   new URL(requireEnv("VITE_TRPC_HTTP_URL")),
   new URL(requireEnv("VITE_TRPC_WS_URL")),
   requireEnv("VITE_DISCORD_CLIENT_ID"),

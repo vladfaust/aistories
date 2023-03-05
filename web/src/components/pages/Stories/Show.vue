@@ -15,7 +15,7 @@ let unsub: Unsubscribable | null = null;
 
 const watchStopHandle = watch(story.ref, (resolved) => {
   if (resolved) {
-    unsub = api.subscriptions.story.onBusy.subscribe(
+    unsub = api.trpc.subscriptions.story.onBusy.subscribe(
       { storyId: resolved.id },
       { onData: (data) => (busy.value = data.busy) }
     );

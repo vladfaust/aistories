@@ -59,7 +59,7 @@ export default class Story {
     if (Story.cache.has(id)) {
       deferred.resolve(Story.cache.get(id));
     } else {
-      api.commands.story.find.query({ storyId: id }).then((data) => {
+      api.trpc.commands.story.find.query({ storyId: id }).then((data) => {
         if (data) {
           deferred.resolve(this.fromBackendModel(data));
         } else {

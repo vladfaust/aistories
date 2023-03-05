@@ -13,7 +13,7 @@ export default class Collection {
       collection = new Deferred<Collection | null>();
       Collection.cache.set(id, collection);
 
-      api.commands.collections.find.query({ id }).then((data) => {
+      api.trpc.commands.collections.find.query({ id }).then((data) => {
         if (data) {
           collection!.resolve(Collection.fromBackendModel(data));
         } else {

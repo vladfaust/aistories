@@ -16,7 +16,7 @@ export default class Character {
       char = new Deferred<Character | null>();
       Character.cache.set(id, char);
 
-      api.commands.character.find.query({ id }).then((data) => {
+      api.trpc.commands.character.find.query({ id }).then((data) => {
         if (data) {
           char!.resolve(Character.fromBackendModel(data));
         } else {

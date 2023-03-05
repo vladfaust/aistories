@@ -88,13 +88,15 @@ const watchStopHandle = watchEffect(async () => {
   storyContent.value = [];
 
   if (userId.value) {
-    api.commands.story.getHistory.query({ storyId: story.id }).then((data) => {
-      storyContent.value.push(...data.map((d) => markRaw(new Content(d))));
-      nextTick(maybeScroll);
-    });
+    api.trpc.commands.story.getHistory
+      .query({ storyId: story.id })
+      .then((data) => {
+        storyContent.value.push(...data.map((d) => markRaw(new Content(d))));
+        nextTick(maybeScroll);
+      });
 
     unsubscribables.push(
-      api.subscriptions.story.onContent.subscribe(
+      api.trpc.subscriptions.story.onContent.subscribe(
         { storyId: story.id },
         {
           onData: (data) => {
@@ -141,6 +143,6 @@ onUnmounted(() => {
     br
     | Set the key in your
     |
-    RouterLink.link(to="/user") profile settings
+    RouterLink.link(to="/me") profile settings
     | .
 </template>

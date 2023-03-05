@@ -16,7 +16,11 @@ class Jwt {
 }
 
 class Discord {
-  constructor(readonly clientSecret: string) {}
+  constructor(
+    readonly clientId: string,
+    readonly clientSecret: string,
+    readonly redirectUri: string
+  ) {}
 }
 
 class Config {
@@ -47,7 +51,11 @@ const config = new Config(
     requireEnv("SERVER_CORS_ORIGIN")
   ),
   new Jwt(Buffer.from(requireEnv("JWT_SECRET"))),
-  new Discord(requireEnv("DISCORD_CLIENT_SECRET"))
+  new Discord(
+    requireEnv("DISCORD_CLIENT_ID"),
+    requireEnv("DISCORD_CLIENT_SECRET"),
+    requireEnv("DISCORD_REDIRECT_URI")
+  )
 );
 
 export default config;

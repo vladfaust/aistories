@@ -18,14 +18,6 @@ function limitText(text: string, limit: number): string {
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.oAuth2Provider.create({
-    data: {
-      id: "discord",
-      clientId: "1080849681321558058",
-      redirectUri: "http://localhost:5173/auth/discord/redirect",
-    },
-  });
-
   const metaCollection = await prisma.characterCollection.create({
     data: {
       id: 0,

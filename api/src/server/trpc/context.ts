@@ -1,8 +1,6 @@
 import { PrismaClient } from "@prisma/client";
-import config from "@/config";
 import { TRPCError } from "@trpc/server";
 import { CreateExpressContextOptions } from "@trpc/server/dist/adapters/express";
-import * as jose from "jose";
 import cookie from "cookie";
 import { CreateWSSContextFnOptions } from "@trpc/server/adapters/ws";
 
@@ -17,25 +15,22 @@ export type Context = {
 async function createContext(
   cookies: Record<string, string>
 ): Promise<Context> {
-  const { jwt } = cookies;
+  const { userId } = cookies;
 
-  if (jwt) {
-    try {
-      const { payload } = await jose.jwtVerify(jwt, config.jwt.secret);
+  if (userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true },
+    });
 
-      const user = await prisma.user.findUniqueOrThrow({
-        where: { id: payload.uid as string },
-        select: { id: true },
+    if (!user) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Invalid user",
       });
-
-      return { user };
-    } catch (e) {
-      if (e instanceof jose.errors.JOSEError) {
-        throw new TRPCError({ code: "UNAUTHORIZED", message: e.message });
-      } else {
-        throw e;
-      }
     }
+
+    return { user };
   } else {
     return { user: null };
   }

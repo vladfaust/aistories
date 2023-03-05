@@ -1,4 +1,5 @@
 import Story from "@/models/Story";
+import { userId } from "@/store";
 import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
@@ -20,13 +21,15 @@ const router = createRouter({
       }),
     },
     {
-      path: "/user",
-      component: () => import("@/components/pages/User/Me.vue"),
-    },
-    {
-      path: "/auth/:provider/redirect",
-      component: () => import("@/components/pages/Auth/Provider/Redirect.vue"),
-      props: true,
+      path: "/me",
+      component: () => import("@/components/pages/Me.vue"),
+      beforeEnter: (to, from, next) => {
+        if (userId.value) {
+          next();
+        } else {
+          next("/");
+        }
+      },
     },
   ],
 });

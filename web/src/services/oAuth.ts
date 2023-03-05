@@ -6,7 +6,7 @@ export enum Provider {
 }
 
 export function url(provider: Provider): string {
-  const state = setRandomState(provider);
+  const state = nanoid();
 
   switch (provider) {
     case Provider.Discord:
@@ -18,23 +18,5 @@ export function url(provider: Provider): string {
       url.searchParams.append("redirect_uri", config.discordRedirectUri);
       url.searchParams.append("prompt", "none");
       return url.toString();
-  }
-}
-
-export function setRandomState(provider: Provider): string {
-  const state = nanoid();
-  sessionStorage.setItem(`authState:${provider}`, state);
-  return state;
-}
-
-export function getState(provider: Provider): string | null {
-  return sessionStorage.getItem(`authState:${provider}`);
-}
-
-export function cleanup() {
-  for (const key of Object.keys(sessionStorage)) {
-    if (key.startsWith("authState:")) {
-      sessionStorage.removeItem(key);
-    }
   }
 }

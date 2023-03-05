@@ -31,15 +31,6 @@ model User {
   OAuth2Identities OAuth2Identity[]
 }
 
-model OAuth2Provider {
-  id String @id
-
-  clientId    String
-  redirectUri String
-
-  OAuth2Identities OAuth2Identity[]
-}
-
 model OAuth2Identity {
   providerId String
   userId     String
@@ -53,8 +44,7 @@ model OAuth2Identity {
   expiresAt    DateTime
   refreshToken String?
 
-  User     User           @relation(fields: [userId], references: [id])
-  Provider OAuth2Provider @relation(fields: [providerId], references: [id])
+  User User @relation(fields: [userId], references: [id])
 
   @@id([providerId, userId])
 }

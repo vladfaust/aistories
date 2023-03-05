@@ -1,26 +1,23 @@
 <script setup lang="ts">
-import Jdenticon from "../../utility/Jdenticon.vue";
-import { jwt, userId } from "@/store";
-import { useRouter } from "vue-router";
+import Jdenticon from "@/components/utility/Jdenticon.vue";
+import { userId } from "@/store";
 import * as api from "@/services/api";
 import { onMounted, ref } from "vue";
 import Spinner2 from "@/components/utility/Spinner2.vue";
-
-const router = useRouter();
 
 const openAiApiKey = ref<string | null>(null);
 const openAiApiKeySaveInProgress = ref(false);
 const openAiApiKeyJustSaved = ref(false);
 
-function deleteCookie(name: string) {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-}
+async function disconnect() {
+  const response = await api.rest.auth.clear();
 
-function disconnect() {
-  jwt.value = null;
-  deleteCookie("jwt");
-  api.recreateWSClient();
-  router.push("/");
+  if (!response.ok) {
+    throw response;
+  } else {
+    userId.value = null;
+    window.location.reload();
+  }
 }
 
 function saveOpenAiApiKey() {
@@ -28,7 +25,7 @@ function saveOpenAiApiKey() {
   openAiApiKeySaveInProgress.value = true;
 
   try {
-    api.commands.user.settings.set.mutate({
+    api.trpc.commands.user.settings.set.mutate({
       key: "openAiApiKey",
       value: openAiApiKey.value!,
     });
@@ -44,12 +41,7 @@ function saveOpenAiApiKey() {
 }
 
 onMounted(() => {
-  if (!userId.value) {
-    router.push("/");
-    return;
-  }
-
-  api.commands.user.settings.get.query("openAiApiKey").then((res) => {
+  api.trpc.commands.user.settings.get.query("openAiApiKey").then((res) => {
     openAiApiKey.value = res;
   });
 });

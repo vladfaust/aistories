@@ -29,7 +29,7 @@ async function sendMessage() {
   const text = inputText.value?.trim();
 
   try {
-    await api.commands.story.advance.mutate({
+    await api.trpc.commands.story.advance.mutate({
       storyId: story.id,
       userMessage: text,
     });
