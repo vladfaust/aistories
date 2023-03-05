@@ -166,8 +166,7 @@ Respond with a single message from a single character.
 Start the message with the character's name in angle brackets, followed by a colon and a space.
 Narrations are wrapped in [], and ONLY in [].
 Any other formatting is NOT allowed.
-The message MUST NOT contain newlines.
-The message MUST NOT contain timestamps.
+The message MUST NOT contain newlines NOR timestamps NOR quotes ("").
 DO NOT include character thoughts.
 Keep the message fairly short (under 256 tokens).
 
