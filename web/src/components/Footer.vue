@@ -6,7 +6,8 @@ footer.flex.h-16.w-full.justify-center.border-y.p-4
     ul.flex.gap-3
       li aistories.xyz © 2023
     ul.flex.gap-3
-      li Terms
-      li Discord
-      li Twitter
+      li
+        a.link-hover(href="https://discord.gg/FEa5JqkJ") Discord
+      li
+        a.link-hover(href="https://twitter.com/vladfaust") Twitter
 </template>
