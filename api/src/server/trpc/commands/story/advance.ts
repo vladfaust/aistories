@@ -111,6 +111,9 @@ export default protectedProcedure
       return {
         contentId: await aiAdvance(story.id, openAiApiKey),
       };
+    } catch (e: any) {
+      konsole.error(["story", "advance"], e);
+      throw e;
     } finally {
       await pgClient.query(`SELECT pg_advisory_unlock($1)`, [hash]);
       redisUpdate.unref();

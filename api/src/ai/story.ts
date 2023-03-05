@@ -170,13 +170,17 @@ Example messages would be:
 
   console.debug(messages);
 
-  const chatCompletion = await pRetry(() =>
-    openai.createChatCompletion(openAiApiKey, messages, 256, {
-      temperature: 1.05,
-      topP: 0.8,
-      presencePenalty: 0.75,
-      frequencyPenalty: 0.75,
-    })
+  const chatCompletion = await pRetry(
+    () =>
+      openai.createChatCompletion(openAiApiKey, messages, 256, {
+        temperature: 1.05,
+        topP: 0.8,
+        presencePenalty: 0.75,
+        frequencyPenalty: 0.75,
+      }),
+    {
+      retries: 5,
+    }
   );
 
   console.debug(chatCompletion, chatCompletion.choices[0]?.message);
@@ -298,8 +302,11 @@ ${toSummarize
 `;
 
       console.debug(prompt);
-      const completion = await pRetry(() =>
-        openai.createCompletion(openAiApiKey, prompt, 512)
+      const completion = await pRetry(
+        () => openai.createCompletion(openAiApiKey, prompt, 512),
+        {
+          retries: 5,
+        }
       );
       console.debug(completion);
 
