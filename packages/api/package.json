@@ -1,6 +1,6 @@
 {
   "name": "@aistories/api",
-  "version": "1.0.0-beta.9",
+  "version": "1.0.0-beta.10",
   "description": "AIStories API types",
   "author": "Vlad Faust <hey@vladfaust.com>",
   "license": "UNLICENSED",
@@ -10,9 +10,7 @@
   },
   "files": [
     "./dist/trpc.d.ts",
-    "./dist/server/trpc/commands.d.ts",
-    "./dist/server/trpc/subscriptions.d.ts",
-    "./dist/server/trpc/context.d.ts"
+    "./dist/server/trpc/**/*.d.ts"
   ],
   "exports": {
     "./trpc": "./dist/trpc"

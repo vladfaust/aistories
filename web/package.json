@@ -1,6 +1,6 @@
 {
   "name": "@aistories/web",
-  "version": "1.0.0-beta.9",
+  "version": "1.0.0-beta.10",
   "description": "AIStories web client",
   "author": "Vlad Faust <hey@vladfaust.com>",
   "license": "UNLICENSED",
@@ -15,7 +15,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@aistories/api": "1.0.0-beta.9",
+    "@aistories/api": "1.0.0-beta.10",
     "@heroicons/vue": "^2.0.16",
     "@trpc/client": "^10.11.1",
     "@trpc/server": "^10.11.1",
