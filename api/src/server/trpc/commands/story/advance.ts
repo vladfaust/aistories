@@ -4,10 +4,9 @@ import { z } from "zod";
 import { protectedProcedure } from "#trpc/middleware/auth";
 import { encode } from "gpt-3-encoder";
 import { TRPCError } from "@trpc/server";
-import * as pg from "@/services/pg";
-import { XXH64 } from "xxh3-ts";
 import { advance as aiAdvance } from "@/ai/story";
 import * as redis from "@/services/redis";
+import { lock } from "./shared";
 
 const INPUT_TOKEN_LIMIT = 1024;
 
@@ -73,21 +72,7 @@ export default protectedProcedure
       });
     }
 
-    const pgClient = await pg.pool.connect();
-    const hash = XXH64(Buffer.from(story.id, "utf-8")) % 9223372036854775807n;
-
-    const result = await pgClient.query(
-      `SELECT pg_try_advisory_lock($1) AS locked`,
-      [hash]
-    );
-
-    if (!result.rows[0].locked) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "Story is busy",
-      });
-    }
-
+    const pgClient = await lock(input.storyId);
     await pubBusy(input.storyId, true);
 
     let done = false;
@@ -148,7 +133,6 @@ export default protectedProcedure
 
       throw e;
     } finally {
-      await pgClient.query(`SELECT pg_advisory_unlock($1)`, [hash]);
       pgClient.release();
 
       done = true;

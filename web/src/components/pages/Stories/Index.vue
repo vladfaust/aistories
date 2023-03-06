@@ -79,7 +79,7 @@ onUnmounted(() => cancelWatch?.());
           :src="story.collection.ref.value?.imageUrl.toString()"
         )
 
-        template(v-for="character in story.characters.slice().reverse()")
+        template(v-for="character in story.characters.value.slice().reverse()")
           img.-ml-6.box-content.h-10.w-10.rounded-full.border.bg-base-50.object-cover(
             v-if="character.ref.value"
             :src="character.ref.value.imagePreviewUrl.toString()"
@@ -89,7 +89,7 @@ onUnmounted(() => cancelWatch?.());
         RouterLink.link-hover.w-max.font-semibold.leading-none(
           :to="'/story/' + story.id"
         )
-          | {{ story.name || story.collection.ref.value?.name + " with " + story.characters.map((c) => c.ref.value?.name).join(", ") }}
+          | {{ story.name || story.collection.ref.value?.name + " with " + story.characters.value.map((c) => c.ref.value?.name).join(", ") }}
         .flex.items-center.gap-1(v-if="story.latestContent")
           img.aspect-square.h-5.shrink-0.rounded.border.bg-base-50.object-cover(
             v-if="story.latestContent.character.ref.value"

@@ -56,7 +56,12 @@ export async function advance(
         id: { gt: story.checkpoint || 0 },
       },
       select: {
-        charId: true,
+        Character: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
         content: true,
         createdAt: true,
       },
@@ -101,8 +106,8 @@ The following is a turn-based roleplaying chat game.
   }
 
   if (contents.length > 0) {
-    for (const { charId, content, createdAt } of contents) {
-      if (charId === 0) {
+    for (const { Character, content, createdAt } of contents) {
+      if (Character.id === 0) {
         messages.push({
           role: "assistant",
           content,
@@ -110,9 +115,7 @@ The following is a turn-based roleplaying chat game.
       } else {
         messages.push({
           role: "user",
-          name: characters
-            .find((c) => c.id === charId)!
-            .name.replace(/\s+/g, "_"),
+          name: Character.name.replace(/\s+/g, "_"),
           content: `(${time(createdAt)}) ${content}`,
         });
       }
@@ -127,6 +130,8 @@ The following is a turn-based roleplaying chat game.
   let possibleChars = characters.filter(
     (c) => c.id !== story.userCharId && c.id !== 0
   );
+
+  console.debug(2);
 
   messages.push({
     role: "system",

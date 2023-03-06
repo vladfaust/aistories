@@ -4,7 +4,7 @@ import { protectedProcedure } from "#trpc/middleware/auth";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import Web3Token from "web3-token";
-import { erc1155Balance } from "@/services/eth";
+import { maybeVerifyOwnership as maybeVerifyOwnership } from "./shared";
 
 export type Erc1155Token = {
   contractAddress: string; // Hex string.
@@ -73,35 +73,12 @@ export default protectedProcedure
       throw new Error("Character not found");
     }
 
-    let address: string | undefined;
-    if (input.web3Token) {
-      address = Web3Token.verify(input.web3Token).address;
-    }
+    const address = input.web3Token
+      ? Web3Token.verify(input.web3Token).address
+      : undefined;
 
     for (const character of characters) {
-      if (character.erc1155Token) {
-        if (!address) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Missing Web3 token",
-          });
-        }
-
-        const erc1155Token = JSON.parse(character.erc1155Token) as Erc1155Token;
-
-        const balance = await erc1155Balance(
-          erc1155Token.contractAddress,
-          erc1155Token.tokenId,
-          address
-        );
-
-        if (balance.eq(0)) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "Insufficient ERC1155 token balance",
-          });
-        }
-      }
+      await maybeVerifyOwnership(character, address);
     }
 
     const story = await prisma.story.create({

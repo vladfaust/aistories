@@ -9,8 +9,10 @@ const { character } = defineProps<{ character: Character }>();
   img.aspect-square.w-48.rounded.border.bg-base-50.object-contain.sm_w-32(
     :src="character.imagePreviewUrl.toString()"
   )
-  .flex.flex-col.gap-1
-    span.text-lg.font-bold.leading-none {{ character.name }}
+  .flex.w-full.flex-col.gap-1
+    .flex.w-full.justify-between
+      span.text-lg.font-bold.leading-none {{ character.name }}
+      span.leading-none.text-base-400 Id {{ character.id }}
     p.leading-tight {{ character.about }}
     .mt-1.flex.items-center.gap-2(v-if="character.erc1155Token")
       template(v-if="eth.account.value")

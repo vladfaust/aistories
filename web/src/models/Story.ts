@@ -1,7 +1,7 @@
 import * as api from "@/services/api";
 import { Deferred } from "@/utils/deferred";
 import Character from "./Character";
-import { markRaw, ref, Ref } from "vue";
+import { markRaw, ref, Ref, shallowRef, ShallowRef } from "vue";
 import Collection from "./Collection";
 
 export default class Story {
@@ -32,8 +32,10 @@ export default class Story {
           char: Character.findOrCreate(data.userCharId) as Deferred<Character>,
         },
 
-        data.charIds.map(
-          (c) => Character.findOrCreate(c) as Deferred<Character>
+        shallowRef(
+          data.charIds.map(
+            (c) => Character.findOrCreate(c) as Deferred<Character>
+          )
         ),
 
         data.name,
@@ -75,7 +77,7 @@ export default class Story {
     readonly id: string,
     readonly collection: Deferred<Collection>,
     readonly user: { id: string; char: Deferred<Character> },
-    readonly characters: Deferred<Character>[],
+    readonly characters: ShallowRef<Deferred<Character>[]>,
     readonly name: string | null,
     readonly fabula: string | null,
     readonly reason: Ref<string | null>,
