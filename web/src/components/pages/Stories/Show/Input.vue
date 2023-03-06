@@ -82,6 +82,7 @@ onMounted(async () => {
     @click="advance"
     :disabled="!mayAdvance"
     :class="{ 'cursor-not-allowed': !mayAdvance }"
+    :title="inputText ? 'Send' : 'Skip turn'"
   )
     Spinner2.h-5.animate-spin(v-if="busy || advanceInProgress")
     PaperAirplaneIcon.h-5(v-else-if="inputText")
