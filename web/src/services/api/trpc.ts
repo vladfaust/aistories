@@ -45,7 +45,8 @@ const subscriptions = createTRPCProxyClient<SubscriptionsRouter>({
   links: [
     loggerLink({
       enabled: (opts) =>
-        opts.direction === "down" && opts.result instanceof Error,
+        process.env.NODE_ENV === "development" ||
+        (opts.direction === "down" && opts.result instanceof Error),
     }),
     wsLink({
       client: wsClient,
