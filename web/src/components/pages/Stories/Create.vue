@@ -13,6 +13,8 @@ import Web3Token from "web3-token";
 import * as eth from "@/services/eth";
 import config from "@/config";
 
+const CHAR_LIMIT = 2;
+
 const router = useRouter();
 
 const collections: ShallowRef<Collection[]> = ref([]);
@@ -30,6 +32,7 @@ const mayCreate = computed(() => {
     chosenProtagonist.value &&
     chosenProtagonist.value.collected.value &&
     selectedCharactes.value.size > 0 &&
+    selectedCharactes.value.size <= CHAR_LIMIT &&
     [...selectedCharactes.value].every((c) => c.collected.value)
   );
 });
@@ -142,7 +145,9 @@ async function create() {
       )
 
     template(v-if="chosenProtagonist?.collected.value")
-      h2.text-lg.leading-none 3. Choose characters
+      h2.text-lg.leading-none(
+        :class="{ 'text-error-500': selectedCharactes.size > CHAR_LIMIT }"
+      ) 3. Choose characters ({{ selectedCharactes.size }}/{{ CHAR_LIMIT }})
       .flex.flex-col.gap-3
         .grid.grid-cols-4.gap-3.sm_grid-cols-8
           CharacterListItem(
@@ -163,7 +168,7 @@ async function create() {
         )
 
       template(
-        v-if="selectedCharactes.size > 0 && [...selectedCharactes].every((c) => c.collected.value)"
+        v-if="selectedCharactes.size > 0 && selectedCharactes.size <= CHAR_LIMIT && [...selectedCharactes].every((c) => c.collected.value)"
       )
         h2.text-lg.leading-none 4. Write fabula (optional)
         textarea.w-full.rounded.border.p-3.leading-tight(
