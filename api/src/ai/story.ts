@@ -136,16 +136,15 @@ The following is a turn-based roleplaying chat game.
             .map((c) => `<${c.name}>`)
             .join(", ")}], choosing the most appropriate for the situation.`
         : `Respond with a SINGLE message as if you are <${possibleChars[0].name}>.`
-    } If the character has nothing to say, make them respond with a narration.
+    } If the character has nothing to say, respond with a narration.
 AVOID REPETITION.
 
 <${
       mainCharacter.name
     }> is the main character of the story, so keep the story focused on them.
-If a character is currently absent from the <${
+If a character is currently inaccessible from the <${
       mainCharacter.name
     }>'s point of view, do NOT chose them.
-NEVER include utterances that <${mainCharacter.name}> can not hear.
 
 Characters are aware of time.
 Current time is ${time(new Date())}.
@@ -165,7 +164,6 @@ Start the message with the character's name in angle brackets, followed by a col
 Narrations are wrapped in [], and ONLY in [].
 Any other formatting is NOT allowed.
 The message MUST NOT contain newlines NOR timestamps NOR quotes ("").
-DO NOT include character thoughts.
 Keep the message fairly short (under 256 tokens).
 
 Example messages would be:
@@ -174,6 +172,7 @@ Example messages would be:
 <Mary Jane>: [Mary welcomes John.] I'm fine, thanks. How are you?
 <John>: I'm fine, thanks. [John looks at Mary with joy.] What are you doing here?
 <Mary Jane>: [Mary looks at John with a blank expression.]
+[John also looks at Mary with a blank expression.]
 `,
   });
 
@@ -286,9 +285,7 @@ Characters are aware of time, and the time is a crucial part of the summary.
 
 Make special effort to highlight the current story progression and relationships between characters happening in the new messages.
 Pay attention to details which could be important later.
-Pay special attention to the main character, <${
-        mainCharacter.name
-      }>; their decisions and actions are the most important for the story.
+Pay special attention to the main character, <${mainCharacter.name}>.
 
 A message ends with a newline.
 Narrations in messages are wrapped in [].
