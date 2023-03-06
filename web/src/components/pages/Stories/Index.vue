@@ -1,41 +1,75 @@
 <script setup lang="ts">
 import * as api from "@/services/api";
-import { ref, type ShallowRef, watchEffect, onUnmounted } from "vue";
+import {
+  ref,
+  type ShallowRef,
+  watchEffect,
+  onUnmounted,
+  onMounted,
+  type WatchStopHandle,
+} from "vue";
 import { userId } from "@/store";
 import Story from "@/models/Story";
 
 const stories: ShallowRef<Story[]> = ref([]);
+const hasOpenAiApiKey = ref(false);
 
-const cancelWatch = watchEffect(async () => {
-  stories.value = [];
+let cancelWatch: WatchStopHandle | null = null;
 
-  if (userId.value) {
-    stories.value = (await api.trpc.commands.story.list.query()).map((data) =>
-      Story.fromBackendModel(data)
-    );
-  }
+onMounted(() => {
+  cancelWatch = watchEffect(async () => {
+    stories.value = [];
+
+    if (userId.value) {
+      stories.value = (await api.trpc.commands.story.list.query()).map((data) =>
+        Story.fromBackendModel(data)
+      );
+    }
+  });
+
+  api.trpc.commands.user.settings.get.query("openAiApiKey").then((res) => {
+    hasOpenAiApiKey.value = !!res;
+  });
 });
 
-onUnmounted(cancelWatch);
+onUnmounted(() => cancelWatch?.());
 </script>
 
 <template lang="pug">
-.flex.w-full.max-w-3xl.flex-col.gap-3
-  p.bg-nft.bg-x2.w-full.animate-bg-position.rounded.p-8.text-center.leading-none.text-white.shadow
-    span.text-3xl.font-medium
-      | aistories.xyz
-      span.select-none ™️
-    br
-    span.text-lg
-      | is&nbsp;
-      i the
-      | &nbsp;place to relive infinite stories with AI characters.
-    br
-    span.text-2xl ❤️💀🤖
+.flex.w-full.max-w-3xl.flex-col.gap-3.overflow-y-auto
+  .bg-nft.bg-x2.flex.w-full.animate-bg-position.justify-center.rounded.p-8.text-white.shadow
+    .flex.flex-col.gap-3
+      span.text-3xl.font-medium
+        | aistories.xyz
+        span.select-none ™️
+
+      p.text-lg.leading-none
+        | A platform to relive memories with AI characters
+
+      ol
+        li.flex.gap-2
+          input(type="checkbox" :checked="hasOpenAiApiKey" disabled)
+          label
+            | Set up your&nbsp;
+            RouterLink.link(to="/me") OpenAI API key
+        li.flex.gap-2
+          input(type="checkbox" :checked="stories.length > 0" disabled)
+          label Embark a story
+        li.flex.gap-2
+          input#dissolve(type="checkbox")
+          label(for="dissolve") Dissolve into singularity
+
+      p.rounded.border.p-2
+        | The possibilities are endless.
+        | AI retains partial memory over stories.
+        | If AI starts to lunate, you're doing something wrong.
+        | Enjoy the flow, and be respectful to other living beings.
+
+      span.text-2xl ❤️💀🤖
 
   RouterLink.btn.btn-primary.w-full(to="/story/new") Embark new story ✨
 
-  .flex.w-full.flex-col.gap-2.overflow-y-auto(v-if="stories.length > 0")
+  .flex.w-full.flex-col.gap-2(v-if="stories.length > 0")
     .flex.w-full.items-center.justify-between.gap-2.rounded.border.p-3(
       v-for="story in stories"
     )
