@@ -68,7 +68,7 @@ export default protectedProcedure
       });
     }
 
-    const pgClient = await lock(input.storyId);
+    const unlock = await lock(input.storyId);
 
     try {
       await prisma.story.update({
@@ -76,6 +76,6 @@ export default protectedProcedure
         data: { charIds: [...new Set(story.charIds.concat([input.charId]))] },
       });
     } finally {
-      pgClient.release();
+      await unlock();
     }
   });

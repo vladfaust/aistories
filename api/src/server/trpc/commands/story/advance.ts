@@ -73,7 +73,7 @@ export default protectedProcedure
       });
     }
 
-    const pgClient = await lock(input.storyId);
+    const unlock = await lock(input.storyId);
     await pubBusy(input.storyId, true);
 
     let done = false;
@@ -139,7 +139,7 @@ export default protectedProcedure
 
       throw e;
     } finally {
-      pgClient.release();
+      await unlock();
 
       done = true;
       redisUpdate.unref();
