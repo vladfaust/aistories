@@ -32,6 +32,7 @@ export async function advance(
           setup: true,
         },
       },
+      Owner: { select: { id: true } },
       userCharId: true,
       charIds: true,
       fabula: true,
@@ -180,7 +181,7 @@ Example messages would be:
 
   const chatCompletion = await pRetry(
     () =>
-      openai.createChatCompletion(openAiApiKey, messages, 256, {
+      openai.createChatCompletion(openAiApiKey, story.Owner.id, messages, 256, {
         temperature: 1.075,
         presencePenalty: 1,
         frequencyPenalty: 1,
@@ -310,7 +311,8 @@ ${toSummarize
 
       console.debug(prompt);
       const completion = await pRetry(
-        () => openai.createCompletion(openAiApiKey, prompt, 512),
+        () =>
+          openai.createCompletion(openAiApiKey, story.Owner.id, prompt, 512),
         {
           retries: 5,
         }

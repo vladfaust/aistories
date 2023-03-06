@@ -9,6 +9,7 @@ import konsole from "./konsole";
 
 export async function createChatCompletion(
   apiKey: string,
+  user: string,
   messages: ChatCompletionRequestMessage[],
   maxTokens: number,
   {
@@ -34,6 +35,7 @@ export async function createChatCompletion(
       top_p: topP,
       presence_penalty: presencePenalty,
       frequency_penalty: frequencyPenalty,
+      user,
     });
 
     return response.data;
@@ -52,6 +54,7 @@ export async function createChatCompletion(
 
 export async function createCompletion(
   apiKey: string,
+  user: string,
   prompt: string,
   maxTokens: number
 ): Promise<CreateCompletionResponse> {
@@ -62,6 +65,7 @@ export async function createCompletion(
       model: "text-davinci-003",
       prompt,
       max_tokens: maxTokens,
+      user,
     });
 
     return response.data;
