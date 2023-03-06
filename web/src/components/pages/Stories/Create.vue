@@ -105,12 +105,13 @@ async function create() {
 .flex.h-full.w-full.max-w-3xl.flex-col.gap-3.overflow-y-auto
   h2.text-lg.leading-none 1. Choose collection
   .flex.flex-col.gap-3
-    .grid.grid-cols-4.gap-3
+    .grid.grid-cols-3.gap-3.sm_grid-cols-4
       CollectionListItem(
         v-for="collection in collections"
         :key="collection.id"
         :collection="collection"
         :selected="collection === chosenCollection"
+        :class="{ 'border border-primary-500': collection === chosenCollection }"
         @click="chosenCollection = collection"
       )
 
@@ -123,7 +124,7 @@ async function create() {
   template(v-if="chosenCollection")
     h2.text-lg.leading-none 2. Choose protagonist
     .flex.flex-col.gap-3
-      .grid.grid-cols-8.gap-3
+      .grid.grid-cols-4.gap-3.sm_grid-cols-8
         CharacterListItem(
           v-for="character in characters.filter((c) => c.collection.ref.value?.id === chosenCollection?.id)"
           :key="character.id"
@@ -143,7 +144,7 @@ async function create() {
     template(v-if="chosenProtagonist?.collected.value")
       h2.text-lg.leading-none 3. Choose characters
       .flex.flex-col.gap-3
-        .grid.grid-cols-8.gap-3
+        .grid.grid-cols-4.gap-3.sm_grid-cols-8
           CharacterListItem(
             v-for="character in characters.filter((c) => c.collection.ref.value?.id === chosenCollection?.id)"
             :key="character.id"

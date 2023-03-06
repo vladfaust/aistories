@@ -4,8 +4,8 @@ const { collection } = defineProps<{ collection: Collection }>();
 </script>
 
 <template lang="pug">
-.flex.flex-col.gap-2.rounded.border.p-3.sm_flex-row
-  img.aspect-square.rounded.border.bg-base-50.object-contain.sm_w-32(
+.flex.flex-col.gap-3.rounded.border.p-3.sm_flex-row
+  img.aspect-square.w-48.rounded.border.bg-base-50.object-contain.sm_w-32(
     :src="collection.imageUrl.toString()"
   )
   .flex.flex-col

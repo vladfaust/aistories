@@ -5,8 +5,8 @@ const { character } = defineProps<{ character: Character }>();
 </script>
 
 <template lang="pug">
-.flex.flex-col.gap-2.rounded.border.p-3.sm_flex-row
-  img.aspect-square.rounded.border.bg-base-50.object-contain.sm_w-24(
+.flex.flex-col.gap-3.rounded.border.p-3.sm_flex-row
+  img.aspect-square.w-48.rounded.border.bg-base-50.object-contain.sm_w-32(
     :src="character.imagePreviewUrl.toString()"
   )
   .flex.flex-col.gap-1
