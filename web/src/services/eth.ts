@@ -3,6 +3,7 @@ import { ref, Ref, ShallowRef } from "vue";
 import { useLocalStorage } from "@vueuse/core";
 import erc1155Abi from "@/assets/abi/erc1155.json";
 import { web3Token } from "@/store";
+import config from "@/config";
 
 declare global {
   interface Window {
@@ -25,6 +26,23 @@ export async function connect() {
   provider.value = new ethers.providers.Web3Provider(window.ethereum, "any");
   account.value = window.ethereum.selectedAddress;
   walletStorage.value = "generic";
+
+  try {
+    await window.ethereum.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: config.ethChain.chainId }],
+    });
+  } catch (switchError: any) {
+    if (switchError.code === 4902) {
+      // TODO: Handle the add error.
+      await window.ethereum.request({
+        method: "wallet_addEthereumChain",
+        params: [config.ethChain],
+      });
+    } else {
+      throw switchError;
+    }
+  }
 
   window.ethereum.on("accountsChanged", function (accounts: string[]) {
     if (accounts.length > 0) {
