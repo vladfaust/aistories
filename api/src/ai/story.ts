@@ -131,8 +131,6 @@ The following is a turn-based roleplaying chat game.
     (c) => c.id !== story.userCharId && c.id !== 0
   );
 
-  console.debug(2);
-
   messages.push({
     role: "system",
     content: `${
