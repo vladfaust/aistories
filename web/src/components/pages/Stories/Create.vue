@@ -13,7 +13,7 @@ import Web3Token from "web3-token";
 import * as eth from "@/services/eth";
 import config from "@/config";
 
-const CHAR_LIMIT = 2;
+const CHAR_LIMIT = 1;
 
 const router = useRouter();
 
