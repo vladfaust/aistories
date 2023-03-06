@@ -5,7 +5,12 @@ import {
   CreateCompletionResponse,
   OpenAIApi,
 } from "openai";
-import konsole from "./konsole";
+
+export class OpenAIError extends Error {
+  constructor(message: string, public status: number) {
+    super(message);
+  }
+}
 
 export async function createChatCompletion(
   apiKey: string,
@@ -41,11 +46,7 @@ export async function createChatCompletion(
     return response.data;
   } catch (e: any) {
     if (e.response) {
-      konsole.warn(["ai", "openai"], "OpenAI API error", {
-        status: e.response.status,
-        statusText: e.response.statusText,
-        data: e.response.data,
-      });
+      throw new OpenAIError(e.response.data.error, e.response.status);
     }
 
     throw e;
@@ -71,11 +72,7 @@ export async function createCompletion(
     return response.data;
   } catch (e: any) {
     if (e.response) {
-      konsole.warn(["ai", "openai"], "OpenAI API error", {
-        status: e.response.status,
-        statusText: e.response.statusText,
-        data: e.response.data,
-      });
+      throw new OpenAIError(e.response.data.error, e.response.status);
     }
 
     throw e;

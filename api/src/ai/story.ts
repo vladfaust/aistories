@@ -4,7 +4,6 @@ import * as openai from "@/services/openai";
 import konsole from "@/services/konsole";
 import { encode } from "gpt-3-encoder";
 import { assert } from "console";
-import pRetry from "p-retry";
 
 const SOFT_BUFFER_LIMIT = 384;
 const HARD_BUFFER_LIMIT = 768;
@@ -181,15 +180,15 @@ Example messages would be:
 
   console.debug(messages);
 
-  const chatCompletion = await pRetry(
-    () =>
-      openai.createChatCompletion(openAiApiKey, story.Owner.id, messages, 256, {
-        temperature: 1.075,
-        presencePenalty: 1,
-        frequencyPenalty: 1,
-      }),
+  const chatCompletion = await openai.createChatCompletion(
+    openAiApiKey,
+    story.Owner.id,
+    messages,
+    256,
     {
-      retries: 5,
+      temperature: 1.075,
+      presencePenalty: 1,
+      frequencyPenalty: 1,
     }
   );
 
@@ -310,12 +309,11 @@ ${toSummarize
 `;
 
       console.debug(prompt);
-      const completion = await pRetry(
-        () =>
-          openai.createCompletion(openAiApiKey, story.Owner.id, prompt, 512),
-        {
-          retries: 5,
-        }
+      const completion = await openai.createCompletion(
+        openAiApiKey,
+        story.Owner.id,
+        prompt,
+        512
       );
       console.debug(completion);
 

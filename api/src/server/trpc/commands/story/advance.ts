@@ -7,6 +7,7 @@ import { TRPCError } from "@trpc/server";
 import { advance as aiAdvance } from "@/ai/story";
 import * as redis from "@/services/redis";
 import { lock } from "./shared";
+import { OpenAIError } from "@/services/openai";
 
 const INPUT_TOKEN_LIMIT = 1024;
 
@@ -124,12 +125,17 @@ export default protectedProcedure
     } catch (e: any) {
       konsole.error(["story", "advance"], e);
 
+      let reason = e.message;
+      if (e instanceof OpenAIError) {
+        reason = `OpenAI error (${e.status}): ${e.message}`;
+      }
+
       await prisma.story.update({
         where: { id: story.id },
-        data: { reason: e.message },
+        data: { reason },
       });
 
-      await pubReason(input.storyId, e.message);
+      await pubReason(input.storyId, reason);
 
       throw e;
     } finally {
