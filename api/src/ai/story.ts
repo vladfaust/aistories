@@ -210,7 +210,7 @@ Example messages would be:
     respondedChar = characters.find((c) => c.name === name);
 
     if (!respondedChar) {
-      throw new Error("Unexpected character name from OpenAI");
+      respondedChar = characters.find((c) => c.id === 0)!;
     }
   } else {
     respondedChar = characters.find((c) => c.id === 0)!;
