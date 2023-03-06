@@ -7,6 +7,7 @@ import find from "./story/find";
 import getHistory from "./story/getHistory";
 import list from "./story/list";
 import removeChar from "./story/removeChar";
+import setName from "./story/setName";
 
 export default t.router({
   addChar,
@@ -16,4 +17,5 @@ export default t.router({
   getHistory,
   list,
   removeChar,
+  setName,
 });

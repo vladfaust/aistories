@@ -8,11 +8,13 @@ import * as eth from "@/services/eth";
 import config from "@/config";
 import * as api from "@/services/api";
 import { Deferred } from "@/utils/deferred";
-import { triggerRef } from "vue";
+import { ref, triggerRef } from "vue";
 
 const { story } = defineProps<{
   story: Story;
 }>();
+
+const nameRef = ref<HTMLSpanElement | null>(null);
 
 async function addChar() {
   let newCharId = prompt(
@@ -86,6 +88,21 @@ async function removeChar(char: Character) {
     throw e;
   }
 }
+
+async function updateName() {
+  const name = nameRef.value?.innerText;
+
+  if (!name) return;
+  if (name == story.name.value) return;
+
+  await api.trpc.commands.story.setName.mutate({
+    storyId: story.id,
+    name,
+  });
+
+  story.name.value = name;
+  nameRef.value?.blur();
+}
 </script>
 
 <template lang="pug">
@@ -108,5 +125,12 @@ async function removeChar(char: Character) {
         title="Add a character to the story"
       )
         PlusIcon.h-4.w-4.text-base-300
-    span.font-semibold.leading-tight {{ story.name || story.collection.ref.value?.name + " with " + story.characters.value.map((c) => c.ref.value?.name).join(", ") }}
+
+    span.font-semibold.leading-tight(
+      contenteditable
+      spellcheck="false"
+      @keydown.enter.prevent="updateName"
+      ref="nameRef"
+    )
+      | {{ story.name.value || story.collection.ref.value?.name + " with " + story.characters.value.map((c) => c.ref.value?.name).join(", ") }}
 </template>

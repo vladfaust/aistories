@@ -38,7 +38,7 @@ export default class Story {
           )
         ),
 
-        data.name,
+        ref(data.name),
         data.fabula,
         ref(data.reason),
 
@@ -78,7 +78,7 @@ export default class Story {
     readonly collection: Deferred<Collection>,
     readonly user: { id: string; char: Deferred<Character> },
     readonly characters: ShallowRef<Deferred<Character>[]>,
-    readonly name: string | null,
+    readonly name: Ref<string | null>,
     readonly fabula: string | null,
     readonly reason: Ref<string | null>,
     readonly latestContent: {

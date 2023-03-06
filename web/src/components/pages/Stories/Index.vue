@@ -89,7 +89,7 @@ onUnmounted(() => cancelWatch?.());
         RouterLink.link-hover.w-max.font-semibold.leading-none(
           :to="'/story/' + story.id"
         )
-          | {{ story.name || story.collection.ref.value?.name + " with " + story.characters.value.map((c) => c.ref.value?.name).join(", ") }}
+          | {{ story.name.value || story.collection.ref.value?.name + " with " + story.characters.value.map((c) => c.ref.value?.name).join(", ") }}
         .flex.items-center.gap-1(v-if="story.latestContent")
           img.aspect-square.h-5.shrink-0.rounded.border.bg-base-50.object-cover(
             v-if="story.latestContent.character.ref.value"
