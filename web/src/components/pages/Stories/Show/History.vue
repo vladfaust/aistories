@@ -133,13 +133,18 @@ onUnmounted(() => {
         template(v-else-if="entry.type === 'utterance'")
           span.text-base-600 {{ entry.text.value }}
       br
-  p.rounded.bg-base-50.p-2.text-center.leading-snug.text-error-500(
-    v-if="story.reason == 'OpenAI API key is not set'"
+
+  p.rounded.bg-base-50.p-2.text-center.text-sm.leading-snug.text-error-500(
+    v-if="story.reason.value == 'OpenAI API key is not set'"
   )
-    | The story can not progress due to the lack of OpenAI API key.
+    | The story could not progress due to the lack of OpenAI API key.
     br
     | Set the key in your
     |
     RouterLink.link(to="/me") profile settings
-    | .
+    | , and try again.
+
+  p.rounded.bg-base-50.p-2.text-center.text-sm.leading-snug.text-error-500(
+    v-else-if="story.reason.value"
+  ) {{ story.reason.value }}
 </template>

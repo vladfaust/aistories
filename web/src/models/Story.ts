@@ -1,7 +1,7 @@
 import * as api from "@/services/api";
 import { Deferred } from "@/utils/deferred";
 import Character from "./Character";
-import { markRaw } from "vue";
+import { markRaw, ref, Ref } from "vue";
 import Collection from "./Collection";
 
 export default class Story {
@@ -38,7 +38,7 @@ export default class Story {
 
         data.name,
         data.fabula,
-        data.reason,
+        ref(data.reason),
 
         data.Content.length > 0
           ? {
@@ -78,7 +78,7 @@ export default class Story {
     readonly characters: Deferred<Character>[],
     readonly name: string | null,
     readonly fabula: string | null,
-    readonly reason: string | null,
+    readonly reason: Ref<string | null>,
     readonly latestContent: {
       character: Deferred<Character>;
       content: string | null;

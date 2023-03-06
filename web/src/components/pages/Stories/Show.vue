@@ -2,7 +2,7 @@
 import Story from "@/models/Story";
 import { Deferred } from "@/utils/deferred";
 import { type Unsubscribable } from "@trpc/server/observable";
-import { onUnmounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch, type WatchStopHandle } from "vue";
 import Header from "./Show/Header.vue";
 import History from "./Show/History.vue";
 import Input from "./Show/Input.vue";
@@ -12,19 +12,36 @@ const { story } = defineProps<{ story: Deferred<Story> }>();
 const busy = ref(false);
 
 let unsub: Unsubscribable | null = null;
+let watchStopHandle: WatchStopHandle | null = null;
 
-const watchStopHandle = watch(story.ref, (resolved) => {
-  if (resolved) {
-    unsub = api.trpc.subscriptions.story.onBusy.subscribe(
-      { storyId: resolved.id },
-      { onData: (data) => (busy.value = data.busy) }
-    );
-  }
+onMounted(() => {
+  watchStopHandle = watch(
+    story.ref,
+    (resolvedStory) => {
+      if (resolvedStory) {
+        unsub = api.trpc.subscriptions.story.onStatus.subscribe(
+          { storyId: resolvedStory.id },
+          {
+            onData: (data) => {
+              if (data.busy !== undefined) {
+                busy.value = data.busy;
+              }
+
+              if (data.reason !== undefined) {
+                resolvedStory.reason.value = data.reason;
+              }
+            },
+          }
+        );
+      }
+    },
+    { immediate: true }
+  );
 });
 
 onUnmounted(() => {
   unsub?.unsubscribe();
-  watchStopHandle();
+  watchStopHandle?.();
 });
 </script>
 

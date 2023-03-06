@@ -13,6 +13,30 @@ const INPUT_TOKEN_LIMIT = 1024;
 
 const prisma = new PrismaClient();
 
+export function busyCh(storyId: string) {
+  return redis.prefix + `story:${storyId}:busy`;
+}
+
+export function reasonCh(storyId: string) {
+  return redis.prefix + `story:${storyId}:reason`;
+}
+
+async function setBusy(storyId: string, busy: boolean, ex?: number) {
+  if (ex) {
+    return redis.default.set(busyCh(storyId), busy ? "1" : "0", "EX", ex);
+  } else {
+    return redis.default.set(busyCh(storyId), busy ? "1" : "0");
+  }
+}
+
+async function pubBusy(storyId: string, busy: boolean) {
+  return redis.default.publish(busyCh(storyId), busy ? "1" : "0");
+}
+
+async function pubReason(storyId: string, reason?: string) {
+  return redis.default.publish(reasonCh(storyId), reason || "");
+}
+
 export default protectedProcedure
   .input(
     z.object({
@@ -64,18 +88,12 @@ export default protectedProcedure
       });
     }
 
-    redis.default.publish(redis.prefix + `story:${input.storyId}:busy`, "1");
+    await pubBusy(input.storyId, true);
 
     let done = false;
     const redisUpdate = setInterval(() => {
       if (done) return;
-
-      redis.default.set(
-        redis.prefix + `story:${input.storyId}:busy`,
-        "1",
-        "EX",
-        1
-      );
+      setBusy(input.storyId, true, 1);
     }, 500);
 
     try {
@@ -87,42 +105,56 @@ export default protectedProcedure
       ).openAiApiKey;
 
       if (!openAiApiKey) {
-        await prisma.story.update({
-          where: { id: story.id },
-          data: { reason: "OpenAI API key is not set" },
-        });
-
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "OpenAI API key is not set",
         });
       }
 
-      if (input.userMessage) {
-        await prisma.storyContent.create({
-          data: {
-            storyId: story.id,
-            charId: story.userCharId,
-            userId: ctx.user.id,
-            content: input.userMessage,
-            tokenUsage: 0,
-            tokenLength: encode(input.userMessage).length,
-          },
+      await prisma.$transaction(async (prisma) => {
+        await prisma.story.update({
+          where: { id: story.id },
+          data: { reason: null },
         });
-      }
+
+        if (input.userMessage) {
+          await prisma.storyContent.create({
+            data: {
+              storyId: story.id,
+              charId: story.userCharId,
+              userId: ctx.user.id,
+              content: input.userMessage,
+              tokenUsage: 0,
+              tokenLength: encode(input.userMessage).length,
+            },
+          });
+        }
+      });
+
+      await pubReason(input.storyId); // Clear reason
 
       return {
         contentId: await aiAdvance(story.id, openAiApiKey),
       };
     } catch (e: any) {
       konsole.error(["story", "advance"], e);
+
+      await prisma.story.update({
+        where: { id: story.id },
+        data: { reason: e.message },
+      });
+
+      await pubReason(input.storyId, e.message);
+
       throw e;
     } finally {
       await pgClient.query(`SELECT pg_advisory_unlock($1)`, [hash]);
+      pgClient.release();
+
       done = true;
       redisUpdate.unref();
-      redis.default.set(redis.prefix + `story:${input.storyId}:busy`, "0");
-      redis.default.publish(redis.prefix + `story:${input.storyId}:busy`, "0");
-      pgClient.release();
+
+      setBusy(input.storyId, false);
+      pubBusy(input.storyId, false);
     }
   });
