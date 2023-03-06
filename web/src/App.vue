@@ -6,10 +6,13 @@ import "animate.css";
 import { onMounted } from "vue";
 import * as api from "@/services/api";
 import { userId } from "./store";
+import * as eth from "@/services/eth";
 
 const route = useRoute();
 
 onMounted(() => {
+  eth.autoConnect();
+
   api.trpc.commands.user.me.query().then((user) => {
     if (user) {
       userId.value = user.id;

@@ -23,6 +23,10 @@ class Discord {
   ) {}
 }
 
+class Eth {
+  constructor(readonly chainId: number, readonly httpRpcUrl: URL) {}
+}
+
 class Config {
   readonly pid = Buffer.from(random(32));
 
@@ -32,7 +36,8 @@ class Config {
     readonly redisUrl: URL,
     readonly server: Server,
     readonly jwt: Jwt,
-    readonly discord: Discord
+    readonly discord: Discord,
+    readonly eth: Eth
   ) {}
 }
 
@@ -55,6 +60,10 @@ const config = new Config(
     requireEnv("DISCORD_CLIENT_ID"),
     requireEnv("DISCORD_CLIENT_SECRET"),
     requireEnv("DISCORD_REDIRECT_URI")
+  ),
+  new Eth(
+    parseInt(requireEnv("ETH_CHAIN_ID")),
+    new URL(requireEnv("ETH_HTTP_RPC_URL"))
   )
 );
 

@@ -77,6 +77,8 @@ model Character {
   about       String // Short description
   personality String // Used in a prompt, should be hidden from the user
 
+  erc1155Token String? // JSON object with ERC1155 NFT data
+
   Collection CharacterCollection @relation(fields: [collectionId], references: [id])
   Stories    Story[] // Stories the character is participating in
   Memories   StoryMemory[] // Memories of the character
