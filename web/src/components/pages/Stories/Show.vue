@@ -7,6 +7,7 @@ import Header from "./Show/Header.vue";
 import History from "./Show/History.vue";
 import Input from "./Show/Input.vue";
 import * as api from "@/services/api";
+import { userId } from "@/store";
 
 const { story } = defineProps<{ story: Deferred<Story> }>();
 const busy = ref(false);
@@ -51,7 +52,11 @@ onUnmounted(() => {
 )
   Header(:story="story.ref.value")
   History.h-full.overflow-y-auto(:story="story.ref.value" :busy="busy")
-  Input(:story="story.ref.value" :busy="busy")
+  Input(
+    v-if="story.ref.value.user.id == userId"
+    :story="story.ref.value"
+    :busy="busy"
+  )
 p.w-full.max-w-3xl(v-else-if="story.resolved") Story not found
 p.w-full.max-w-3xl(v-else) Loading...
 </template>
