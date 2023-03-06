@@ -1,7 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@aistories/api': 1.0.0-beta.6
+  '@aistories/api': 1.0.0-beta.7
   '@heroicons/vue': ^2.0.16
   '@prettier/plugin-pug': ^2.4.1
   '@trpc/client': ^10.11.1
@@ -32,7 +32,7 @@ specifiers:
   web3-token: ^1.0.4
 
 dependencies:
-  '@aistories/api': 1.0.0-beta.6
+  '@aistories/api': 1.0.0-beta.7
   '@heroicons/vue': 2.0.16_vue@3.2.47
   '@trpc/client': 10.11.1_@trpc+server@10.11.1
   '@trpc/server': 10.11.1
@@ -66,8 +66,8 @@ devDependencies:
 
 packages:
 
-  /@aistories/api/1.0.0-beta.6:
-    resolution: {integrity: sha512-Wj3km0zxSGs5RuVrYMHftVm0IrPh+xhZ0zPkm2T7RKp2LiA0ZMyJ+3OSfVyKfCXVo8oC6J3tCDd8Hxcz+lr45A==, tarball: download/@aistories/api/1.0.0-beta.6/74e28ce6b7773361564c13957b4b9f437e824416}
+  /@aistories/api/1.0.0-beta.7:
+    resolution: {integrity: sha512-7sks7b0Abd7OGQgvb6PGMZHhpvQA/rf77A1yHCG5tIjNWoRhbLjek4N4XbzUjFpNJfpvQLK1mn8EFVyMX9YWdA==, tarball: download/@aistories/api/1.0.0-beta.7/6b23520461c5b2765082c9c513aec8d3f57e17d1}
     dependencies:
       '@trpc/server': 10.11.1
     dev: false
