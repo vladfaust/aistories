@@ -64,6 +64,7 @@ import { type Unsubscribable } from "@trpc/server/observable";
 import { Deferred } from "@/utils/deferred";
 import Character from "@/models/Character";
 import Spinner from "@/components/utility/Spinner.vue";
+import { userId } from "@/store";
 
 const { story, busy } = defineProps<{
   story: Story;
@@ -133,6 +134,10 @@ onUnmounted(() => {
         template(v-else-if="entry.type === 'utterance'")
           span.text-base-600 {{ entry.text.value }}
       br
+
+  .flex.w-full.justify-center.p-2(v-if="story.user.id === userId")
+    Spinner.h-5.w-5.animate-pulse(:kind="'dots-fade'" v-if="busy")
+    p.rounded.border.px-2.py-1.text-xs.font-medium.italic.text-base-400(v-else) Waiting for user input
 
   p.rounded.bg-base-50.p-2.text-center.text-sm.leading-snug.text-error-500(
     v-if="story.reason.value == 'OpenAI API key is not set'"
