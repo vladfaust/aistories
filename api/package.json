@@ -1,6 +1,6 @@
 {
   "name": "@aistories/api",
-  "version": "1.0.0-beta.10",
+  "version": "1.0.0-beta.11",
   "description": "AIStories API server",
   "author": "Vlad Faust <hey@vladfaust.com>",
   "license": "UNLICENSED",
