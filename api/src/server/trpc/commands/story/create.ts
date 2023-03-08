@@ -4,7 +4,7 @@ import { protectedProcedure } from "#trpc/middleware/auth";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import Web3Token from "web3-token";
-import { maybeVerifyOwnership as maybeVerifyOwnership } from "./shared";
+import { maybeVerifyCharOwnership as maybeVerifyCharOwnership } from "./shared";
 
 export type Erc1155Token = {
   contractAddress: string; // Hex string.
@@ -78,7 +78,7 @@ export default protectedProcedure
       : undefined;
 
     for (const character of characters) {
-      await maybeVerifyOwnership(character, address);
+      await maybeVerifyCharOwnership(character, address);
     }
 
     const story = await prisma.story.create({

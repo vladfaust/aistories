@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { protectedProcedure } from "#trpc/middleware/auth";
 import { TRPCError } from "@trpc/server";
-import { lock, maybeVerifyOwnership } from "./shared";
+import { lock, maybeVerifyCharOwnership } from "./shared";
 import Web3Token from "web3-token";
 
 const MAX_CHARS = 5;
@@ -52,7 +52,7 @@ export default protectedProcedure
       ? Web3Token.verify(input.web3Token).address
       : undefined;
 
-    await maybeVerifyOwnership(char, address);
+    await maybeVerifyCharOwnership(char, address);
 
     if (story.charIds.length >= MAX_CHARS) {
       throw new TRPCError({

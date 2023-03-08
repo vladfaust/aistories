@@ -33,7 +33,7 @@ export type Erc1155Token = {
   uri: string; // URI to the NFT page.
 };
 
-export async function maybeVerifyOwnership(
+export async function maybeVerifyCharOwnership(
   character: {
     erc1155Token: string | null;
   },
