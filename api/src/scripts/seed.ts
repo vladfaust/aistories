@@ -21,6 +21,14 @@ const prisma = new PrismaClient();
 async function main() {
   await prisma.settings.create({
     data: {
+      key: "twitterLink",
+      value: "https://twitter.com/elonmusk",
+      description: "Link to the Twitter account",
+    },
+  });
+
+  await prisma.settings.create({
+    data: {
       key: "discordLink",
       value: "https://discord.gg/tUKJTvGX",
       description: "Link to the Discord server",

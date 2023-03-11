@@ -5,6 +5,8 @@ import konsole from "@/services/konsole";
 import { encode } from "gpt-3-encoder";
 import { assert } from "console";
 import config from "@/config";
+import * as redis from "@/services/redis";
+import * as energy from "@/logic/energy";
 
 const SOFT_BUFFER_LIMIT = 384;
 const HARD_BUFFER_LIMIT = 768;
@@ -349,6 +351,8 @@ ${toSummarize
       },
     }),
   ]);
+
+  redis.del(energy.fromStoryContentKey(story.Owner.id));
 
   return content.id;
 }

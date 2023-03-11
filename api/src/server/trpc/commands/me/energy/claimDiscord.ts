@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import * as settings from "@/settings";
 import * as discord from "@/services/discord";
+import * as redis from "@/services/redis";
+import * as energy from "@/logic/energy";
 import konsole from "@/services/konsole";
 import { TRPCError } from "@trpc/server";
 
@@ -74,6 +76,8 @@ export default protectedProcedure
           amount,
         },
       });
+
+      redis.del(energy.fromGrantsKey(ctx.user.id));
     });
 
     konsole.log([], `Claimed energy for Discord guild membership`, {

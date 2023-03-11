@@ -7,6 +7,8 @@ import Web3Token from "web3-token";
 import * as settings from "@/settings";
 import konsole from "@/services/konsole";
 import { toBuffer } from "@/utils";
+import * as redis from "@/services/redis";
+import * as energy from "@/logic/energy";
 
 const prisma = new PrismaClient();
 
@@ -75,6 +77,8 @@ export default protectedProcedure
     }
 
     if (data.length > 0) {
+      redis.del(energy.fromWeb3PurchasesKey(ctx.user.id));
+
       return {
         claimedEventsCount: (
           await prisma.web3EnergyPurchase.createMany({

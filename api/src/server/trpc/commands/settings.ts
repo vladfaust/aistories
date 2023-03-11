@@ -17,6 +17,6 @@ export default t.router({
     )
     .output(z.string().nullable())
     .query(async ({ input }) => {
-      return await settings.maybeGet(input);
+      return await settings.get(input);
     }),
 });
