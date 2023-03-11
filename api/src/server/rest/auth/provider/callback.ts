@@ -71,7 +71,25 @@ export default async function (req: Request, res: Response) {
       },
     });
 
-    if (!identity) {
+    if (identity) {
+      await prisma.oAuth2Identity.update({
+        where: {
+          providerId_userId: {
+            providerId: input.provider,
+            userId: identity.userId,
+          },
+        },
+        data: {
+          accessToken: response.access_token,
+          tokenType: response.token_type,
+          scope: response.scope,
+          expiresAt: new Date(
+            new Date().valueOf() + response.expires_in * 1000
+          ),
+          refreshToken: response.refresh_token,
+        },
+      });
+    } else {
       identity = await prisma.oAuth2Identity.create({
         data: {
           providerId: input.provider,
