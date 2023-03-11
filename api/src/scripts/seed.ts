@@ -18,6 +18,30 @@ function limitText(text: string, limit: number): string {
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.settings.create({
+    data: {
+      key: "discordLink",
+      value: "https://discord.gg/tUKJTvGX",
+      description: "Link to the Discord server",
+    },
+  });
+
+  await prisma.settings.create({
+    data: {
+      key: "energyWeb3ExchangeRate",
+      value: "50",
+      description: "How much energy you get for 1 ETH",
+    },
+  });
+
+  await prisma.settings.create({
+    data: {
+      key: "energyWeb3ExchangeMinValue",
+      value: "1",
+      description: "Minimum amount of ETH to exchange for energy",
+    },
+  });
+
   const metaCollection = await prisma.characterCollection.create({
     data: {
       id: 0,
@@ -31,7 +55,8 @@ async function main() {
 
   const ai = await prisma.character.create({
     data: {
-      Collection: { connect: { id: metaCollection.id } },
+      id: 0,
+      collectionId: metaCollection.id,
       name: "AI",
       about: "The AI that runs the game",
       imagePreviewUrl:
@@ -280,4 +305,5 @@ Sugar-and-Ice Personality: One of the feistier examples of this
   });
 }
 
-main();
+await main();
+process.exit(0);

@@ -1,8 +1,9 @@
 import config from "@/config.js";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { timeout } from "@/utils.js";
 import assert from "assert";
 import erc1155Abi from "@/abi/erc1155.json" assert { type: "json" };
+import receiverAbi from "@/abi/receiver.json" assert { type: "json" };
 import konsole from "./konsole";
 
 export let provider: ethers.providers.BaseProvider;
@@ -36,4 +37,31 @@ export async function erc1155Balance(
   );
 
   return await contract.balanceOf(ethers.utils.hexlify(address), erc1155Id);
+}
+
+export async function* getReceiverEvents(
+  address: string,
+  fromBlock?: number
+): AsyncGenerator<{
+  blockNumber: number;
+  logIndex: number;
+  txHash: string;
+  value: BigNumber;
+}> {
+  const contract = new ethers.Contract(
+    ethers.utils.hexlify(config.eth.receiverAddress),
+    receiverAbi,
+    provider
+  );
+
+  const filter = contract.filters.Receive(address);
+
+  for await (const event of await contract.queryFilter(filter, fromBlock)) {
+    yield {
+      blockNumber: event.blockNumber,
+      logIndex: event.logIndex,
+      txHash: event.transactionHash,
+      value: event.args!.value,
+    };
+  }
 }

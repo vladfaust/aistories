@@ -13,6 +13,13 @@ export interface AddEthereumChainParameter {
   blockTime: number;
 }
 
+class Eth {
+  constructor(
+    readonly chain: AddEthereumChainParameter,
+    readonly receiverAddress: string
+  ) {}
+}
+
 class Config {
   constructor(
     readonly restApiUrl: URL,
@@ -20,7 +27,7 @@ class Config {
     readonly trpcWsUrl: URL,
     readonly discordClientId: string,
     readonly discordRedirectUri: string,
-    readonly ethChain: AddEthereumChainParameter
+    readonly eth: Eth
   ) {}
 }
 
@@ -35,7 +42,10 @@ const config = new Config(
   new URL(requireEnv("VITE_TRPC_WS_URL")),
   requireEnv("VITE_DISCORD_CLIENT_ID"),
   requireEnv("VITE_DISCORD_REDIRECT_URI"),
-  JSON.parse(requireEnv("VITE_ETH_CHAIN"))
+  new Eth(
+    JSON.parse(requireEnv("VITE_ETH_CHAIN")),
+    requireEnv("VITE_ETH_RECEIVER_ADDRESS")
+  )
 );
 
 export default config;

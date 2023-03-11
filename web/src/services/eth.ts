@@ -30,14 +30,14 @@ export async function connect() {
   try {
     await window.ethereum.request({
       method: "wallet_switchEthereumChain",
-      params: [{ chainId: config.ethChain.chainId }],
+      params: [{ chainId: config.eth.chain.chainId }],
     });
   } catch (switchError: any) {
     if (switchError.code === 4902) {
       // TODO: Handle the add error.
       await window.ethereum.request({
         method: "wallet_addEthereumChain",
-        params: [config.ethChain],
+        params: [config.eth.chain],
       });
     } else {
       throw switchError;

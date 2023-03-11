@@ -139,17 +139,23 @@ onUnmounted(() => {
     Spinner.h-5.w-5.animate-pulse(:kind="'dots-fade'" v-if="busy")
     p.rounded.border.px-2.py-1.text-xs.font-medium.italic.text-base-400(v-else) Waiting for user input
 
-  p.rounded.bg-base-50.p-2.text-center.text-sm.leading-snug.text-error-500(
-    v-if="story.reason.value == 'OpenAI API key is not set'"
+  p.rounded.border.border-error-200.p-2.text-center.text-sm.leading-snug.text-error-500(
+    v-if="story.reason.value"
   )
-    | The story could not progress due to the lack of OpenAI API key.
-    br
-    | Set the key in your
-    |
-    RouterLink.link(to="/me") profile settings
-    | , and try again.
+    template(v-if="story.reason.value == 'OpenAI API key is not set'")
+      | The story could not progress because the OpenAI API key is not set.
+      br
+      | Set the key in your
+      |
+      RouterLink.link(to="/me") profile settings
+      | , and try again.
 
-  p.rounded.bg-base-50.p-2.text-center.text-sm.leading-snug.text-error-500(
-    v-else-if="story.reason.value"
-  ) {{ story.reason.value }}
+    template(v-else-if="story.reason.value == 'Not enough energy'")
+      | Not enough energy to continue the story. Go to
+      |
+      RouterLink.link(to="/me") profile
+      |
+      | to get more energy.
+
+    template(v-else) {{ story.reason.value }}
 </template>

@@ -4,9 +4,14 @@
 
 @layer components {
   .btn {
-    @apply flex items-center justify-center rounded border border-black border-opacity-10 py-3 px-4 text-center font-semibold leading-none;
+    @apply flex items-center justify-center rounded border border-black border-opacity-10 py-3 px-4 text-center font-medium leading-none;
     @apply disabled_cursor-not-allowed disabled_opacity-50;
     @apply pressable cursor-pointer select-none transition;
+  }
+
+  .btn-raised {
+    @apply shadow;
+    @apply active_shadow-none;
   }
 
   .btn-square {
@@ -34,11 +39,11 @@
   }
 
   .btn-web3 {
-    @apply bg-x2 bg-web3 animate-bg-position border-none text-white;
+    @apply bg-x2 bg-web3 animate-bg-position text-white;
   }
 
   .btn-nft {
-    @apply bg-x2 bg-nft animate-bg-position border-none text-white;
+    @apply bg-x2 bg-nft animate-bg-position text-white;
   }
 
   .btn-sm {

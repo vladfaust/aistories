@@ -8,11 +8,10 @@ import {
   onMounted,
   type WatchStopHandle,
 } from "vue";
-import { userId } from "@/store";
+import { userId, energy } from "@/store";
 import Story from "@/models/Story";
 
 const stories: ShallowRef<Story[]> = ref([]);
-const hasOpenAiApiKey = ref(false);
 
 let cancelWatch: WatchStopHandle | null = null;
 
@@ -25,10 +24,6 @@ onMounted(() => {
         Story.fromBackendModel(data)
       );
     }
-  });
-
-  api.trpc.commands.user.settings.get.query("openAiApiKey").then((res) => {
-    hasOpenAiApiKey.value = !!res;
   });
 });
 
@@ -48,10 +43,10 @@ onUnmounted(() => cancelWatch?.());
 
       ol
         li.flex.gap-2
-          input(type="checkbox" :checked="hasOpenAiApiKey" disabled)
+          input(type="checkbox" :checked="energy > 0" disabled)
           label
-            | Set up your&nbsp;
-            RouterLink.link(to="/me") OpenAI API key
+            | Get some&nbsp;
+            RouterLink.link(to="/me") energy
         li.flex.gap-2
           input(type="checkbox" :checked="stories.length > 0" disabled)
           label Embark a story

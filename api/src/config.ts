@@ -24,7 +24,11 @@ class Discord {
 }
 
 class Eth {
-  constructor(readonly chainId: number, readonly httpRpcUrl: URL) {}
+  constructor(
+    readonly chainId: number,
+    readonly httpRpcUrl: URL,
+    readonly receiverAddress: string
+  ) {}
 }
 
 class Config {
@@ -34,6 +38,7 @@ class Config {
     readonly prod: boolean,
     readonly databaseUrl: URL,
     readonly redisUrl: URL,
+    readonly openAiApiKey: string,
     readonly server: Server,
     readonly jwt: Jwt,
     readonly discord: Discord,
@@ -50,6 +55,7 @@ const config = new Config(
   process.env.NODE_ENV === "production",
   new URL(requireEnv("DATABASE_URL")),
   new URL(requireEnv("REDIS_URL")),
+  requireEnv("OPENAI_API_KEY"),
   new Server(
     requireEnv("SERVER_HOST"),
     parseInt(requireEnv("SERVER_PORT")),
@@ -63,7 +69,8 @@ const config = new Config(
   ),
   new Eth(
     parseInt(requireEnv("ETH_CHAIN_ID")),
-    new URL(requireEnv("ETH_HTTP_RPC_URL"))
+    new URL(requireEnv("ETH_HTTP_RPC_URL")),
+    requireEnv("ETH_RECEIVER_ADDRESS")
   )
 );
 

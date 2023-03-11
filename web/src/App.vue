@@ -5,7 +5,7 @@ import { useRoute } from "vue-router";
 import "animate.css";
 import { onMounted } from "vue";
 import * as api from "@/services/api";
-import { userId } from "./store";
+import { userId, energy } from "./store";
 import * as eth from "@/services/eth";
 
 const route = useRoute();
@@ -13,9 +13,19 @@ const route = useRoute();
 onMounted(() => {
   eth.autoConnect();
 
-  api.trpc.commands.user.me.query().then((user) => {
-    if (user) {
-      userId.value = user.id;
+  api.trpc.commands.me.getId.query().then((id) => {
+    userId.value = id;
+
+    if (id) {
+      api.trpc.commands.me.energy.get.query().then((res) => {
+        energy.value = res;
+
+        api.trpc.subscriptions.me.onEnergy.subscribe(undefined, {
+          onData: (res) => {
+            energy.value = energy.value + res.delta;
+          },
+        });
+      });
     }
   });
 });
@@ -23,7 +33,7 @@ onMounted(() => {
 
 <template lang="pug">
 HeaderVue
-.flex.justify-center.p-4(style="height: calc(100vh - 8rem)")
+.flex.justify-center.p-4(style="min-height: calc(100vh - 8rem)")
   RouterView(v-slot="{ Component }")
     Transition(name="fade" mode="out-in")
       Component(:is="Component" :key="route.path")

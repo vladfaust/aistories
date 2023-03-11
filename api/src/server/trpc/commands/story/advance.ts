@@ -8,6 +8,7 @@ import { advance as aiAdvance } from "@/ai/story";
 import * as redis from "@/services/redis";
 import { lock } from "./shared";
 import { OpenAIError } from "@/services/openai";
+import * as energy from "@/logic/energy";
 
 const INPUT_TOKEN_LIMIT = 1024;
 
@@ -83,18 +84,28 @@ export default protectedProcedure
     }, 500);
 
     try {
-      const openAiApiKey = (
-        await prisma.user.findUniqueOrThrow({
-          where: { id: ctx.user.id },
-          select: { openAiApiKey: true },
-        })
-      ).openAiApiKey;
+      const user = await prisma.user.findUniqueOrThrow({
+        where: { id: ctx.user.id },
+        select: {
+          openAiApiKey: true,
+          useOpenAiApiKey: true,
+        },
+      });
 
-      if (!openAiApiKey) {
-        throw new TRPCError({
-          code: "PRECONDITION_FAILED",
-          message: "OpenAI API key is not set",
-        });
+      if (user.useOpenAiApiKey) {
+        if (!user.openAiApiKey) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "OpenAI API key is not set",
+          });
+        }
+      } else {
+        if ((await energy.getBalance(ctx.user.id)) < 1) {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Not enough energy",
+          });
+        }
       }
 
       await prisma.$transaction(async (prisma) => {
@@ -120,7 +131,10 @@ export default protectedProcedure
       await pubReason(input.storyId); // Clear reason
 
       return {
-        contentId: await aiAdvance(story.id, openAiApiKey),
+        contentId: await aiAdvance(
+          story.id,
+          user.useOpenAiApiKey ? user.openAiApiKey! : undefined
+        ),
       };
     } catch (e: any) {
       konsole.error(["story", "advance"], e);

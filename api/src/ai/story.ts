@@ -4,6 +4,7 @@ import * as openai from "@/services/openai";
 import konsole from "@/services/konsole";
 import { encode } from "gpt-3-encoder";
 import { assert } from "console";
+import config from "@/config";
 
 const SOFT_BUFFER_LIMIT = 384;
 const HARD_BUFFER_LIMIT = 768;
@@ -21,8 +22,10 @@ const prisma = new PrismaClient();
  */
 export async function advance(
   storyId: string,
-  openAiApiKey: string
+  userOpenAiApiKey?: string
 ): Promise<number> {
+  const openAiApiKey = userOpenAiApiKey || config.openAiApiKey;
+
   const story = await prisma.story.findFirstOrThrow({
     where: { id: storyId },
     select: {
@@ -334,6 +337,7 @@ ${toSummarize
         content: text,
         tokenLength: textTokenLength,
         tokenUsage: chatCompletion.usage!.total_tokens,
+        energyUsage: userOpenAiApiKey ? 0 : 1,
       },
       select: { id: true },
     }),

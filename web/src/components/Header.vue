@@ -1,9 +1,10 @@
 <script setup lang="ts">
-/// <reference types="vite-svg-loader" />
 import Jdenticon from "./utility/Jdenticon.vue";
-import { userId } from "@/store";
+import { userId, energy } from "@/store";
 import * as oAuth from "@/services/oAuth";
 import DiscordLogo from "@/assets/discord.svg?component";
+import EnergyIcon from "@/components/utility/EnergyIcon.vue";
+import Placeholder from "./utility/Placeholder.vue";
 </script>
 
 <template lang="pug">
@@ -19,10 +20,15 @@ header.flex.h-16.w-full.place-content-center.border-y.px-4
     ul.flex.items-center.justify-end.gap-2
       template(v-if="userId")
         li
+          RouterLink.pressable.flex.items-center.transition-transform(to="/me")
+            EnergyIcon.h-5
+            span.text-sm.text-base-600(v-if="energy !== undefined") {{ energy }}
+            Placeholder.h-5.w-8.rounded.bg-base-100(v-else)
+        li
           RouterLink.pressable.flex.items-center.gap-2.transition-transform(
             to="/me"
           )
-            Jdenticon.h-8.w-8.rounded.border(:input="userId")
+            Jdenticon.h-8.w-8.rounded-full.border(:input="userId" class="p-0.5")
       li(v-else)
         a.btn.btn-sm.gap-2.text-white(
           class="bg-[#5865F2]"

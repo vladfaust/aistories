@@ -4,7 +4,14 @@ import * as settings from "@/settings";
 
 export default t.router({
   get: t.procedure
-    .input(z.enum(["twitterLink", "discordLink"]))
+    .input(
+      z.enum([
+        "twitterLink",
+        "discordLink",
+        "energyWeb3ExchangeRate",
+        "energyWeb3ExchangeMinValue",
+      ])
+    )
     .output(z.string().nullable())
     .query(async ({ input }) => {
       return await settings.maybeGet(input);
