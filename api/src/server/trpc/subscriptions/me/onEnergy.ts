@@ -22,7 +22,7 @@ async function getStoryOwner(storyId: string): Promise<string> {
  */
 export default protectedProcedure.subscription(async ({ ctx }) => {
   return observable<{
-    reason: "web3Purchase" | "storyContent";
+    reason: "web3Purchase" | "storyContent" | "grant";
     delta: number;
     createdAt: Date;
   }>((emit) => {
@@ -56,6 +56,22 @@ export default protectedProcedure.subscription(async ({ ctx }) => {
         emit.next({
           reason: "storyContent",
           delta: -message.energyUsage,
+          createdAt: new Date(Date.parse(message.createdAt)),
+        });
+      }),
+
+      pg.listen("EnergyGrantInsert", async (payload: any) => {
+        const message: {
+          userId: string;
+          amount: number;
+          createdAt: string; // Timestamp
+        } = JSON.parse(payload);
+
+        if (message.userId != ctx.user.id) return;
+
+        emit.next({
+          reason: "grant",
+          delta: message.amount,
           createdAt: new Date(Date.parse(message.createdAt)),
         });
       }),

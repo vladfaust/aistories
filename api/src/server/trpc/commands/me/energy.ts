@@ -1,9 +1,13 @@
 import { t } from "#trpc";
 
-import claim from "./energy/claim";
+import claimDiscord from "./energy/claimDiscord";
+import claimWeb3 from "./energy/claimWeb3";
 import get from "./energy/get";
+import getDiscordClaimed from "./energy/getDiscordClaimed";
 
 export default t.router({
-  claim,
+  claimDiscord,
+  claimWeb3,
   get,
+  getDiscordClaimed,
 });

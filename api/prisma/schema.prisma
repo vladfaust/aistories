@@ -31,6 +31,7 @@ model User {
 
   OAuth2Identities    OAuth2Identity[]
   Web3EnergyPurchases Web3EnergyPurchase[]
+  EnergyGrants        EnergyGrant[]
 }
 
 model OAuth2Identity {
@@ -66,6 +67,18 @@ model Web3EnergyPurchase {
   User User @relation(fields: [userId], references: [id])
 
   @@id([blockNumber, logIndex])
+}
+
+model EnergyGrant {
+  id     Int    @id @default(autoincrement())
+  userId String
+
+  reason String
+  amount Float
+
+  createdAt DateTime @default(now())
+
+  User User @relation(fields: [userId], references: [id])
 }
 
 model CharacterCollection {

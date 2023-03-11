@@ -19,7 +19,8 @@ class Discord {
   constructor(
     readonly clientId: string,
     readonly clientSecret: string,
-    readonly redirectUri: string
+    readonly redirectUri: string,
+    readonly guildId: string
   ) {}
 }
 
@@ -65,7 +66,8 @@ const config = new Config(
   new Discord(
     requireEnv("DISCORD_CLIENT_ID"),
     requireEnv("DISCORD_CLIENT_SECRET"),
-    requireEnv("DISCORD_REDIRECT_URI")
+    requireEnv("DISCORD_REDIRECT_URI"),
+    requireEnv("DISCORD_GUILD_ID")
   ),
   new Eth(
     parseInt(requireEnv("ETH_CHAIN_ID")),

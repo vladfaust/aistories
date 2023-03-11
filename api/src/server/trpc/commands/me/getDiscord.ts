@@ -1,6 +1,7 @@
 import { protectedProcedure } from "@/server/trpc/middleware/auth";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
+import * as discord from "@/services/discord";
 
 const prisma = new PrismaClient();
 
@@ -27,30 +28,16 @@ export default protectedProcedure
         },
       },
       select: {
-        externalId: true,
         accessToken: true,
+        tokenType: true,
       },
     });
 
     if (discordIdentity) {
-      const response = await fetch(`https://discord.com/api/v10/users/@me`, {
-        headers: {
-          Authorization: `Bearer ${discordIdentity.accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch Discord user", { cause: response });
-      }
-
-      const discord: {
-        id: string;
-        username: string;
-        discriminator: string;
-        avatar: string | null;
-      } = await response.json();
-
-      return discord;
+      return await discord.me(
+        discordIdentity.tokenType,
+        discordIdentity.accessToken
+      );
     } else {
       return null;
     }

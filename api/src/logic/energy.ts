@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
  * OPTIMIZE: Cache.
  */
 export async function getBalance(userId: string): Promise<number> {
-  const [web3Purchases, stories] = await Promise.all([
+  const [web3Purchases, stories, grants] = await Promise.all([
     prisma.web3EnergyPurchase.findMany({
       where: { userId },
       select: { amount: true },
@@ -20,6 +20,10 @@ export async function getBalance(userId: string): Promise<number> {
           },
         },
       },
+    }),
+    prisma.energyGrant.findMany({
+      where: { userId },
+      select: { amount: true },
     }),
   ]);
 
@@ -38,5 +42,7 @@ export async function getBalance(userId: string): Promise<number> {
     0
   );
 
-  return web3PurchasesEnergy - contentEnergy;
+  const grantsEnergy = grants.reduce((acc, cur) => acc + cur.amount, 0);
+
+  return web3PurchasesEnergy - contentEnergy + grantsEnergy;
 }

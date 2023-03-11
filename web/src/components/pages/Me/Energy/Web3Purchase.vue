@@ -73,7 +73,7 @@ async function purchase() {
 
     await pRetry(
       async () => {
-        await api.trpc.commands.me.energy.claim.query({
+        await api.trpc.commands.me.energy.claimWeb3.query({
           web3Token: web3Token.value!,
         });
       },
@@ -101,7 +101,7 @@ async function restore() {
     }
   );
 
-  const result = await api.trpc.commands.me.energy.claim.query({
+  const result = await api.trpc.commands.me.energy.claimWeb3.query({
     web3Token: web3Token.value,
   });
 
@@ -110,12 +110,12 @@ async function restore() {
 </script>
 
 <template lang="pug">
-.flex.flex-col.gap-3
+.flex.flex-col
   p.rounded.bg-base-50.p-3.text-center.leading-tight.text-base-600
     | Purchase energy credits with cryptocurrency
 
   .flex.w-full.items-center.gap-2
-    input.w-full.rounded.border.py-1.text-center(
+    input.w-full.rounded.border.py-2.text-center(
       type="number"
       v-model="inputToken"
       :min="exchangeMin"

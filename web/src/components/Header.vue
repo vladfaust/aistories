@@ -32,7 +32,7 @@ header.flex.h-16.w-full.place-content-center.border-y.px-4
       li(v-else)
         a.btn.btn-sm.gap-2.text-white(
           class="bg-[#5865F2]"
-          :href="oAuth.url(oAuth.Provider.Discord)"
+          :href="oAuth.url(oAuth.Provider.Discord, ['identify', 'guilds.members.read'])"
         )
           | Log in
           DiscordLogo.h-5.fill-white

@@ -6,6 +6,7 @@ if (config.prod) {
 
 import { PrismaClient } from "@prisma/client";
 import { encode as gpt3Encode } from "gpt-3-encoder";
+import { GRANT_SETTING as DISCORD_GRANT_SETTING } from "#trpc/commands/me/energy/claimDiscord";
 
 function limitText(text: string, limit: number): string {
   if (gpt3Encode(text).length > limit) {
@@ -39,6 +40,15 @@ async function main() {
       key: "energyWeb3ExchangeMinValue",
       value: "1",
       description: "Minimum amount of ETH to exchange for energy",
+    },
+  });
+
+  await prisma.settings.create({
+    data: {
+      key: DISCORD_GRANT_SETTING,
+      value: "50",
+      description:
+        "Amount of energy to grant for being a member of the Discord guild",
     },
   });
 
