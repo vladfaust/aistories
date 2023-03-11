@@ -56,6 +56,11 @@ export async function* getReceiverEvents(
 
   const filter = contract.filters.Receive(address);
 
+  if (!fromBlock) {
+    // QuickNode is limited to a 10000 blocks range.
+    fromBlock = (await provider.getBlockNumber()) - 9000;
+  }
+
   for await (const event of await contract.queryFilter(filter, fromBlock)) {
     yield {
       blockNumber: event.blockNumber,

@@ -37,6 +37,7 @@ export default protectedProcedure
       await prisma.web3EnergyPurchase.findFirst({
         where: { userId: ctx.user.id },
         orderBy: { blockNumber: "desc" },
+        select: { blockNumber: true },
       })
     )?.blockNumber;
 
