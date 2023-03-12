@@ -1,7 +1,7 @@
 <script setup lang="ts">
-const { animated = true } = defineProps<{
-  animated?: boolean;
-}>();
+const { animated } = withDefaults(defineProps<{ animated?: boolean }>(), {
+  animated: true,
+});
 </script>
 
 <template lang="pug">

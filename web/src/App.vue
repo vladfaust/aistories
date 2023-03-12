@@ -2,7 +2,6 @@
 import HeaderVue from "@/components/Header.vue";
 import FooterVue from "@/components/Footer.vue";
 import { useRoute } from "vue-router";
-import "animate.css";
 import { onMounted } from "vue";
 import * as api from "@/services/api";
 import { userId, energy } from "./store";
@@ -38,6 +37,7 @@ HeaderVue
     Transition(name="fade" mode="out-in")
       Component(:is="Component" :key="route.path")
 FooterVue
+.hidden.animate-pulse
 </template>
 
 <style lang="scss">
