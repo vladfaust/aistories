@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import Collection from "@/models/Collection";
+import Lore from "@/models/Lore";
 
-const { collection, selected } = defineProps<{
-  collection: Collection;
+const { lore, selected } = defineProps<{
+  lore: Lore;
   selected: boolean;
 }>();
 </script>
 
 <template lang="pug">
 img.aspect-square.select-none.rounded.border.bg-base-50.object-contain.transition(
-  :src="collection.imageUrl.toString()"
+  :src="lore.imageUrl.toString()"
   :class="selected ? 'pressable cursor-pointer opacity-100 shadow-sm' : 'pressable cursor-pointer opacity-40 hover_opacity-100'"
 )
 </template>

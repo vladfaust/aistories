@@ -81,7 +81,7 @@ model EnergyGrant {
   User User @relation(fields: [userId], references: [id])
 }
 
-model CharacterCollection {
+model Lore {
   id Int @id @default(autoincrement())
 
   imageUrl String
@@ -100,7 +100,7 @@ model CharacterCollection {
 model Character {
   id Int @id @default(autoincrement())
 
-  collectionId Int
+  loreId Int
 
   // TODO: Rename to avatarUrl
   imagePreviewUrl String
@@ -111,18 +111,18 @@ model Character {
 
   erc1155Token String? // JSON object with ERC1155 NFT data
 
-  Collection CharacterCollection @relation(fields: [collectionId], references: [id])
-  Stories    Story[] // Stories the character is participating in
-  Content    StoryContent[] // Content created by the character (user-controlled or not)
+  Lore    Lore           @relation(fields: [loreId], references: [id])
+  Stories Story[] // Stories the character is participating in
+  Content StoryContent[] // Content created by the character (user-controlled or not)
 }
 
 model Story {
   id String @id // Nanoid
 
-  userId       String // Id of the user who owns the story
-  collectionId Int // Id of the character collection used in the story
-  charIds      Int[] // All characters in the story (including user-controlled ones)
-  userCharId   Int // The character controlled by the user
+  userId     String // Id of the user who owns the story
+  loreId     Int // Id of the lore used in the story
+  charIds    Int[] // All characters in the story (including user-controlled ones)
+  userCharId Int // The character controlled by the user
 
   name   String? // Display name of the story
   fabula String? // The initial context of the story, further augmented by memories
@@ -134,8 +134,8 @@ model Story {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  Owner      User                @relation(fields: [userId], references: [id])
-  Collection CharacterCollection @relation(fields: [collectionId], references: [id])
+  Owner      User           @relation(fields: [userId], references: [id])
+  Lore       Lore           @relation(fields: [loreId], references: [id])
   Characters Character[]
   Content    StoryContent[]
 }

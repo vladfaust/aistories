@@ -22,7 +22,7 @@ const prisma = new PrismaClient();
 export default protectedProcedure
   .input(
     z.object({
-      collectionId: z.number().positive(),
+      loreId: z.number().positive(),
       userCharacterId: z.number().positive(),
 
       // FIXME: Use `zod.set`.
@@ -45,15 +45,15 @@ export default protectedProcedure
       throw new Error("Empty character list");
     }
 
-    const collection = await prisma.characterCollection.findUnique({
-      where: { id: input.collectionId },
+    const lore = await prisma.lore.findUnique({
+      where: { id: input.loreId },
       select: { id: true },
     });
 
-    if (!collection) {
+    if (!lore) {
       throw new TRPCError({
         code: "BAD_REQUEST",
-        message: "Collection not found",
+        message: "Lore not found",
       });
     }
 
@@ -84,7 +84,7 @@ export default protectedProcedure
     const story = await prisma.story.create({
       data: {
         id: nanoid(),
-        collectionId: input.collectionId,
+        loreId: input.loreId,
         charIds: [input.userCharacterId, ...nonUserCharacterIds],
         userId: ctx.user.id,
         userCharId: input.userCharacterId,

@@ -15,7 +15,7 @@ export default t.procedure
       where: { id: input.storyId },
       select: {
         id: true,
-        collectionId: true,
+        loreId: true,
         userId: true,
         userCharId: true,
         charIds: true,

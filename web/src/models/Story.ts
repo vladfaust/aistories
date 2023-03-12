@@ -2,14 +2,14 @@ import * as api from "@/services/api";
 import { Deferred } from "@/utils/deferred";
 import Character from "./Character";
 import { markRaw, ref, Ref, shallowRef, ShallowRef } from "vue";
-import Collection from "./Collection";
+import Lore from "./Lore";
 
 export default class Story {
   static cache = new Map<string, Story>();
 
   static fromBackendModel(data: {
     id: string;
-    collectionId: number;
+    loreId: number;
     charIds: number[];
     userId: string;
     userCharId: number;
@@ -25,7 +25,7 @@ export default class Story {
     return markRaw(
       new Story(
         data.id,
-        Collection.findOrCreate(data.collectionId) as Deferred<Collection>,
+        Lore.findOrCreate(data.loreId) as Deferred<Lore>,
 
         {
           id: data.userId,
@@ -75,7 +75,7 @@ export default class Story {
 
   private constructor(
     readonly id: string,
-    readonly collection: Deferred<Collection>,
+    readonly lore: Deferred<Lore>,
     readonly user: { id: string; char: Deferred<Character> },
     readonly characters: ShallowRef<Deferred<Character>[]>,
     readonly name: Ref<string | null>,

@@ -31,7 +31,7 @@ export async function advance(
   const story = await prisma.story.findFirstOrThrow({
     where: { id: storyId },
     select: {
-      Collection: {
+      Lore: {
         select: {
           setup: true,
         },
@@ -86,10 +86,10 @@ The following is a turn-based roleplaying chat game.
 `.trim(),
   });
 
-  if (story.Collection.setup) {
+  if (story.Lore.setup) {
     messages.push({
       role: "system",
-      content: `Initial setup of the story:\n${story.Collection.setup}`.trim(),
+      content: `Initial setup of the story:\n${story.Lore.setup}`.trim(),
     });
   }
 
@@ -297,7 +297,7 @@ Pay special attention to the main character, <${mainCharacter.name}>.
 A message ends with a newline.
 Narrations in messages are wrapped in [].
 
-${story.Collection.setup ? "[SETUP]\n" + story.Collection.setup + "\n" : ""}
+${story.Lore.setup ? "[SETUP]\n" + story.Lore.setup + "\n" : ""}
 [CHARACTERS]
 ${characters.map((c) => `[[${c.name}]]\n` + c.personality).join("\n\n")}
 

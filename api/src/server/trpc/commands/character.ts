@@ -29,7 +29,7 @@ export default t.router({
         where: { id: input.id },
         select: {
           id: true,
-          collectionId: true,
+          loreId: true,
           imagePreviewUrl: true,
           name: true,
           about: true,

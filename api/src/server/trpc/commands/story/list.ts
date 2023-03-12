@@ -11,7 +11,7 @@ export default protectedProcedure.query(async ({ ctx }) => {
     where: { userId: ctx.user.id },
     select: {
       id: true,
-      collectionId: true,
+      loreId: true,
       userId: true,
       userCharId: true,
       charIds: true,

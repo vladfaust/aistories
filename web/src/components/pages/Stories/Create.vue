@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import Character from "@/models/Character";
-import Collection from "@/models/Collection";
+import Lore from "@/models/Lore";
 import * as api from "@/services/api";
 import { userId, web3Token } from "@/store";
 import { computed, onMounted, ref, type Ref, type ShallowRef } from "vue";
 import { useRouter } from "vue-router";
-import CollectionListItem from "./Create/CollectionListItem.vue";
-import CollectionCard from "./Create/CollectionCard.vue";
+import LoreListItem from "./Create/LoreListItem.vue";
+import LoreCard from "./Create/LoreCard.vue";
 import CharacterCard from "./Create/CharacterCard.vue";
 import CharacterListItem from "./Create/CharacterListItem.vue";
 import Web3Token from "web3-token";
@@ -17,8 +17,8 @@ const CHAR_LIMIT = 1;
 
 const router = useRouter();
 
-const collections: ShallowRef<Collection[]> = ref([]);
-const chosenCollection: Ref<Collection | undefined> = ref();
+const lores: ShallowRef<Lore[]> = ref([]);
+const chosenLore: Ref<Lore | undefined> = ref();
 
 const characters: ShallowRef<Character[]> = ref([]);
 const chosenProtagonist: ShallowRef<Character | null> = ref(null);
@@ -28,7 +28,7 @@ const fabula: Ref<string | undefined> = ref();
 const mayCreate = computed(() => {
   return (
     !createInProgress.value &&
-    chosenCollection.value &&
+    chosenLore.value &&
     chosenProtagonist.value &&
     chosenProtagonist.value.collected.value &&
     selectedCharactes.value.size > 0 &&
@@ -39,10 +39,10 @@ const mayCreate = computed(() => {
 const createInProgress = ref(false);
 
 onMounted(() => {
-  api.trpc.commands.collections.index.query().then(async (ids) => {
-    collections.value = (await Promise.all(
-      ids.map((id) => Collection.findOrCreate(id).promise)
-    )) as Collection[];
+  api.trpc.commands.lores.index.query().then(async (ids) => {
+    lores.value = (await Promise.all(
+      ids.map((id) => Lore.findOrCreate(id).promise)
+    )) as Lore[];
   });
 
   api.trpc.commands.character.index.query().then(async (ids) => {
@@ -85,7 +85,7 @@ async function create() {
 
   try {
     const storyId = await api.trpc.commands.story.create.mutate({
-      collectionId: chosenCollection.value!.id,
+      loreId: chosenLore.value!.id,
       nonUserCharacterIds: [...selectedCharactes.value.values()].map(
         (c) => c.id
       ),
@@ -106,30 +106,26 @@ async function create() {
 
 <template lang="pug">
 .flex.h-full.w-full.max-w-3xl.flex-col.gap-3.overflow-y-auto
-  h2.text-lg.leading-none 1. Choose collection
+  h2.text-lg.leading-none 1. Choose lore
   .flex.flex-col.gap-3
     .grid.grid-cols-3.gap-3.sm_grid-cols-4
-      CollectionListItem(
-        v-for="collection in collections"
-        :key="collection.id"
-        :collection="collection"
-        :selected="collection === chosenCollection"
-        :class="{ 'border border-primary-500': collection === chosenCollection }"
-        @click="chosenCollection = collection"
+      LoreListItem(
+        v-for="lore in lores"
+        :key="lore.id"
+        :lore="lore"
+        :selected="lore === chosenLore"
+        :class="{ 'border border-primary-500': lore === chosenLore }"
+        @click="chosenLore = lore"
       )
 
-    CollectionCard(
-      v-if="chosenCollection"
-      :key="chosenCollection.id"
-      :collection="chosenCollection"
-    )
+    LoreCard(v-if="chosenLore" :key="chosenLore.id" :lore="chosenLore")
 
-  template(v-if="chosenCollection")
+  template(v-if="chosenLore")
     h2.text-lg.leading-none 2. Choose protagonist
     .flex.flex-col.gap-3
       .grid.grid-cols-4.gap-3.sm_grid-cols-8
         CharacterListItem(
-          v-for="character in characters.filter((c) => c.collection.ref.value?.id === chosenCollection?.id)"
+          v-for="character in characters.filter((c) => c.lore.ref.value?.id === chosenLore?.id)"
           :key="character.id"
           :character="character"
           :selected="character === chosenProtagonist"
@@ -151,7 +147,7 @@ async function create() {
       .flex.flex-col.gap-3
         .grid.grid-cols-4.gap-3.sm_grid-cols-8
           CharacterListItem(
-            v-for="character in characters.filter((c) => c.collection.ref.value?.id === chosenCollection?.id)"
+            v-for="character in characters.filter((c) => c.lore.ref.value?.id === chosenLore?.id)"
             :key="character.id"
             :character="character"
             :selected="selectedCharactes.has(character)"

@@ -4,7 +4,7 @@ import { tap } from "@/utils";
 import { Deferred } from "@/utils/deferred";
 import { BigNumber } from "ethers";
 import { computed, markRaw, ref, Ref, watch } from "vue";
-import Collection from "./Collection";
+import Lore from "./Lore";
 
 type Erc1155Token = {
   contractAddress: string; // Hex string.
@@ -45,7 +45,7 @@ export default class Character {
 
   static fromBackendModel(data: {
     id: number;
-    collectionId: number;
+    loreId: number;
     name: string;
     about: string;
     imagePreviewUrl: string;
@@ -54,7 +54,7 @@ export default class Character {
     return markRaw(
       new Character(
         data.id,
-        Collection.findOrCreate(data.collectionId) as Deferred<Collection>,
+        Lore.findOrCreate(data.loreId) as Deferred<Lore>,
         data.name,
         data.about,
         new URL(data.imagePreviewUrl),
@@ -65,7 +65,7 @@ export default class Character {
 
   constructor(
     readonly id: number,
-    readonly collection: Deferred<Collection>,
+    readonly lore: Deferred<Lore>,
     readonly name: string,
     readonly about: string,
     readonly imagePreviewUrl: URL,

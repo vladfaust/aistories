@@ -109,8 +109,8 @@ async function updateName() {
 .box-border.flex.items-center.justify-between.p-3
   .flex.items-center.gap-2
     img.box-content.h-8.w-8.rounded.border.bg-base-50.object-cover(
-      v-if="story.collection.ref.value?.imageUrl"
-      :src="story.collection.ref.value?.imageUrl.toString()"
+      v-if="story.lore.ref.value?.imageUrl"
+      :src="story.lore.ref.value?.imageUrl.toString()"
     )
     .flex.gap-1
       template(v-for="character in story.characters.value.slice().reverse()")
@@ -132,5 +132,5 @@ async function updateName() {
       @keydown.enter.prevent="updateName"
       ref="nameRef"
     )
-      | {{ story.name.value || story.collection.ref.value?.name + " with " + story.characters.value.map((c) => c.ref.value?.name).join(", ") }}
+      | {{ story.name.value || story.lore.ref.value?.name + " with " + story.characters.value.map((c) => c.ref.value?.name).join(", ") }}
 </template>
