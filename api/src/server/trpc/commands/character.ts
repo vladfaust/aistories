@@ -18,6 +18,24 @@ export default t.router({
     ).map((c) => c.id);
   }),
 
+  /**
+   * Returns a list of all character IDs that belong to a given lore.
+   */
+  filterByLore: t.procedure
+    .input(
+      z.object({
+        loreId: z.number(),
+      })
+    )
+    .query(async ({ input }) => {
+      return (
+        await prisma.character.findMany({
+          where: { loreId: input.loreId },
+          select: { id: true },
+        })
+      ).map((c) => c.id);
+    }),
+
   find: t.procedure
     .input(
       z.object({

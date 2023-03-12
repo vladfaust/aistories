@@ -1,3 +1,5 @@
+import Character from "@/models/Character";
+import Lore from "@/models/Lore";
 import Story from "@/models/Story";
 import { userId } from "@/store";
 import { createRouter, createWebHistory } from "vue-router";
@@ -8,6 +10,28 @@ const router = createRouter({
     {
       path: "/",
       component: () => import("@/components/pages/Stories/Index.vue"),
+    },
+    {
+      path: "/lores",
+      component: () => import("@/components/pages/Lore/Index.vue"),
+    },
+    {
+      path: "/lores/:id",
+      component: () => import("@/components/pages/Lore/Show.vue"),
+      props: (route) => ({
+        lore: Lore.findOrCreate(parseInt(route.params.id as string)),
+      }),
+    },
+    {
+      path: "/chars",
+      component: () => import("@/components/pages/Character/Index.vue"),
+    },
+    {
+      path: "/chars/:id",
+      component: () => import("@/components/pages/Character/Show.vue"),
+      props: (route) => ({
+        character: Character.findOrCreate(parseInt(route.params.id as string)),
+      }),
     },
     {
       path: "/story/new",

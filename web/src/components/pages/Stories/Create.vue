@@ -5,10 +5,10 @@ import * as api from "@/services/api";
 import { userId, web3Token } from "@/store";
 import { computed, onMounted, ref, type Ref, type ShallowRef } from "vue";
 import { useRouter } from "vue-router";
-import LoreListItem from "./Create/LoreListItem.vue";
-import LoreCard from "./Create/LoreCard.vue";
-import CharacterCard from "./Create/CharacterCard.vue";
-import CharacterListItem from "./Create/CharacterListItem.vue";
+import LoreCard from "@/components/Lore/Card.vue";
+import LoreSummary from "@/components/Lore/Summary.vue";
+import CharCard from "@/components/Character/Card.vue";
+import CharSummary from "@/components/Character/Summary.vue";
 import Web3Token from "web3-token";
 import * as eth from "@/services/eth";
 import config from "@/config";
@@ -108,60 +108,68 @@ async function create() {
 .flex.h-full.w-full.max-w-3xl.flex-col.gap-3.overflow-y-auto
   h2.text-lg.leading-none 1. Choose lore
   .flex.flex-col.gap-3
-    .grid.grid-cols-3.gap-3.sm_grid-cols-4
-      LoreListItem(
+    .grid.grid-cols-3.gap-3.sm_grid-cols-5
+      LoreCard.pressable.cursor-pointer.gap-2.rounded.border.p-2.transition-transform(
         v-for="lore in lores"
         :key="lore.id"
         :lore="lore"
-        :selected="lore === chosenLore"
         :class="{ 'border border-primary-500': lore === chosenLore }"
-        @click="chosenLore = lore"
+        :click="() => { chosenLore = lore; chosenProtagonist = null; selectedCharactes.clear(); }"
       )
 
-    LoreCard(v-if="chosenLore" :key="chosenLore.id" :lore="chosenLore")
+    .grid.grid-cols-4.gap-3.rounded.border.border-primary-500.p-3(
+      v-if="chosenLore"
+    )
+      LoreCard.pressable.cursor-pointer.gap-2.rounded.border.p-3.transition-transform(
+        :lore="chosenLore"
+      )
+      LoreSummary.col-span-3(:lore="chosenLore")
 
   template(v-if="chosenLore")
     h2.text-lg.leading-none 2. Choose protagonist
     .flex.flex-col.gap-3
-      .grid.grid-cols-4.gap-3.sm_grid-cols-8
-        CharacterListItem(
+      .grid.grid-cols-4.gap-3.sm_grid-cols-5
+        CharCard.pressable.cursor-pointer.rounded.border.p-3.transition-transform(
           v-for="character in characters.filter((c) => c.lore.ref.value?.id === chosenLore?.id)"
-          :key="character.id"
-          :character="character"
+          :char="character"
           :selected="character === chosenProtagonist"
-          :class="chosenProtagonist === character ? (character.collected.value ? 'border border-primary-500' : 'border border-error-500') : ''"
-          @click="chosenProtagonist = character; selectedCharactes.delete(character)"
+          :class="chosenProtagonist === character ? (character.collected.value ? 'border-primary-500' : 'border-error-500') : ''"
+          :click="() => { chosenProtagonist = character; selectedCharactes.delete(character); }"
         )
 
-      CharacterCard(
+      .grid.grid-cols-4.gap-3.rounded.border.p-3(
         v-if="chosenProtagonist"
-        :key="chosenProtagonist.id"
-        :character="chosenProtagonist"
-        :class="{ 'border border-red-500': !chosenProtagonist.collected.value }"
+        :class="chosenProtagonist.collected.value ? 'border-primary-500' : 'border-error-500'"
       )
+        CharCard.pressable.cursor-pointer.gap-2.rounded.border.p-3.transition-transform(
+          :char="chosenProtagonist"
+        )
+        CharSummary.col-span-3(:char="chosenProtagonist")
 
     template(v-if="chosenProtagonist?.collected.value")
       h2.text-lg.leading-none(
         :class="{ 'text-error-500': selectedCharactes.size > CHAR_LIMIT }"
       ) 3. Choose characters ({{ selectedCharactes.size }}/{{ CHAR_LIMIT }})
       .flex.flex-col.gap-3
-        .grid.grid-cols-4.gap-3.sm_grid-cols-8
-          CharacterListItem(
+        .grid.grid-cols-4.gap-3.sm_grid-cols-5
+          CharCard.rounded.border.p-3(
             v-for="character in characters.filter((c) => c.lore.ref.value?.id === chosenLore?.id)"
             :key="character.id"
-            :character="character"
+            :char="character"
             :selected="selectedCharactes.has(character)"
-            :disabled="chosenProtagonist === character"
-            :class="selectedCharactes.has(character) ? (character.collected.value ? 'border border-primary-500' : 'border border-error-500') : ''"
-            @click="chosenProtagonist === character ? null : selectedCharactes.has(character) ? selectedCharactes.delete(character) : selectedCharactes.add(character)"
+            :class="{ 'cursor-pointer pressable transition-transform': chosenProtagonist !== character, 'cursor-not-allowed grayscale': chosenProtagonist === character, 'border-primary-500': selectedCharactes.has(character) && character.collected.value, 'border-error-500': selectedCharactes.has(character) && !character.collected.value }"
+            :click="() => { chosenProtagonist === character ? null : selectedCharactes.has(character) ? selectedCharactes.delete(character) : selectedCharactes.add(character); }"
           )
 
-        CharacterCard(
+        .grid.grid-cols-4.gap-3.rounded.border.p-3(
           v-for="character in selectedCharactes"
-          :key="character.id"
-          :character="character"
-          :class="{ 'border border-red-500': !character.collected.value }"
+          :class="character.collected.value ? 'border-primary-500' : 'border-error-500'"
         )
+          CharCard.pressable.cursor-pointer.gap-2.rounded.border.p-3.transition-transform(
+            :key="character.id"
+            :char="character"
+          )
+          CharSummary.col-span-3(:char="character" :key="character.id")
 
       template(
         v-if="selectedCharactes.size > 0 && selectedCharactes.size <= CHAR_LIMIT && [...selectedCharactes].every((c) => c.collected.value)"

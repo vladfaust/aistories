@@ -9,14 +9,19 @@ import Placeholder from "./utility/Placeholder.vue";
 
 <template lang="pug">
 header.flex.h-16.w-full.place-content-center.border-y.px-4
-  .grid.h-full.w-full.max-w-3xl.grid-cols-3
+  .grid.h-full.w-full.max-w-3xl.grid-cols-2
     ul._left.flex.items-center.gap-6
       li
         RouterLink.pressable.block.text-lg.transition-transform(to="/")
           span.text-base-400 β.
           | aistories.xyz
           span.select-none ™️
-    .flex.items-center.justify-center
+      li
+        RouterLink.pressable.block.text-base.transition-transform(to="/lores")
+          | Lores
+      li
+        RouterLink.pressable.block.text-base.transition-transform(to="/chars")
+          | Chars
     ul.flex.items-center.justify-end.gap-2
       template(v-if="userId")
         li
