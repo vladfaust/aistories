@@ -113,7 +113,6 @@ model Character {
 
   Collection CharacterCollection @relation(fields: [collectionId], references: [id])
   Stories    Story[] // Stories the character is participating in
-  Memories   StoryMemory[] // Memories of the character
   Content    StoryContent[] // Content created by the character (user-controlled or not)
 }
 
@@ -139,7 +138,6 @@ model Story {
   Collection CharacterCollection @relation(fields: [collectionId], references: [id])
   Characters Character[]
   Content    StoryContent[]
-  Memories   StoryMemory[]
 }
 
 model StoryContent {
@@ -161,20 +159,4 @@ model StoryContent {
   Story     Story     @relation(fields: [storyId], references: [id])
   Character Character @relation(fields: [charId], references: [id])
   User      User?     @relation(fields: [userId], references: [id])
-}
-
-// A story memory per (character) actor.
-// Not saved for a user-controlled character.
-// TODO: Remove (not used).
-model StoryMemory {
-  storyId String
-  charId  Int
-
-  memory     String
-  tokenUsage Int // Total number of tokens used to generate the memory
-
-  Story     Story     @relation(fields: [storyId], references: [id])
-  Character Character @relation(fields: [charId], references: [id])
-
-  @@id([storyId, charId])
 }
