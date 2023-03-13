@@ -21,9 +21,9 @@ onMounted(async () => {
   .flex.items-center.justify-between.gap-3
     .shrink-0.text-xl.font-medium.leading-none(to="/lore") Lores
     .w-full.bg-base-100(class="h-[1px]")
-    button.btn.btn-sm.btn-primary.shrink-0 Create new ✨
+    RouterLink.btn.btn-sm.btn-primary.shrink-0(:to="'/lores/new'") Create new ✨
 
-  .grid.grid-cols-5.gap-2
+  .grid.grid-cols-4.gap-2
     template(v-for="lore in lores")
       LoreCard.gap-2.rounded.border.p-2(
         v-if="lore.ref.value"

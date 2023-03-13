@@ -1,5 +1,7 @@
 import { Deferred } from "@/utils/deferred";
 import * as api from "@/services/api";
+import config from "@/config";
+import { markRaw, ref, Ref } from "vue";
 
 export default class Lore {
   static cache = new Map<number, Deferred<Lore | null>>();
@@ -27,17 +29,40 @@ export default class Lore {
 
   static fromBackendModel(data: {
     id: number;
-    imageUrl: string;
+    creatorId: string;
+    public: boolean;
     name: string;
     about: string;
+    setup?: string;
+    createdAt: string;
+    updatedAt: string;
   }): Lore {
-    return new Lore(data.id, new URL(data.imageUrl), data.name, data.about);
+    return markRaw(
+      new Lore(
+        data.id,
+        data.creatorId,
+        ref(data.public),
+        ref(data.name),
+        ref(data.about),
+        data.setup ? ref(data.setup) : undefined,
+        new Date(data.createdAt),
+        new Date(data.updatedAt)
+      )
+    );
   }
 
   constructor(
     readonly id: number,
-    readonly imageUrl: URL,
-    readonly name: string,
-    readonly about: string
+    readonly creatorId: string,
+    readonly public_: Ref<boolean>,
+    readonly name: Ref<string>,
+    readonly about: Ref<string>,
+    readonly prompt: Ref<string> | undefined,
+    readonly createdAt: Date,
+    readonly updatedAt: Date
   ) {}
+
+  get imageUrl(): URL {
+    return new URL(config.cdnUrl + "lores/" + this.id + "/image");
+  }
 }

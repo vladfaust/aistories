@@ -77,18 +77,18 @@ onUnmounted(() => cancelWatch?.());
         template(v-for="character in story.characters.value.slice().reverse()")
           img.-ml-6.box-content.h-10.w-10.rounded-full.border.bg-base-50.object-cover(
             v-if="character.ref.value"
-            :src="character.ref.value.imagePreviewUrl.toString()"
+            :src="character.ref.value.imageUrl.toString()"
           )
 
       .flex.grow.flex-col.gap-1.overflow-hidden
         RouterLink.link-hover.w-max.font-semibold.leading-none(
           :to="'/story/' + story.id"
         )
-          | {{ story.name.value || story.lore.ref.value?.name + " with " + story.characters.value.map((c) => c.ref.value?.name).join(", ") }}
+          | {{ story.name.value || story.lore.ref.value?.name.value + " with " + story.characters.value.map((c) => c.ref.value?.name.value).join(", ") }}
         .flex.items-center.gap-1(v-if="story.latestContent")
           img.aspect-square.h-5.shrink-0.rounded.border.bg-base-50.object-cover(
             v-if="story.latestContent.character.ref.value"
-            :src="story.latestContent.character.ref.value.imagePreviewUrl.toString()"
+            :src="story.latestContent.character.ref.value.imageUrl.toString()"
           )
           p.w-full.whitespace-nowrap.text-sm.font-medium.leading-none.text-base-500
             | {{ story.latestContent.content }}

@@ -2,6 +2,7 @@ import Character from "@/models/Character";
 import Lore from "@/models/Lore";
 import Story from "@/models/Story";
 import { userId } from "@/store";
+import { Deferred } from "@/utils/deferred";
 import { createRouter, createWebHistory } from "vue-router";
 
 const router = createRouter({
@@ -16,6 +17,17 @@ const router = createRouter({
       component: () => import("@/components/pages/Lore/Index.vue"),
     },
     {
+      path: "/lores/new",
+      component: () => import("@/components/pages/Lore/Edit.vue"),
+    },
+    {
+      path: "/lores/:id/edit",
+      component: () => import("@/components/pages/Lore/Edit.vue"),
+      props: (route) => ({
+        lore: Lore.findOrCreate(parseInt(route.params.id as string)),
+      }),
+    },
+    {
       path: "/lores/:id",
       component: () => import("@/components/pages/Lore/Show.vue"),
       props: (route) => ({
@@ -25,6 +37,33 @@ const router = createRouter({
     {
       path: "/chars",
       component: () => import("@/components/pages/Character/Index.vue"),
+    },
+    {
+      path: "/chars/new",
+      component: () => import("@/components/pages/Character/Edit.vue"),
+      props: (route) => ({
+        lore: Lore.findOrCreate(parseInt(route.query.loreId as string)),
+      }),
+    },
+    {
+      path: "/chars/:id/edit",
+      component: () => import("@/components/pages/Character/Edit.vue"),
+      props: (route) => {
+        const char = Character.findOrCreate(
+          parseInt(route.params.id as string)
+        );
+
+        const lore = Deferred.create(
+          char.promise.then(
+            (c) => c?.lore.promise.then((l) => l || null) || null
+          )
+        );
+
+        return {
+          lore,
+          char,
+        };
+      },
     },
     {
       path: "/chars/:id",

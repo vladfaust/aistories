@@ -32,6 +32,16 @@ class Eth {
   ) {}
 }
 
+class S3 {
+  constructor(
+    readonly accessKeyId: string,
+    readonly secretAccessKey: string,
+    readonly endpoint: URL,
+    readonly region: string,
+    readonly bucket: string
+  ) {}
+}
+
 class Config {
   readonly pid = Buffer.from(random(32));
 
@@ -43,7 +53,8 @@ class Config {
     readonly server: Server,
     readonly jwt: Jwt,
     readonly discord: Discord,
-    readonly eth: Eth
+    readonly eth: Eth,
+    readonly s3: S3
   ) {}
 }
 
@@ -73,6 +84,13 @@ const config = new Config(
     parseInt(requireEnv("ETH_CHAIN_ID")),
     new URL(requireEnv("ETH_HTTP_RPC_URL")),
     requireEnv("ETH_RECEIVER_ADDRESS")
+  ),
+  new S3(
+    requireEnv("S3_ACCESS_KEY_ID"),
+    requireEnv("S3_SECRET_ACCESS_KEY"),
+    new URL(requireEnv("S3_ENDPOINT")),
+    requireEnv("S3_REGION"),
+    requireEnv("S3_BUCKET")
   )
 );
 

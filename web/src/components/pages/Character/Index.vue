@@ -8,7 +8,7 @@ import CharCard from "@/components/Character/Card.vue";
 const characters = shallowRef<Deferred<Character>[]>([]);
 
 onMounted(async () => {
-  characters.value = (await api.trpc.commands.character.index.query()).map(
+  characters.value = (await api.trpc.commands.characters.index.query()).map(
     (lore) => Character.findOrCreate(lore) as Deferred<Character>
   );
 });
@@ -21,7 +21,7 @@ onMounted(async () => {
     .w-full.bg-base-100(class="h-[1px]")
     button.btn.btn-sm.btn-primary.shrink-0 Create new ✨
 
-  .grid.grid-cols-5.gap-2
+  .grid.grid-cols-2.gap-2.sm_grid-cols-4
     template(v-for="char in characters" :key="char.ref.value?.id")
       CharCard.gap-2.rounded.border.p-2(
         v-if="char.ref.value"

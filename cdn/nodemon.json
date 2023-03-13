@@ -1,0 +1,8 @@
+{
+  "watch": [
+    "src",
+    ".env"
+  ],
+  "ext": "*",
+  "exec": "pnpm run build && pnpm run start"
+}

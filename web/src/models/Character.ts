@@ -1,3 +1,4 @@
+import config from "@/config";
 import * as api from "@/services/api";
 import { account, getErc1155Balance } from "@/services/eth";
 import { tap } from "@/utils";
@@ -29,7 +30,7 @@ export default class Character {
       char = new Deferred<Character | null>();
       Character.cache.set(id, char);
 
-      api.trpc.commands.character.find.query({ id }).then((data) => {
+      api.trpc.commands.characters.find.query({ id }).then((data) => {
         if (data) {
           char!.resolve(
             tap(Character.fromBackendModel(data), (c) => c.watchBalance())
@@ -46,19 +47,28 @@ export default class Character {
   static fromBackendModel(data: {
     id: number;
     loreId: number;
+    creatorId: string;
+    public: boolean;
     name: string;
     about: string;
-    imagePreviewUrl: string;
+    personality?: string;
     erc1155Token: Erc1155Token | null;
+    createdAt: string;
+    updatedAt: string;
   }): Character {
     return markRaw(
       new Character(
         data.id,
         Lore.findOrCreate(data.loreId) as Deferred<Lore>,
-        data.name,
-        data.about,
-        new URL(data.imagePreviewUrl),
-        data.erc1155Token
+        data.creatorId,
+        ref(data.public),
+        ref(data.name),
+        ref(data.about),
+        data.personality ? ref(data.personality) : undefined,
+        data.erc1155Token,
+        ref(),
+        new Date(data.createdAt),
+        new Date(data.updatedAt)
       )
     );
   }
@@ -66,11 +76,15 @@ export default class Character {
   constructor(
     readonly id: number,
     readonly lore: Deferred<Lore>,
-    readonly name: string,
-    readonly about: string,
-    readonly imagePreviewUrl: URL,
+    readonly creatorId: string,
+    readonly public_: Ref<boolean>,
+    readonly name: Ref<string>,
+    readonly about: Ref<string>,
+    readonly personality: Ref<string> | undefined,
     readonly erc1155Token: Erc1155Token | null,
-    readonly balance: Ref<BigNumber | undefined> = ref()
+    readonly balance: Ref<BigNumber | undefined>,
+    readonly createdAt: Date,
+    readonly updatedAt: Date
   ) {}
 
   private watchBalance() {
@@ -98,5 +112,9 @@ export default class Character {
         ));
       }
     })());
+  }
+
+  get imageUrl(): URL {
+    return new URL(config.cdnUrl + "chars/" + this.id + "/image");
   }
 }

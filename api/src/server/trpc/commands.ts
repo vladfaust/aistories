@@ -1,13 +1,13 @@
 import t from "#trpc";
 
-import character from "./commands/character";
+import characters from "./commands/characters";
 import lores from "./commands/lores";
 import me from "./commands/me";
 import settings from "./commands/settings";
 import story from "./commands/story";
 
 export const commandsRouter = t.router({
-  character,
+  characters,
   lores,
   settings,
   me,

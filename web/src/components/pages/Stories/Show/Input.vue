@@ -64,7 +64,7 @@ onMounted(async () => {
 )
   img.box-border.aspect-square.h-9.rounded.border.object-cover(
     v-if="story.user.char?.ref.value"
-    :src="story.user.char.ref.value.imagePreviewUrl.toString()"
+    :src="story.user.char.ref.value.imageUrl.toString()"
   )
   textarea.w-full.bg-base-50.px-3.py-2.text-sm.leading-tight(
     ref="textareaEl"

@@ -32,6 +32,9 @@ model User {
   OAuth2Identities    OAuth2Identity[]
   Web3EnergyPurchases Web3EnergyPurchase[]
   EnergyGrants        EnergyGrant[]
+
+  LoresCreated      Lore[]
+  CharactersCreated Character[]
 }
 
 model OAuth2Identity {
@@ -84,14 +87,18 @@ model EnergyGrant {
 model Lore {
   id Int @id @default(autoincrement())
 
-  imageUrl String
-  name     String
-  about    String
+  creatorId String // Id of the user who created the lore
 
-  setup String // The initial setup of the story, present in all prompts
+  public Boolean @default(false)
+
+  name  String
+  about String
+  setup String // Present in all prompts
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  Creator User @relation(fields: [creatorId], references: [id])
 
   Characters Character[]
   Stories    Story[]
@@ -100,10 +107,10 @@ model Lore {
 model Character {
   id Int @id @default(autoincrement())
 
-  loreId Int
+  loreId    Int
+  creatorId String // Id of the user who created the character
 
-  // TODO: Rename to avatarUrl
-  imagePreviewUrl String
+  public Boolean @default(false)
 
   name        String // E.g. "Spot"
   about       String // Short description
@@ -111,7 +118,12 @@ model Character {
 
   erc1155Token String? // JSON object with ERC1155 NFT data
 
-  Lore    Lore           @relation(fields: [loreId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Lore    Lore @relation(fields: [loreId], references: [id])
+  Creator User @relation(fields: [creatorId], references: [id])
+
   Stories Story[] // Stories the character is participating in
   Content StoryContent[] // Content created by the character (user-controlled or not)
 }

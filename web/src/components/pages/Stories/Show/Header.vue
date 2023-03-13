@@ -116,7 +116,7 @@ async function updateName() {
       template(v-for="character in story.characters.value.slice().reverse()")
         img.pressable.box-content.h-8.w-8.cursor-pointer.rounded-full.border.bg-base-50.object-cover.transition(
           v-if="character.ref.value"
-          :src="character.ref.value.imagePreviewUrl.toString()"
+          :src="character.ref.value.imageUrl.toString()"
           @click="character.ref.value ? removeChar(character.ref.value) : undefined"
           title="Remove this character from the story"
         )
@@ -132,5 +132,5 @@ async function updateName() {
       @keydown.enter.prevent="updateName"
       ref="nameRef"
     )
-      | {{ story.name.value || story.lore.ref.value?.name + " with " + story.characters.value.map((c) => c.ref.value?.name).join(", ") }}
+      | {{ story.name.value || story.lore.ref.value?.name.value + " with " + story.characters.value.map((c) => c.ref.value?.name.value).join(", ") }}
 </template>

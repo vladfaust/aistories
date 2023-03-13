@@ -6,6 +6,7 @@ import { onMounted } from "vue";
 import * as api from "@/services/api";
 import { userId, energy } from "./store";
 import * as eth from "@/services/eth";
+import Spinner2 from "./components/utility/Spinner2.vue";
 
 const route = useRoute();
 
@@ -31,13 +32,17 @@ onMounted(() => {
 </script>
 
 <template lang="pug">
+Notifications(position="top center" classes="my-notification")
 HeaderVue
 .flex.justify-center.p-4(style="min-height: calc(100vh - 8rem)")
   RouterView(v-slot="{ Component }")
     Transition(name="fade" mode="out-in")
-      Component(:is="Component" :key="route.path")
+      Suspense
+        template(#default)
+          Component(:is="Component" :key="route.path")
+        template(#fallback)
+          Spinner2.animate-spin.text-primary-500
 FooterVue
-.hidden.animate-pulse
 </template>
 
 <style lang="scss">
@@ -95,6 +100,43 @@ FooterVue
         transform: none;
       }
     }
+  }
+}
+
+.vue-notification-group {
+  @apply m-3;
+
+  & > span {
+    display: flex !important;
+    @apply flex-col gap-2;
+  }
+}
+
+.vue-notification-wrapper {
+  overflow: inherit !important;
+}
+
+.my-notification {
+  @apply cursor-pointer rounded p-4 drop-shadow-lg;
+
+  & > .notification-title {
+    @apply mb-0.5 font-bold leading-tight;
+  }
+
+  & > .notification-content {
+    @apply text-sm font-medium leading-tight;
+  }
+
+  &.success {
+    @apply bg-success-500 text-white;
+  }
+
+  &.info {
+    @apply bg-primary-500 text-white;
+  }
+
+  &.error {
+    @apply bg-error-500 text-white;
   }
 }
 </style>

@@ -121,10 +121,10 @@ onUnmounted(() => {
   .flex.items-center.gap-2(v-for="content of storyContent")
     img.box-border.aspect-square.w-9.select-none.rounded.border.object-cover(
       v-if="content.character.ref.value"
-      :src="content.character.ref.value.imagePreviewUrl.toString()"
+      :src="content.character.ref.value.imageUrl.toString()"
     )
     p.h-min.w-full.bg-base-50.px-3.py-2.text-sm.font-medium.leading-tight
-      span.font-semibold {{ content.character.ref.value?.name }}
+      span.font-semibold {{ content.character.ref.value?.name.value }}
       br
       template(v-if="content.entries.value.length === 0")
         Spinner.h-5(:kind="'dots-fade'")
