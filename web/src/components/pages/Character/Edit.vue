@@ -124,8 +124,8 @@ const anyChanges = computed(
       (about.value && about.value !== char?.ref.value?.about.value) ||
       (personality.value &&
         personality.value !== char?.ref.value?.personality?.value) ||
-      public_.value !== char?.ref.value?.public_.value ||
-      (char.ref.value.nft.value
+      (public_.value && public_.value !== char?.ref.value?.public_.value) ||
+      (char?.ref.value?.nft.value
         ? nftUri.value !== char?.ref.value?.nft.value?.uri
         : nftEnabled.value)
     )

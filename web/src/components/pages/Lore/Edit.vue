@@ -87,8 +87,7 @@ const anyChanges = computed(
   () =>
     !!(
       imageFile.value ||
-      (public_.value !== undefined &&
-        public_.value !== lore?.ref.value?.public_.value) ||
+      (public_.value && public_.value !== lore?.ref.value?.public_.value) ||
       (name.value && name.value !== lore?.ref.value?.name.value) ||
       (about.value && about.value !== lore?.ref.value?.about.value) ||
       (prompt.value && prompt.value !== lore?.ref.value?.prompt?.value)
