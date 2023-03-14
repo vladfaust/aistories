@@ -1,7 +1,7 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@aistories/api': 1.0.0-beta.12
+  '@aistories/api': 1.0.0-beta.13
   '@heroicons/vue': ^2.0.16
   '@kyvg/vue3-notification': ^2.9.0
   '@prettier/plugin-pug': ^2.4.1
@@ -35,7 +35,7 @@ specifiers:
   web3-token: ^1.0.4
 
 dependencies:
-  '@aistories/api': link:../packages/api
+  '@aistories/api': 1.0.0-beta.13
   '@heroicons/vue': 2.0.16_vue@3.2.47
   '@kyvg/vue3-notification': 2.9.0_vue@3.2.47
   '@trpc/client': 10.11.1_@trpc+server@10.11.1
@@ -71,6 +71,12 @@ devDependencies:
   vue-tsc: 1.0.24_typescript@4.9.5
 
 packages:
+
+  /@aistories/api/1.0.0-beta.13:
+    resolution: {integrity: sha512-WHNwhIWGsWDnX0aSd1wqIru6cDJAVvg7bGv/v8r7Cc2jH6uCOr0gaCwKjBImsyW4FT2MucZd1247lN99nZh26w==, tarball: download/@aistories/api/1.0.0-beta.13/86ea5fd123c09bcc6e012a81752096c08c0c8368}
+    dependencies:
+      '@trpc/server': 10.11.1
+    dev: false
 
   /@babel/helper-string-parser/7.19.4:
     resolution: {integrity: sha512-nHtDoQcuqFmwYNYPz3Rah5ph2p8PFeFCsZk9A/48dPc/rGocJ5J3hAAZ7pb76VWX3fZKu+uEr/FhH5jLx7umrw==}
