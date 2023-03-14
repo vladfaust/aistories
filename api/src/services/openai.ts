@@ -46,7 +46,7 @@ export async function createChatCompletion(
     return response.data;
   } catch (e: any) {
     if (e.response) {
-      throw new OpenAIError(e.response.data.error, e.response.status);
+      throw new OpenAIError(e.response.data.error.message, e.response.status);
     }
 
     throw e;
@@ -72,7 +72,7 @@ export async function createCompletion(
     return response.data;
   } catch (e: any) {
     if (e.response) {
-      throw new OpenAIError(e.response.data.error, e.response.status);
+      throw new OpenAIError(e.response.data.error.message, e.response.status);
     }
 
     throw e;
