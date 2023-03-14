@@ -47,8 +47,9 @@ onUnmounted(() => {
 </script>
 
 <template lang="pug">
-.flex.max-h-full.w-full.max-w-3xl.flex-col.divide-y.overflow-hidden.rounded.border(
+.flex.w-full.max-w-3xl.flex-col.divide-y.overflow-hidden.rounded.border(
   v-if="story.resolved && story.ref.value"
+  style="height: calc(100vh - 10rem)"
 )
   Header(:story="story.ref.value")
   History.h-full.overflow-y-auto(:story="story.ref.value" :busy="busy")
