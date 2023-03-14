@@ -62,7 +62,7 @@ export async function ensureNftOwnership(input: {
 
   if (!nftOwnership) {
     throw new TRPCError({
-      code: "BAD_REQUEST",
+      code: "FORBIDDEN",
       message: "You don't own this NFT",
     });
   }

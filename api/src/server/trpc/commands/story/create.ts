@@ -59,6 +59,8 @@ export default protectedProcedure
       },
       select: {
         id: true,
+        creatorId: true,
+        public: true,
         nftContractAddress: true,
         nftTokenId: true,
       },
@@ -73,6 +75,13 @@ export default protectedProcedure
       : undefined;
 
     for (const char of characters) {
+      if (!char.public && char.creatorId !== ctx.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Character not owned",
+        });
+      }
+
       if (char.nftContractAddress && char.nftTokenId) {
         if (!input.web3Token) {
           throw new TRPCError({

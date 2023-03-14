@@ -40,6 +40,8 @@ export default protectedProcedure
       where: { id: input.charId },
       select: {
         id: true,
+        creatorId: true,
+        public: true,
         nftContractAddress: true,
         nftTokenId: true,
       },
@@ -49,6 +51,13 @@ export default protectedProcedure
       throw new TRPCError({
         code: "NOT_FOUND",
         message: "Character not found",
+      });
+    }
+
+    if (!char.public && char.creatorId !== ctx.user.id) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Not your character",
       });
     }
 
