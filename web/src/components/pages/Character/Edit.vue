@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useFileDialog } from "@vueuse/core";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watchEffect } from "vue";
 import prettyBytes from "pretty-bytes";
 import { trpc } from "@/services/api";
 import Spinner2 from "@/components/utility/Spinner2.vue";
@@ -138,6 +138,7 @@ const anyChanges = computed(
 );
 
 const inProgress = ref(false);
+watchEffect(() => (inProgress.value ? nProgress.start() : nProgress.done()));
 
 async function create() {
   if (!valid.value) return;
@@ -200,6 +201,7 @@ async function update() {
   if (!char?.ref.value) throw new Error("Unexpected null char");
 
   inProgress.value = true;
+  nProgress.start();
 
   try {
     const promises = [];

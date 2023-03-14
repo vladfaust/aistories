@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watchEffect } from "vue";
 import * as api from "@/services/api";
 import Spinner2 from "@/components/utility/Spinner2.vue";
+import nProgress from "nprogress";
 
 const [enabledVal, keyVal] = await Promise.all([
   api.trpc.commands.me.settings.get.query("openAiApiKey"),
@@ -12,8 +13,15 @@ const enabled = ref(enabledVal === "true");
 const key = ref(keyVal);
 
 const enabledSaveInProgress = ref(false);
+watchEffect(() =>
+  enabledSaveInProgress.value ? nProgress.start() : nProgress.done()
+);
 
 const keySaveInProgress = ref(false);
+watchEffect(() =>
+  keySaveInProgress.value ? nProgress.start() : nProgress.done()
+);
+
 const justSavedKey = ref(false);
 
 async function saveEnabled() {

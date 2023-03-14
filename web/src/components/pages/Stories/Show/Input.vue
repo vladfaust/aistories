@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, type Ref, ref } from "vue";
+import { computed, onMounted, type Ref, ref, watchEffect } from "vue";
 import Story from "@/models/Story";
 import * as api from "@/services/api";
 import { userId } from "@/store";
 import { PaperAirplaneIcon, ForwardIcon } from "@heroicons/vue/24/outline";
 import Spinner2 from "@/components/utility/Spinner2.vue";
+import nProgress from "nprogress";
 
 const { story, busy } = defineProps<{
   story: Story;
@@ -14,7 +15,11 @@ const { story, busy } = defineProps<{
 const textareaEl = ref<HTMLTextAreaElement | null>(null);
 const textareaFocused = ref(false);
 const inputText: Ref<string | undefined> = ref();
+
 const advanceInProgress = ref(false);
+watchEffect(() =>
+  advanceInProgress.value ? nProgress.start() : nProgress.done()
+);
 
 const mayAdvance = computed(() => {
   return (
