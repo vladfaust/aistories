@@ -23,6 +23,9 @@ async function pipe(Key: string, res: Response) {
   res.set("ETag", response.ETag);
   res.set("Last-Modified", response.LastModified?.toString());
 
+  // Set cache to 24 hours
+  res.set("Cache-Control", "max-age=86400");
+
   const readableStream = response.Body!.transformToWebStream();
 
   const writeableStream = new WritableStream({
