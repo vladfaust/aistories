@@ -131,7 +131,8 @@ async function create() {
     });
 
     justCreated = true;
-    router.push(`/lores/${lore.id}`);
+
+    await router.push(`/lores/${lore.id}`);
   } catch (e: any) {
     console.error(e);
     alert(e.message);
@@ -204,8 +205,6 @@ async function update() {
       text: "Lore updated",
       type: "success",
     });
-
-    router.push(`/lores/${lore.ref.value!.id}`);
   } catch (e: any) {
     console.error(e);
     alert(e.message);

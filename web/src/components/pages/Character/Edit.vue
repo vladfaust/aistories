@@ -178,7 +178,7 @@ async function create() {
 
     justCreated = true;
 
-    router.push(`/chars/${char.charId}`);
+    await router.push(`/chars/${char.charId}`);
   } catch (e: any) {
     console.error(e);
     alert(e.message);
@@ -287,8 +287,6 @@ async function update() {
       text: "Character updated",
       type: "success",
     });
-
-    router.push(`/chars/${char.ref.value.id}`);
   } catch (e: any) {
     console.error(e);
     alert(e.message);
