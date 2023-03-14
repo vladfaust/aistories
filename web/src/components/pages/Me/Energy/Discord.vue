@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import EnergyIcon from "@/components/utility/EnergyIcon.vue";
+import Spinner2 from "@/components/utility/Spinner2.vue";
 import * as api from "@/services/api";
-import { ref } from "vue";
+import nProgress from "nprogress";
+import { ref, watchEffect } from "vue";
 
 const [discordLink, grantAmount, granted_] = await Promise.all([
   (await api.trpc.commands.settings.get.query("discordLink"))!,
@@ -14,14 +16,29 @@ const [discordLink, grantAmount, granted_] = await Promise.all([
 ]);
 
 const claimInProgress = ref(false);
+watchEffect(() =>
+  claimInProgress.value ? nProgress.start() : nProgress.done()
+);
+
 const granted = ref(granted_);
 
 async function claim() {
   if (claimInProgress.value) return;
   if (granted_) throw new Error("Already claimed");
-  const energyClaimed = await api.trpc.commands.me.energy.claimDiscord.mutate();
-  alert(`Claimed ${energyClaimed} energy credits`);
-  granted.value = true;
+
+  claimInProgress.value = true;
+
+  try {
+    const energyClaimed =
+      await api.trpc.commands.me.energy.claimDiscord.mutate();
+    alert(`Claimed ${energyClaimed} energy credits`);
+    granted.value = true;
+  } catch (e: any) {
+    console.error(e);
+    alert(e.message);
+  } finally {
+    claimInProgress.value = false;
+  }
 }
 </script>
 
@@ -38,10 +55,12 @@ async function claim() {
     @click="claim"
     :disabled="claimInProgress"
   )
-    span Claim
-    .flex.items-center
-      EnergyIcon.h-5
-      span {{ grantAmount }}
+    Spinner2.h-5(v-if="claimInProgress")
+    template(v-else)
+      span Claim
+      .flex.items-center
+        EnergyIcon.h-5
+        span {{ grantAmount }}
 
   button.btn.w-full(v-else disabled) Already claimed
 </template>
