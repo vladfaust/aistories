@@ -15,6 +15,8 @@ import Toggle from "@/components/utility/Toggle.vue";
 import { ensureWeb3Token } from "@/store";
 import { tokenize } from "@/utils/ai";
 import { BigNumber } from "ethers";
+import * as eth from "@/services/eth";
+import Jdenticon from "@/components/utility/Jdenticon.vue";
 
 const IMAGE_MAX_SIZE = 1000 * 1000; // 1 MB
 const NAME_MAX_LENGTH = 32;
@@ -518,6 +520,19 @@ onUnmounted(() => {
         v-model="nftUri"
         :class="{ 'border-error-500': !nftUriValid }"
       )
+
+      .flex.items-center.justify-between.gap-3
+        span.shrink-0.text-sm.font-medium.leading-none Ethereum wallet
+
+        .w-full.bg-base-100(class="h-[1px]")
+
+        .flex.shrink-0.items-center.gap-2(v-if="eth.account.value")
+          code.hidden.text-sm.sm_inline-block {{ eth.account.value.slice(0, 9) }}…
+          Jdenticon.w-8.rounded-full.border.p-1(:input="eth.account.value")
+          button.btn.btn-error.btn-sm(@click="eth.disconnect") Disconnect
+        .flex.shrink-0.items-center.gap-2(v-else)
+          span.text-sm.text-base-400 Not connected
+          button.btn.btn-web3.btn-sm(@click="eth.connect") Connect wallet
 
     p.rounded.border.bg-base-50.p-2.text-xs.leading-tight.text-base-500
       | An NFT character must be collected in order to use it in a story.
