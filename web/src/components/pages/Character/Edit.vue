@@ -258,6 +258,13 @@ async function update() {
           char.ref.value!.about.value = about.value;
           char.ref.value!.personality!.value = personality.value;
           char.ref.value!.public_.value = public_.value;
+
+          // It is not possible to change NFT essentials.
+          // Therefore, we want to watch the NFT if it is enabled now.
+          const wannaWatch = char.ref.value!.nft.value
+            ? false // Already watching
+            : nftEnabled.value; // Watch if just enabled
+
           char.ref.value!.nft.value = nftContractAddress.value
             ? {
                 contractAddress: nftContractAddress.value,
@@ -265,6 +272,10 @@ async function update() {
                 uri: nftUri.value,
               }
             : null;
+
+          if (wannaWatch) {
+            char.ref.value!.watchBalance();
+          }
         })()
       );
     }

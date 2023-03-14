@@ -4,7 +4,7 @@ import { account, getErc1155Balance } from "@/services/eth";
 import { tap } from "@/utils";
 import { Deferred } from "@/utils/deferred";
 import { BigNumber } from "ethers";
-import { computed, markRaw, ref, Ref, watch } from "vue";
+import { computed, markRaw, ref, Ref, watch, WatchStopHandle } from "vue";
 import Lore from "./Lore";
 import { Buffer, bufferToHex } from "@/utils/prisma";
 
@@ -22,6 +22,7 @@ export default class Character {
   readonly collected = computed(
     () => !this.nft.value || this.balance.value?.gt(0)
   );
+  private watchBalanceStopHandle?: WatchStopHandle;
 
   static findOrCreate(id: number): Deferred<Character | null> {
     let char = Character.cache.get(id);
@@ -97,8 +98,10 @@ export default class Character {
     readonly updatedAt: Date
   ) {}
 
-  private watchBalance() {
-    return watch(
+  watchBalance() {
+    this.watchBalanceStopHandle?.();
+
+    return (this.watchBalanceStopHandle = watch(
       account,
       (account) => {
         console.debug("watchBalance", account);
@@ -107,7 +110,7 @@ export default class Character {
         if (account) this.fetchBalance(account);
       },
       { immediate: true }
-    );
+    ));
   }
 
   async fetchBalance(account: string): Promise<BigNumber | undefined> {
