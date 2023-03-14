@@ -6,8 +6,10 @@ import { Deferred } from "@/utils/deferred";
 import { BigNumber } from "ethers";
 import { computed, markRaw, ref, Ref, watch } from "vue";
 import Lore from "./Lore";
+import { Buffer, bufferToHex } from "@/utils/prisma";
 
-type Erc1155Token = {
+// An NFT is either ERC-721 or ERC-1155.
+export type NFT = {
   contractAddress: string; // Hex string.
   tokenId: string; // Hex string.
   uri: string; // URI to the NFT page.
@@ -18,7 +20,7 @@ export default class Character {
 
   private _fetchBalancePromise?: Promise<BigNumber | undefined>;
   readonly collected = computed(
-    () => !this.erc1155Token || this.balance.value?.gt(0)
+    () => !this.nft.value || this.balance.value?.gt(0)
   );
 
   static findOrCreate(id: number): Deferred<Character | null> {
@@ -52,7 +54,9 @@ export default class Character {
     name: string;
     about: string;
     personality?: string;
-    erc1155Token: Erc1155Token | null;
+    nftContractAddress: Buffer | null;
+    nftTokenId: Buffer | null;
+    nftUri: string | null;
     createdAt: string;
     updatedAt: string;
   }): Character {
@@ -65,7 +69,13 @@ export default class Character {
         ref(data.name),
         ref(data.about),
         data.personality ? ref(data.personality) : undefined,
-        data.erc1155Token,
+        data.nftContractAddress
+          ? ref({
+              contractAddress: bufferToHex(data.nftContractAddress!),
+              tokenId: bufferToHex(data.nftTokenId!),
+              uri: data.nftUri!,
+            })
+          : ref(null),
         ref(),
         new Date(data.createdAt),
         new Date(data.updatedAt)
@@ -81,7 +91,7 @@ export default class Character {
     readonly name: Ref<string>,
     readonly about: Ref<string>,
     readonly personality: Ref<string> | undefined,
-    readonly erc1155Token: Erc1155Token | null,
+    readonly nft: Ref<NFT | null>,
     readonly balance: Ref<BigNumber | undefined>,
     readonly createdAt: Date,
     readonly updatedAt: Date
@@ -102,12 +112,12 @@ export default class Character {
 
   async fetchBalance(account: string): Promise<BigNumber | undefined> {
     return (this._fetchBalancePromise ||= (async () => {
-      if (!this.erc1155Token) {
+      if (!this.nft.value) {
         return undefined;
       } else {
         return (this.balance.value ||= await getErc1155Balance(
-          this.erc1155Token.contractAddress,
-          this.erc1155Token.tokenId,
+          this.nft.value.contractAddress,
+          this.nft.value.tokenId,
           account
         ));
       }

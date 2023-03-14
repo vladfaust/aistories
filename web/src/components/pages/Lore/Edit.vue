@@ -208,6 +208,8 @@ async function update() {
       text: "Lore updated",
       type: "success",
     });
+
+    router.push(`/lores/${lore.ref.value!.id}`);
   } catch (e: any) {
     console.error(e);
     alert(e.message);

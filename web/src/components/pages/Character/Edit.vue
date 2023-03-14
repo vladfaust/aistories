@@ -13,11 +13,13 @@ import LoreSummary from "@/components/Lore/Summary.vue";
 import LoreCard from "@/components/Lore/Card.vue";
 import { notify } from "@kyvg/vue3-notification";
 import Toggle from "@/components/utility/Toggle.vue";
+import { ensureWeb3Token } from "@/store";
 
 const IMAGE_MAX_SIZE = 1000 * 1000; // 1 MB
 const NAME_MAX_LENGTH = 32;
 const ABOUT_MAX_LENGTH = 512;
 const PROMPT_MAX_TOKEN_LENGTH = 512;
+const NFT_URI_MAX_LENGTH = 256;
 
 const tokenizer = new GPT3Tokenizer({ type: "gpt3" });
 const router = useRouter();
@@ -73,6 +75,33 @@ const public_ = ref(
     : false
 );
 
+const nftEnabled = ref(!!char?.ref.value?.nft.value);
+const nftContractAddress = ref(
+  char?.ref.value?.nft.value?.contractAddress || ""
+);
+const nftTokenId = ref(char?.ref.value?.nft.value?.tokenId || "");
+const nftUri = ref(char?.ref.value?.nft.value?.uri || "");
+
+const nftContractAddressValid = computed(() =>
+  nftContractAddress.value.match(/^0x[a-fA-F0-9]{40}$/)
+);
+
+const nftTokenIdValid = computed(() =>
+  nftTokenId.value.match(/^0x[a-fA-F0-9]{2,64}$/)
+);
+
+const nftUriLength = computed(() => nftUri.value.length);
+
+const nftUriValid = computed(
+  () =>
+    nftUriLength.value <= NFT_URI_MAX_LENGTH && nftUri.value.match(/^https?:/)
+);
+
+const nftValid = computed(
+  () =>
+    nftContractAddressValid.value && nftTokenIdValid.value && nftUriValid.value
+);
+
 const valid = computed(
   () =>
     !!(
@@ -83,7 +112,8 @@ const valid = computed(
       about.value.length > 0 &&
       !aboutLengthLimitExceeded.value &&
       personality.value.length > 0 &&
-      !personalityTokenLengthLimitExceeded.value
+      !personalityTokenLengthLimitExceeded.value &&
+      (!nftEnabled.value || nftValid.value)
     )
 );
 
@@ -95,7 +125,10 @@ const anyChanges = computed(
       (about.value && about.value !== char?.ref.value?.about.value) ||
       (personality.value &&
         personality.value !== char?.ref.value?.personality?.value) ||
-      public_.value !== char?.ref.value?.public_.value
+      public_.value !== char?.ref.value?.public_.value ||
+      (char.ref.value.nft.value
+        ? nftUri.value !== char?.ref.value?.nft.value?.uri
+        : nftEnabled.value)
     )
 );
 
@@ -114,6 +147,14 @@ async function create() {
       name: name.value,
       about: about.value,
       personality: personality.value,
+      nft: nftEnabled.value
+        ? {
+            contractAddress: nftContractAddress.value,
+            tokenId: nftTokenId.value,
+            uri: nftUri.value,
+            web3Token: await ensureWeb3Token(),
+          }
+        : undefined,
     });
     console.log("Created char", char);
 
@@ -182,7 +223,10 @@ async function update() {
       name.value !== char.ref.value.name.value ||
       about.value !== char.ref.value.about.value ||
       personality.value !== char.ref.value.personality?.value ||
-      public_.value !== char.ref.value.public_.value
+      public_.value !== char.ref.value.public_.value ||
+      (char.ref.value.nft.value
+        ? nftUri.value !== char.ref.value.nft.value.uri
+        : nftEnabled.value)
     ) {
       promises.push(
         (async () => {
@@ -192,6 +236,21 @@ async function update() {
             name: name.value || undefined,
             about: about.value || undefined,
             personality: personality.value || undefined,
+            nft: nftEnabled.value
+              ? char.ref.value!.nft.value
+                ? nftUri.value !== char.ref.value!.nft.value.uri
+                  ? /** We may only update URI of an existing NFT */ {
+                      uri: nftUri.value,
+                      web3Token: await ensureWeb3Token(),
+                    }
+                  : undefined
+                : /** We may create a new NFT */ {
+                    contractAddress: nftContractAddress.value,
+                    tokenId: nftTokenId.value,
+                    uri: nftUri.value,
+                    web3Token: await ensureWeb3Token(),
+                  }
+              : undefined,
           });
 
           console.log("Updated character");
@@ -200,6 +259,13 @@ async function update() {
           char.ref.value!.about.value = about.value;
           char.ref.value!.personality!.value = personality.value;
           char.ref.value!.public_.value = public_.value;
+          char.ref.value!.nft.value = nftContractAddress.value
+            ? {
+                contractAddress: nftContractAddress.value,
+                tokenId: nftTokenId.value,
+                uri: nftUri.value,
+              }
+            : null;
         })()
       );
     }
@@ -211,6 +277,8 @@ async function update() {
       text: "Character updated",
       type: "success",
     });
+
+    router.push(`/chars/${char.ref.value.id}`);
   } catch (e: any) {
     console.error(e);
     alert(e.message);
@@ -282,7 +350,7 @@ onUnmounted(() => {
         .w-full.bg-base-100(class="h-[1px]")
         span.shrink-0.text-base-500(
           :class="{ 'text-error-500': imageSizeLimitExceeded }"
-        ) {{ imageSize ? prettyBytes(imageSize) : "0" }} / {{ prettyBytes(IMAGE_MAX_SIZE) }}
+        ) {{ imageSize ? prettyBytes(imageSize) : "0" }}/{{ prettyBytes(IMAGE_MAX_SIZE) }}
 
       .aspect-square.overflow-hidden.rounded.border
         img.h-full.w-full.cursor-pointer.object-cover.transition-transform.hover_scale-105(
@@ -304,7 +372,7 @@ onUnmounted(() => {
           .w-full.bg-base-100(class="h-[1px]")
           span.shrink-0.text-base-500(
             :class="{ 'text-error-500': nameLengthLimitExceeded }"
-          ) {{ nameLength }} / {{ NAME_MAX_LENGTH }} chars
+          ) {{ nameLength }}/{{ NAME_MAX_LENGTH }}
         input.rounded.border.px-3.py-2(
           type="text"
           placeholder="Name"
@@ -321,7 +389,7 @@ onUnmounted(() => {
           .w-full.bg-base-100(class="h-[1px]")
           span.shrink-0.text-base-500(
             :class="{ 'text-error-500': aboutLengthLimitExceeded }"
-          ) {{ aboutLength }} / {{ ABOUT_MAX_LENGTH }} chars
+          ) {{ aboutLength }}/{{ ABOUT_MAX_LENGTH }}
         textarea.h-full.rounded.border.px-3.py-2.text-sm.leading-tight(
           type="text"
           placeholder="About"
@@ -341,7 +409,7 @@ onUnmounted(() => {
       span.shrink-0.text-base-500(
         :class="{ 'text-error-500': personalityTokenLengthLimitExceeded }"
       )
-        | {{ personalityTokenLength }} / {{ PROMPT_MAX_TOKEN_LENGTH }}
+        | {{ personalityTokenLength }}/{{ PROMPT_MAX_TOKEN_LENGTH }}
         |
         a.link(href="https://platform.openai.com/tokenizer" tabindex="-1") tokens
     textarea.rounded.border.px-3.py-2.text-sm.leading-tight(
@@ -352,12 +420,12 @@ onUnmounted(() => {
       rows=8
     )
 
-    p.text-sm.leading-tight.text-base-500
+    p.rounded.border.bg-base-50.p-2.text-xs.leading-tight.text-base-500
       | A character personality is used as a hidden prompt for the AI.
       | It is not shown to the user.
-      | Expereiment with different personalities to see what works best for the character.
+      | Experiment with different personalities to see what works best for the character.
 
-    .-my-1.flex.items-center.justify-between.gap-3
+    .flex.items-center.justify-between.gap-3
       label.shrink-0.font-medium
         | Public
         span(
@@ -369,10 +437,73 @@ onUnmounted(() => {
         :disabled="char?.ref.value?.public_.value || inProgress"
       )
 
-    p.text-sm.leading-tight.text-base-500
+    p.rounded.border.bg-base-50.p-2.text-xs.leading-tight.text-base-500
       | Public characters are visible to everyone.
       | Once a character is public, it cannot be made private again.
       | The personality is always hidden, even if the character is public.
+
+    .flex.items-center.justify-between.gap-3
+      label.shrink-0.font-medium
+        | NFT
+        span(v-if="char?.ref.value && nftEnabled && !char.ref.value.nft.value") *
+      .w-full.bg-base-100(class="h-[1px]")
+      Toggle.shrink-0(
+        v-model="nftEnabled"
+        :disabled="!!char?.ref.value?.nft.value || inProgress"
+      )
+
+    .flex.flex-col.gap-2.rounded.border.p-3(v-if="nftEnabled")
+      .flex.items-center.justify-between.gap-3
+        label.shrink-0.text-sm.font-medium.leading-none Contract address
+        .w-full.bg-base-100(class="h-[1px]")
+        span.shrink-0.text-sm.text-base-400(
+          :class="{ 'text-error-500': !nftContractAddressValid }"
+        ) /^0x[a-fA-F0-9]{40}$/
+
+      input.rounded.border.px-3.py-2.text-sm.invalid_border-error-500(
+        type="text"
+        placeholder="0x0000000000000000000000000000000000000000"
+        v-model="nftContractAddress"
+        :disabled="!!char?.ref.value?.nft.value?.contractAddress"
+        pattern="^0x[a-fA-F0-9]{40}$"
+      )
+
+      .flex.items-center.justify-between.gap-3
+        label.shrink-0.text-sm.font-medium.leading-none Token ID
+        .w-full.bg-base-100(class="h-[1px]")
+        span.shrink-0.text-sm.text-base-400(
+          :class="{ 'text-error-500': !nftTokenIdValid }"
+        ) /^0x[a-fA-F0-9]{2,64}$/
+
+      input.rounded.border.px-3.py-2.text-sm.invalid_border-error-500(
+        type="text"
+        placeholder="0x0000000000000000000000000000000000000000000000000000000000000000"
+        v-model="nftTokenId"
+        :disabled="!!char?.ref.value?.nft.value?.tokenId"
+        pattern="^0x[a-fA-F0-9]{2,64}$"
+      )
+
+      .flex.items-center.justify-between.gap-3
+        label.shrink-0.text-sm.font-medium.leading-none
+          | Token page URI
+          span(
+            v-if="char?.ref.value && char.ref.value.nft.value?.uri && char.ref.value.nft.value.uri !== nftUri"
+          ) *
+        .w-full.bg-base-100(class="h-[1px]")
+        span.shrink-0.text-sm.text-base-400(
+          :class="{ 'text-error-500': !nftUriValid }"
+        ) {{ nftUriLength }}/{{ NFT_URI_MAX_LENGTH }}
+
+      input.rounded.border.px-3.py-2.text-sm.invalid_border-error-500(
+        type="url"
+        placeholder="https://example.com/mytoken"
+        v-model="nftUri"
+      )
+
+    p.rounded.border.bg-base-50.p-2.text-xs.leading-tight.text-base-500
+      | An NFT character must be collected in order to use it in a story.
+      | Once a character is linked to an NFT, the token details can not be changed, except for the token page URI.
+      | You must prove the NFT ownership in order to update its settings.
 
     button.btn.btn-primary.mt-1(
       v-if="char"

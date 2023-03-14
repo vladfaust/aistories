@@ -2,8 +2,8 @@ import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
 import { protectedProcedure } from "#trpc/middleware/auth";
 import { TRPCError } from "@trpc/server";
-import { lock, maybeVerifyCharOwnership } from "./shared";
-import Web3Token from "web3-token";
+import { lock } from "./shared";
+import { ensureNftOwnership } from "../characters/create";
 
 const MAX_CHARS = 5;
 const prisma = new PrismaClient();
@@ -38,7 +38,11 @@ export default protectedProcedure
 
     const char = await prisma.character.findFirst({
       where: { id: input.charId },
-      select: { id: true, erc1155Token: true },
+      select: {
+        id: true,
+        nftContractAddress: true,
+        nftTokenId: true,
+      },
     });
 
     if (!char) {
@@ -48,11 +52,20 @@ export default protectedProcedure
       });
     }
 
-    const address = input.web3Token
-      ? Web3Token.verify(input.web3Token).address
-      : undefined;
+    if (char.nftContractAddress && char.nftTokenId) {
+      if (!input.web3Token) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Missing web3Token",
+        });
+      }
 
-    await maybeVerifyCharOwnership(char, address);
+      await ensureNftOwnership({
+        contractAddress: char.nftContractAddress,
+        tokenId: char.nftTokenId,
+        web3Token: input.web3Token,
+      });
+    }
 
     if (story.charIds.length >= MAX_CHARS) {
       throw new TRPCError({

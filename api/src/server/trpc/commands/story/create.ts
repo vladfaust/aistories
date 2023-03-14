@@ -4,13 +4,7 @@ import { protectedProcedure } from "#trpc/middleware/auth";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import Web3Token from "web3-token";
-import { maybeVerifyCharOwnership as maybeVerifyCharOwnership } from "./shared";
-
-export type Erc1155Token = {
-  contractAddress: string; // Hex string.
-  tokenId: string; // Hex string.
-  uri: string; // URI to the NFT page.
-};
+import { ensureNftOwnership } from "../characters/create";
 
 const prisma = new PrismaClient();
 
@@ -65,7 +59,8 @@ export default protectedProcedure
       },
       select: {
         id: true,
-        erc1155Token: true,
+        nftContractAddress: true,
+        nftTokenId: true,
       },
     });
 
@@ -77,8 +72,21 @@ export default protectedProcedure
       ? Web3Token.verify(input.web3Token).address
       : undefined;
 
-    for (const character of characters) {
-      await maybeVerifyCharOwnership(character, address);
+    for (const char of characters) {
+      if (char.nftContractAddress && char.nftTokenId) {
+        if (!input.web3Token) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Missing web3Token",
+          });
+        }
+
+        await ensureNftOwnership({
+          contractAddress: char.nftContractAddress,
+          tokenId: char.nftTokenId,
+          web3Token: input.web3Token,
+        });
+      }
     }
 
     const story = await prisma.story.create({

@@ -35,9 +35,9 @@ const { char } = defineProps<{ char: Character }>();
       span.italic.text-accent-500(v-if="char.creatorId == userId") &nbsp;(you)&nbsp;
       | {{ formatDistanceToNow(char.createdAt) }} ago
 
-  .mt-2.flex.items-center.gap-2(v-if="char.erc1155Token")
+  .mt-2.flex.items-center.gap-2(v-if="char.nft.value")
     template(v-if="eth.account.value")
-      a.btn.btn-nft(:href="char.erc1155Token.uri.toString()")
+      a.btn.btn-nft(:href="char.nft.value.uri.toString()")
         span(v-if="char.collected.value") See NFT
         span(v-else) Collect NFT to unlock
       span.text-sm.text-gray-400(v-if="char.collected.value") {{ char.balance.value }} collected

@@ -36,14 +36,14 @@ RouterLink.contents(
         :class="{ 'group-hover_scale-105': char.collected.value, 'scale-110 blur-sm brightness-50 group-hover_scale-100 group-hover_blur-none group-hover_brightness-100': !char.collected.value }"
       )
       .absolute.bottom-1.right-1.rounded.bg-white.p-1.leading-none.shadow(
-        v-if="!char.public_.value || char.erc1155Token"
+        v-if="!char.public_.value || char.nft.value"
       )
         EyeSlashIcon.h-4.text-base-500(
           v-if="!char.public_.value"
           title="Private"
         )
         CubeIcon.h-4.text-base-500(
-          v-if="char.erc1155Token"
+          v-if="char.nft.value"
           title="NFT Collectible"
         )
     .relative.flex.w-full.flex-col(class="gap-0.5")

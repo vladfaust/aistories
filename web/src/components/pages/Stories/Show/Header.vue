@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import Character from "@/models/Character";
 import Story from "@/models/Story";
-import { web3Token } from "@/store";
+import { ensureWeb3Token, web3Token } from "@/store";
 import { PlusIcon } from "@heroicons/vue/24/outline";
-import Web3Token from "web3-token";
-import * as eth from "@/services/eth";
-import config from "@/config";
 import * as api from "@/services/api";
 import { Deferred } from "@/utils/deferred";
 import { ref, triggerRef } from "vue";
@@ -29,22 +26,16 @@ async function addChar() {
     return;
   }
 
-  if (newChar.ref.value.erc1155Token) {
-    if (!newChar.ref.value) {
-      alert("You must collect this character's NFT to add it to a story.");
-      return;
+  try {
+    if (newChar.ref.value.nft) {
+      if (!newChar.ref.value.collected.value) {
+        alert("You must collect this character's NFT to add it to a story.");
+        return;
+      }
+
+      await ensureWeb3Token();
     }
 
-    web3Token.value ||= await Web3Token.sign(
-      async (msg: string) => eth.provider.value!.getSigner().signMessage(msg),
-      {
-        domain: import.meta.env.PROD ? config.trpcHttpUrl.hostname : undefined,
-        expires_in: 60 * 60 * 24 * 1000, // 1 day
-      }
-    );
-  }
-
-  try {
     await api.trpc.commands.story.addChar.mutate({
       storyId: story.id,
       charId: newChar.ref.value.id,

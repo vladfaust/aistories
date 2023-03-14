@@ -116,7 +116,9 @@ model Character {
   about       String // Short description
   personality String // Used in a prompt, should be hidden from the user
 
-  erc1155Token String? // JSON object with ERC1155 NFT data
+  nftContractAddress Bytes?
+  nftTokenId         Bytes?
+  nftUri             String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

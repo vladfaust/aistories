@@ -2,16 +2,13 @@
 import Character from "@/models/Character";
 import Lore from "@/models/Lore";
 import * as api from "@/services/api";
-import { userId, web3Token } from "@/store";
+import { ensureWeb3Token, userId, web3Token } from "@/store";
 import { computed, onMounted, ref, type Ref, type ShallowRef } from "vue";
 import { useRouter } from "vue-router";
 import LoreCard from "@/components/Lore/Card.vue";
 import LoreSummary from "@/components/Lore/Summary.vue";
 import CharCard from "@/components/Character/Card.vue";
 import CharSummary from "@/components/Character/Summary.vue";
-import Web3Token from "web3-token";
-import * as eth from "@/services/eth";
-import config from "@/config";
 
 const CHAR_LIMIT = 1;
 
@@ -62,28 +59,14 @@ async function create() {
 
   createInProgress.value = true;
 
-  if (
-    chosenProtagonist.value?.erc1155Token ||
-    [...selectedCharactes.value].find((c) => c.erc1155Token)
-  ) {
-    if (!eth.provider.value) {
-      alert(
-        "You must be connected to Ethereum to create a story with NFT characters."
-      );
-
-      return;
+  try {
+    if (
+      chosenProtagonist.value?.nft ||
+      [...selectedCharactes.value].find((c) => c.nft)
+    ) {
+      await ensureWeb3Token();
     }
 
-    web3Token.value ||= await Web3Token.sign(
-      async (msg: string) => eth.provider.value!.getSigner().signMessage(msg),
-      {
-        domain: import.meta.env.PROD ? config.trpcHttpUrl.hostname : undefined,
-        expires_in: 60 * 60 * 24 * 1000, // 1 day
-      }
-    );
-  }
-
-  try {
     const storyId = await api.trpc.commands.story.create.mutate({
       loreId: chosenLore.value!.id,
       nonUserCharacterIds: [...selectedCharactes.value.values()].map(

@@ -4,7 +4,9 @@ const { modelValue, disabled } = defineProps<{
   disabled?: boolean;
 }>();
 
-defineEmits(["update:modelValue"]);
+const emit = defineEmits<{
+  (e: "update:modelValue", value: boolean): void;
+}>();
 </script>
 
 <template>
@@ -15,7 +17,7 @@ defineEmits(["update:modelValue"]);
       :checked="modelValue"
       :disabled="disabled"
       @input="
-        $emit('update:modelValue', ($event.target as HTMLInputElement).checked)
+        emit('update:modelValue', ($event.target as HTMLInputElement).checked)
       "
     />
     <div

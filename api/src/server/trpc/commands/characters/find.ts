@@ -1,7 +1,6 @@
 import t from "#trpc";
 import { PrismaClient } from "@prisma/client";
 import { z } from "zod";
-import { Erc1155Token } from "#trpc/commands/story/create";
 
 const prisma = new PrismaClient();
 
@@ -22,7 +21,9 @@ export default t.procedure
         name: true,
         about: true,
         personality: true,
-        erc1155Token: true,
+        nftContractAddress: true,
+        nftTokenId: true,
+        nftUri: true,
         createdAt: true,
         updatedAt: true,
       },
@@ -31,20 +32,12 @@ export default t.procedure
     if (!char) return null;
     if (!char.public && char.creatorId !== ctx.user?.id) return null;
 
-    const erc1155Token = char.erc1155Token
-      ? (JSON.parse(char.erc1155Token) as Erc1155Token)
-      : null;
-
     if (char.creatorId === ctx.user?.id) {
-      return {
-        ...char,
-        erc1155Token,
-      };
+      return char;
     } else {
       return {
         ...char,
-        personality: undefined,
-        erc1155Token,
+        personality: undefined, // Hide personality from non-owners
       };
     }
   });

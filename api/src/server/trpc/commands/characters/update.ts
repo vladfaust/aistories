@@ -1,27 +1,32 @@
 import { z } from "zod";
 import { protectedProcedure } from "#trpc/middleware/auth";
 import { TRPCError } from "@trpc/server";
-import { encode } from "gpt-3-encoder";
 import { PrismaClient } from "@prisma/client";
-import {
-  NAME_MAX_LENGTH,
-  ABOUT_MAX_LENGTH,
-  PERSONALITY_MAX_TOKEN_LENGTH,
-} from "./create";
+import { ensureNftOwnership, SCHEMA } from "./create";
+import { toBuffer } from "@/utils";
 
 const prisma = new PrismaClient();
 
 /**
- * Update an existing lore.
+ * Update an existing character.
  */
 export default protectedProcedure
   .input(
     z.object({
       charId: z.number(),
       public: z.boolean().optional(),
-      name: z.string().optional(),
-      about: z.string().optional(),
-      personality: z.string().optional(),
+      name: SCHEMA.name.optional(),
+      about: SCHEMA.about.optional(),
+      personality: SCHEMA.personality.optional(),
+      nft: z
+        .union([
+          SCHEMA.nft,
+          z.object({
+            uri: SCHEMA.nft.shape.uri,
+            web3Token: SCHEMA.nft.shape.web3Token,
+          }),
+        ])
+        .optional(),
     })
   )
   .mutation(async ({ ctx, input }) => {
@@ -33,6 +38,9 @@ export default protectedProcedure
         name: true,
         about: true,
         personality: true,
+        nftContractAddress: true,
+        nftTokenId: true,
+        nftUri: true,
       },
     });
 
@@ -54,7 +62,8 @@ export default protectedProcedure
       input.public === undefined &&
       input.name === undefined &&
       input.about === undefined &&
-      input.personality === undefined
+      input.personality === undefined &&
+      input.nft === undefined
     ) {
       throw new TRPCError({
         code: "BAD_REQUEST",
@@ -69,27 +78,33 @@ export default protectedProcedure
       });
     }
 
-    if (input.name && input.name.length > NAME_MAX_LENGTH) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "name is too long",
-      });
-    }
+    if (input.nft) {
+      if ("contractAddress" in input.nft) {
+        if (char.nftContractAddress) {
+          // Want to change NFT essentially.
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Cannot change NFT",
+          });
+        }
+      } else if (!char.nftContractAddress) {
+        // Want to update uri, but NFT not enabled.
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "NFT not enabled for this character",
+        });
+      }
 
-    if (input.about && input.about.length > ABOUT_MAX_LENGTH) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "about is too long",
-      });
-    }
-
-    if (
-      input.personality &&
-      encode(input.personality).length > PERSONALITY_MAX_TOKEN_LENGTH
-    ) {
-      throw new TRPCError({
-        code: "PRECONDITION_FAILED",
-        message: "personality is too long",
+      await ensureNftOwnership({
+        contractAddress:
+          "contractAddress" in input.nft
+            ? toBuffer(input.nft.contractAddress)
+            : char.nftContractAddress!,
+        tokenId:
+          "tokenId" in input.nft
+            ? toBuffer(input.nft.tokenId)
+            : char.nftTokenId!,
+        web3Token: input.nft.web3Token,
       });
     }
 
@@ -100,6 +115,15 @@ export default protectedProcedure
         name: input.name ?? char.name,
         about: input.about ?? char.about,
         personality: input.personality ?? char.personality,
+        nftContractAddress:
+          input.nft && "contractAddress" in input.nft
+            ? toBuffer(input.nft.contractAddress)
+            : char.nftContractAddress,
+        nftTokenId:
+          input.nft && "tokenId" in input.nft
+            ? toBuffer(input.nft.tokenId)
+            : char.nftTokenId,
+        nftUri: input.nft?.uri ?? char.nftUri,
       },
     });
   });
