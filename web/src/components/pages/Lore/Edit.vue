@@ -339,12 +339,12 @@ onUnmounted(() => {
       rows=8
     )
 
-    p.text-sm.leading-tight.text-base-500
+    p.rounded.border.bg-base-50.p-2.text-xs.leading-tight.text-base-500
       | The lore prompt is inserted into each story prompt.
       | It is never shown to the user.
       | Experiment with different prompts to see what works best for the lore.
 
-    .-my-1.flex.items-center.justify-between.gap-3
+    .flex.items-center.justify-between.gap-3
       label.shrink-0.font-medium
         | Public
         span(
@@ -356,7 +356,7 @@ onUnmounted(() => {
         :disabled="lore?.ref.value?.public_.value || inProgress"
       )
 
-    p.text-sm.leading-tight.text-base-500
+    p.rounded.border.bg-base-50.p-2.text-xs.leading-tight.text-base-500
       | Public lores are visible to everyone.
       | Once a lore is public, it cannot be made private again.
       | The prompt is always hidden, even if the lore is public.
