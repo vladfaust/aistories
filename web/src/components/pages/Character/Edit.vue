@@ -414,7 +414,7 @@ onUnmounted(() => {
     textarea.rounded.border.px-3.py-2.text-sm.leading-tight(
       type="text"
       placeholder="Personality prompt"
-      v-model="personality"
+      v-model.trim="personality"
       :class="{ 'border-error-500': personalityTokenLengthLimitExceeded }"
       rows=8
     )
