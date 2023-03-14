@@ -20,7 +20,7 @@ export const SCHEMA = {
     }),
   nft: z.object({
     contractAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-    tokenId: z.string().regex(/^0x[a-fA-F0-9]{1,64}$/),
+    tokenId: z.string().regex(/^0x(?:[a-fA-F0-9]{2}){1,32}$/),
     uri: z.string().url().min(1).max(256),
     web3Token: z.string(), // Proof of ownership
   }),

@@ -14,6 +14,7 @@ import { notify } from "@kyvg/vue3-notification";
 import Toggle from "@/components/utility/Toggle.vue";
 import { ensureWeb3Token } from "@/store";
 import { tokenize } from "@/utils/ai";
+import { BigNumber } from "ethers";
 
 const IMAGE_MAX_SIZE = 1000 * 1000; // 1 MB
 const NAME_MAX_LENGTH = 32;
@@ -86,14 +87,15 @@ const nftContractAddressValid = computed(() =>
 );
 
 const nftTokenIdValid = computed(() =>
-  nftTokenId.value.match(/^0x[a-fA-F0-9]{2,64}$/)
+  nftTokenId.value.match(/(^\d+$)|(^0x(?:[a-fA-F0-9]{2}){1,32}$)/)
 );
 
 const nftUriLength = computed(() => nftUri.value.length);
 
 const nftUriValid = computed(
   () =>
-    nftUriLength.value <= NFT_URI_MAX_LENGTH && nftUri.value.match(/^https?:/)
+    nftUriLength.value <= NFT_URI_MAX_LENGTH &&
+    nftUri.value.match(/^https?:\/\/.+/)
 );
 
 const nftValid = computed(
@@ -149,7 +151,7 @@ async function create() {
       nft: nftEnabled.value
         ? {
             contractAddress: nftContractAddress.value,
-            tokenId: nftTokenId.value,
+            tokenId: BigNumber.from(nftTokenId.value)._hex,
             uri: nftUri.value,
             web3Token: await ensureWeb3Token(),
           }
@@ -245,7 +247,7 @@ async function update() {
                   : undefined
                 : /** We may create a new NFT */ {
                     contractAddress: nftContractAddress.value,
-                    tokenId: nftTokenId.value,
+                    tokenId: BigNumber.from(nftTokenId.value)._hex,
                     uri: nftUri.value,
                     web3Token: await ensureWeb3Token(),
                   }
@@ -462,11 +464,15 @@ onUnmounted(() => {
 
     .flex.flex-col.gap-2.rounded.border.p-3(v-if="nftEnabled")
       .flex.items-center.justify-between.gap-3
-        label.shrink-0.text-sm.font-medium.leading-none Contract address
+        label.shrink-0.text-sm.font-medium.leading-none
+          | Contract address
+          span(
+            v-if="nftContractAddress && nftContractAddress !== char?.ref.value?.nft.value?.contractAddress"
+          ) *
         .w-full.bg-base-100(class="h-[1px]")
         span.shrink-0.text-sm.text-base-400(
           :class="{ 'text-error-500': !nftContractAddressValid }"
-        ) /^0x[a-fA-F0-9]{40}$/
+        ) Hex
 
       input.rounded.border.px-3.py-2.text-sm.invalid_border-error-500(
         type="text"
@@ -474,29 +480,33 @@ onUnmounted(() => {
         v-model="nftContractAddress"
         :disabled="!!char?.ref.value?.nft.value?.contractAddress"
         pattern="^0x[a-fA-F0-9]{40}$"
+        :class="{ 'border-error-500': !nftContractAddressValid }"
       )
 
       .flex.items-center.justify-between.gap-3
-        label.shrink-0.text-sm.font-medium.leading-none Token ID
+        label.shrink-0.text-sm.font-medium.leading-none
+          | Token ID
+          span(
+            v-if="nftTokenId && nftTokenId !== char?.ref.value?.nft.value?.tokenId"
+          ) *
         .w-full.bg-base-100(class="h-[1px]")
         span.shrink-0.text-sm.text-base-400(
           :class="{ 'text-error-500': !nftTokenIdValid }"
-        ) /^0x[a-fA-F0-9]{2,64}$/
+        ) Hex or number
 
       input.rounded.border.px-3.py-2.text-sm.invalid_border-error-500(
         type="text"
-        placeholder="0x0000000000000000000000000000000000000000000000000000000000000000"
+        placeholder="0x... or number"
         v-model="nftTokenId"
         :disabled="!!char?.ref.value?.nft.value?.tokenId"
-        pattern="^0x[a-fA-F0-9]{2,64}$"
+        pattern="(^\\d+$)|(^0x(?:[a-fA-F0-9]{2}){1,32}$)"
+        :class="{ 'border-error-500': !nftTokenIdValid }"
       )
 
       .flex.items-center.justify-between.gap-3
         label.shrink-0.text-sm.font-medium.leading-none
           | Token page URI
-          span(
-            v-if="char?.ref.value && char.ref.value.nft.value?.uri && char.ref.value.nft.value.uri !== nftUri"
-          ) *
+          span(v-if="nftUri && nftUri !== char?.ref.value?.nft.value?.uri") *
         .w-full.bg-base-100(class="h-[1px]")
         span.shrink-0.text-sm.text-base-400(
           :class="{ 'text-error-500': !nftUriValid }"
@@ -506,6 +516,7 @@ onUnmounted(() => {
         type="url"
         placeholder="https://example.com/mytoken"
         v-model="nftUri"
+        :class="{ 'border-error-500': !nftUriValid }"
       )
 
     p.rounded.border.bg-base-50.p-2.text-xs.leading-tight.text-base-500
