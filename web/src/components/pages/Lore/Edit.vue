@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useFileDialog } from "@vueuse/core";
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import GPT3Tokenizer from "gpt3-tokenizer";
 import prettyBytes from "pretty-bytes";
 import { trpc } from "@/services/api";
 import Spinner2 from "@/components/utility/Spinner2.vue";
@@ -10,13 +9,13 @@ import { Deferred } from "@/utils/deferred";
 import Lore from "@/models/Lore";
 import { notify } from "@kyvg/vue3-notification";
 import Toggle from "@/components/utility/Toggle.vue";
+import { tokenize } from "@/utils/ai";
 
 const IMAGE_MAX_SIZE = 1000 * 1000; // 1 MB
 const NAME_MAX_LENGTH = 32;
 const ABOUT_MAX_LENGTH = 512;
 const PROMPT_MAX_TOKEN_LENGTH = 512;
 
-const tokenizer = new GPT3Tokenizer({ type: "gpt3" });
 const router = useRouter();
 
 const { lore } = defineProps<{ lore?: Deferred<Lore | null> }>();
@@ -56,9 +55,7 @@ const aboutLengthLimitExceeded = computed(
 );
 
 const prompt = ref(lore?.ref.value?.prompt?.value || "");
-const promptTokenLength = computed(
-  () => tokenizer.encode(prompt.value).bpe.length
-);
+const promptTokenLength = computed(() => tokenize(prompt.value).bpe.length);
 const promptTokenLengthLimitExceeded = computed(
   () => promptTokenLength.value > PROMPT_MAX_TOKEN_LENGTH
 );

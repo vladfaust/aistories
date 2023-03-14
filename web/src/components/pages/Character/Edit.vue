@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useFileDialog } from "@vueuse/core";
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import GPT3Tokenizer from "gpt3-tokenizer";
 import prettyBytes from "pretty-bytes";
 import { trpc } from "@/services/api";
 import Spinner2 from "@/components/utility/Spinner2.vue";
@@ -14,6 +13,7 @@ import LoreCard from "@/components/Lore/Card.vue";
 import { notify } from "@kyvg/vue3-notification";
 import Toggle from "@/components/utility/Toggle.vue";
 import { ensureWeb3Token } from "@/store";
+import { tokenize } from "@/utils/ai";
 
 const IMAGE_MAX_SIZE = 1000 * 1000; // 1 MB
 const NAME_MAX_LENGTH = 32;
@@ -21,7 +21,6 @@ const ABOUT_MAX_LENGTH = 512;
 const PROMPT_MAX_TOKEN_LENGTH = 512;
 const NFT_URI_MAX_LENGTH = 256;
 
-const tokenizer = new GPT3Tokenizer({ type: "gpt3" });
 const router = useRouter();
 
 let { lore, char } = defineProps<{
@@ -63,7 +62,7 @@ const aboutLengthLimitExceeded = computed(
 
 const personality = ref(char?.ref.value?.personality!.value || "");
 const personalityTokenLength = computed(
-  () => tokenizer.encode(personality.value).bpe.length
+  () => tokenize(personality.value).bpe.length
 );
 const personalityTokenLengthLimitExceeded = computed(
   () => personalityTokenLength.value > PROMPT_MAX_TOKEN_LENGTH
