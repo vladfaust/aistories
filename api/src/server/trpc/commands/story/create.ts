@@ -70,10 +70,6 @@ export default protectedProcedure
       throw new Error("Character not found");
     }
 
-    const address = input.web3Token
-      ? Web3Token.verify(input.web3Token).address
-      : undefined;
-
     for (const char of characters) {
       if (!char.public && char.creatorId !== ctx.user.id) {
         throw new TRPCError({
