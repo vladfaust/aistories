@@ -17,6 +17,7 @@ import { tokenize } from "@/utils/ai";
 import { BigNumber } from "ethers";
 import * as eth from "@/services/eth";
 import Jdenticon from "@/components/utility/Jdenticon.vue";
+import nProgress from "nprogress";
 
 const IMAGE_MAX_SIZE = 1000 * 1000; // 1 MB
 const NAME_MAX_LENGTH = 32;
@@ -32,6 +33,7 @@ let { lore, char } = defineProps<{
 }>();
 
 await Promise.all([lore.promise, char ? char.promise : Promise.resolve()]);
+nProgress.done();
 
 let justCreated = false;
 

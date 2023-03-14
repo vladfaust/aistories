@@ -1,17 +1,31 @@
 <script setup lang="ts">
 import HeaderVue from "@/components/Header.vue";
 import FooterVue from "@/components/Footer.vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { onMounted } from "vue";
 import * as api from "@/services/api";
 import { userId, energy } from "./store";
 import * as eth from "@/services/eth";
 import Spinner2 from "./components/utility/Spinner2.vue";
+import nProgress from "nprogress";
 
 const route = useRoute();
+const router = useRouter();
+
+nProgress.configure({ showSpinner: false });
 
 onMounted(() => {
   eth.autoConnect();
+
+  router.beforeEach(() => {
+    nProgress.start();
+  });
+
+  router.afterEach((to) => {
+    if (!to.meta.doNotTerminateNProgress) {
+      nProgress.done();
+    }
+  });
 
   api.trpc.commands.me.getId.query().then((id) => {
     userId.value = id;

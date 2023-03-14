@@ -4,16 +4,17 @@
 import Lore from "@/models/Lore";
 import * as api from "@/services/api";
 import { Deferred } from "@/utils/deferred";
-import { onMounted, shallowRef } from "vue";
+import { shallowRef } from "vue";
 import LoreCard from "@/components/Lore/Card.vue";
+import nProgress from "nprogress";
 
 const lores = shallowRef<Deferred<Lore>[]>([]);
 
-onMounted(async () => {
-  lores.value = (await api.trpc.commands.lores.index.query()).map(
-    (lore) => Lore.findOrCreate(lore) as Deferred<Lore>
-  );
-});
+lores.value = (await api.trpc.commands.lores.index.query()).map(
+  (lore) => Lore.findOrCreate(lore) as Deferred<Lore>
+);
+
+nProgress.done();
 </script>
 
 <template lang="pug">

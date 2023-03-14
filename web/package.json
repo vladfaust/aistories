@@ -26,6 +26,7 @@
     "gpt3-tokenizer": "^1.1.5",
     "jdenticon": "^3.2.0",
     "nanoid": "^4.0.1",
+    "nprogress": "^0.2.0",
     "p-retry": "^5.1.2",
     "pretty-bytes": "^6.1.0",
     "sass": "^1.58.3",
@@ -36,6 +37,7 @@
   },
   "devDependencies": {
     "@prettier/plugin-pug": "^2.4.1",
+    "@types/nprogress": "^0.2.0",
     "@types/splitpanes": "^2.2.1",
     "@vitejs/plugin-vue": "^4.0.0",
     "@volar/vue-language-plugin-pug": "^1.0.24",

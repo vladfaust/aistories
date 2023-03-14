@@ -10,6 +10,7 @@ import Lore from "@/models/Lore";
 import { notify } from "@kyvg/vue3-notification";
 import Toggle from "@/components/utility/Toggle.vue";
 import { tokenize } from "@/utils/ai";
+import nProgress from "nprogress";
 
 const IMAGE_MAX_SIZE = 1000 * 1000; // 1 MB
 const NAME_MAX_LENGTH = 32;
@@ -23,6 +24,8 @@ const { lore } = defineProps<{ lore?: Deferred<Lore | null> }>();
 if (lore) {
   await lore.promise;
 }
+
+nProgress.done();
 
 let justCreated = false;
 

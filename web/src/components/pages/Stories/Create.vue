@@ -9,6 +9,7 @@ import LoreCard from "@/components/Lore/Card.vue";
 import LoreSummary from "@/components/Lore/Summary.vue";
 import CharCard from "@/components/Character/Card.vue";
 import CharSummary from "@/components/Character/Summary.vue";
+import nProgress from "nprogress";
 
 const CHAR_LIMIT = 1;
 
@@ -35,19 +36,22 @@ const mayCreate = computed(() => {
 });
 const createInProgress = ref(false);
 
-onMounted(() => {
+const promises = [
   api.trpc.commands.lores.index.query().then(async (ids) => {
     lores.value = (await Promise.all(
       ids.map((id) => Lore.findOrCreate(id).promise)
     )) as Lore[];
-  });
+  }),
 
   api.trpc.commands.characters.index.query().then(async (ids) => {
     characters.value = (await Promise.all(
       ids.map((id) => Character.findOrCreate(id).promise)
     )) as Character[];
-  });
-});
+  }),
+];
+
+await Promise.all(promises);
+nProgress.done();
 
 async function create() {
   if (!mayCreate.value) return;

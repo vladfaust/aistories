@@ -2,44 +2,31 @@
 import Spinner2 from "@/components/utility/Spinner2.vue";
 import Character from "@/models/Character";
 import { Deferred } from "@/utils/deferred";
-import {
-  onMounted,
-  onUnmounted,
-  shallowRef,
-  watch,
-  type WatchStopHandle,
-} from "vue";
+import { shallowRef } from "vue";
 import * as api from "@/services/api";
 import LoreCard from "@/components/Lore/Card.vue";
 import LoreSummary from "@/components/Lore/Summary.vue";
 import CharCard from "@/components/Character/Card.vue";
 import CharSummary from "@/components/Character/Summary.vue";
 import { userId } from "@/store";
+import nProgress from "nprogress";
 
 const { character } = defineProps<{ character: Deferred<Character | null> }>();
 const fellowChars = shallowRef<Deferred<Character>[]>([]);
 
-let watchStopHandle: WatchStopHandle | null = null;
+await character.promise;
 
-onMounted(() => {
-  watchStopHandle = watch(
-    () => character.ref.value?.lore.ref.value,
-    async (lore) => {
-      if (lore) {
-        fellowChars.value = (
-          await api.trpc.commands.characters.filterByLore.query({
-            loreId: lore.id,
-          })
-        ).map((id) => Character.findOrCreate(id) as Deferred<Character>);
-      }
-    },
-    { immediate: true }
-  );
-});
+if (character.ref.value) {
+  await character.ref.value.lore.promise;
 
-onUnmounted(() => {
-  watchStopHandle?.();
-});
+  fellowChars.value = (
+    await api.trpc.commands.characters.filterByLore.query({
+      loreId: character.ref.value.lore.ref.value!.id,
+    })
+  ).map((id) => Character.findOrCreate(id) as Deferred<Character>);
+}
+
+nProgress.done();
 </script>
 
 <template lang="pug">

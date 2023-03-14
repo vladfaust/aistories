@@ -2,47 +2,41 @@
 import Story from "@/models/Story";
 import { Deferred } from "@/utils/deferred";
 import { type Unsubscribable } from "@trpc/server/observable";
-import { onMounted, onUnmounted, ref, watch, type WatchStopHandle } from "vue";
+import { onUnmounted, ref } from "vue";
 import Header from "./Show/Header.vue";
 import History from "./Show/History.vue";
 import Input from "./Show/Input.vue";
 import * as api from "@/services/api";
 import { userId } from "@/store";
+import nProgress from "nprogress";
 
 const { story } = defineProps<{ story: Deferred<Story> }>();
 const busy = ref(false);
 
+await story.promise;
+nProgress.done();
+
 let unsub: Unsubscribable | null = null;
-let watchStopHandle: WatchStopHandle | null = null;
 
-onMounted(() => {
-  watchStopHandle = watch(
-    story.ref,
-    (resolvedStory) => {
-      if (resolvedStory) {
-        unsub = api.trpc.subscriptions.story.onStatus.subscribe(
-          { storyId: resolvedStory.id },
-          {
-            onData: (data) => {
-              if (data.busy !== undefined) {
-                busy.value = data.busy;
-              }
+if (story.ref.value) {
+  unsub = api.trpc.subscriptions.story.onStatus.subscribe(
+    { storyId: story.ref.value.id },
+    {
+      onData: (data) => {
+        if (data.busy !== undefined) {
+          busy.value = data.busy;
+        }
 
-              if (data.reason !== undefined) {
-                resolvedStory.reason.value = data.reason;
-              }
-            },
-          }
-        );
-      }
-    },
-    { immediate: true }
+        if (data.reason !== undefined) {
+          story.ref.value!.reason.value = data.reason;
+        }
+      },
+    }
   );
-});
+}
 
 onUnmounted(() => {
   unsub?.unsubscribe();
-  watchStopHandle?.();
 });
 </script>
 

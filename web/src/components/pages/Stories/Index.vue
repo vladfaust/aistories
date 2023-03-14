@@ -1,33 +1,19 @@
 <script setup lang="ts">
 import * as api from "@/services/api";
-import {
-  ref,
-  type ShallowRef,
-  watchEffect,
-  onUnmounted,
-  onMounted,
-  type WatchStopHandle,
-} from "vue";
+import { ref, type ShallowRef } from "vue";
 import { userId, energy } from "@/store";
 import Story from "@/models/Story";
+import nProgress from "nprogress";
 
 const stories: ShallowRef<Story[]> = ref([]);
 
-let cancelWatch: WatchStopHandle | null = null;
+if (userId) {
+  stories.value = (await api.trpc.commands.story.list.query()).map((data) =>
+    Story.fromBackendModel(data)
+  );
+}
 
-onMounted(() => {
-  cancelWatch = watchEffect(async () => {
-    stories.value = [];
-
-    if (userId.value) {
-      stories.value = (await api.trpc.commands.story.list.query()).map((data) =>
-        Story.fromBackendModel(data)
-      );
-    }
-  });
-});
-
-onUnmounted(() => cancelWatch?.());
+nProgress.done();
 </script>
 
 <template lang="pug">

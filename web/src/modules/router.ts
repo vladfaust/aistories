@@ -11,10 +11,12 @@ const router = createRouter({
     {
       path: "/",
       component: () => import("@/components/pages/Stories/Index.vue"),
+      meta: { doNotTerminateNProgress: true },
     },
     {
       path: "/lores",
       component: () => import("@/components/pages/Lore/Index.vue"),
+      meta: { doNotTerminateNProgress: true },
     },
     {
       path: "/lores/new",
@@ -26,6 +28,7 @@ const router = createRouter({
       props: (route) => ({
         lore: Lore.findOrCreate(parseInt(route.params.id as string)),
       }),
+      meta: { doNotTerminateNProgress: true },
     },
     {
       path: "/lores/:id",
@@ -33,10 +36,12 @@ const router = createRouter({
       props: (route) => ({
         lore: Lore.findOrCreate(parseInt(route.params.id as string)),
       }),
+      meta: { doNotTerminateNProgress: true },
     },
     {
       path: "/chars",
       component: () => import("@/components/pages/Character/Index.vue"),
+      meta: { doNotTerminateNProgress: true },
     },
     {
       path: "/chars/new",
@@ -44,6 +49,7 @@ const router = createRouter({
       props: (route) => ({
         lore: Lore.findOrCreate(parseInt(route.query.loreId as string)),
       }),
+      meta: { doNotTerminateNProgress: true },
     },
     {
       path: "/chars/:id/edit",
@@ -64,6 +70,7 @@ const router = createRouter({
           char,
         };
       },
+      meta: { doNotTerminateNProgress: true },
     },
     {
       path: "/chars/:id",
@@ -71,10 +78,12 @@ const router = createRouter({
       props: (route) => ({
         character: Character.findOrCreate(parseInt(route.params.id as string)),
       }),
+      meta: { doNotTerminateNProgress: true },
     },
     {
       path: "/story/new",
       component: () => import("@/components/pages/Stories/Create.vue"),
+      meta: { doNotTerminateNProgress: true },
     },
     {
       path: "/story/:id",
@@ -82,6 +91,7 @@ const router = createRouter({
       props: (route) => ({
         story: Story.findOrCreate(route.params.id as string),
       }),
+      meta: { doNotTerminateNProgress: true },
     },
     {
       path: "/me",

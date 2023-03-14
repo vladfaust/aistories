@@ -2,16 +2,17 @@
 import Character from "@/models/Character";
 import * as api from "@/services/api";
 import { Deferred } from "@/utils/deferred";
-import { onMounted, shallowRef } from "vue";
+import { shallowRef } from "vue";
 import CharCard from "@/components/Character/Card.vue";
+import nProgress from "nprogress";
 
 const characters = shallowRef<Deferred<Character>[]>([]);
 
-onMounted(async () => {
-  characters.value = (await api.trpc.commands.characters.index.query()).map(
-    (lore) => Character.findOrCreate(lore) as Deferred<Character>
-  );
-});
+characters.value = (await api.trpc.commands.characters.index.query()).map(
+  (lore) => Character.findOrCreate(lore) as Deferred<Character>
+);
+
+nProgress.done();
 </script>
 
 <template lang="pug">
