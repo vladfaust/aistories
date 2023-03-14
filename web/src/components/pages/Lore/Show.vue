@@ -14,6 +14,7 @@ import * as api from "@/services/api";
 import LoreSummary from "@/components/Lore/Summary.vue";
 import LoreCard from "@/components/Lore/Card.vue";
 import CharCard from "@/components/Character/Card.vue";
+import { userId } from "@/store";
 
 const { lore } = defineProps<{ lore: Deferred<Lore | null> }>();
 const characters = shallowRef<Deferred<Character>[]>([]);
@@ -46,10 +47,11 @@ onUnmounted(() => {
   template(v-if="lore.ref.value")
     .flex.items-center.justify-between.gap-3
       .shrink-0.text-xl.font-medium Lore
-      .w-full.bg-base-100(class="h-[1px]")
-      RouterLink.btn.btn-sm.btn-primary.shrink-0(
-        :to="'/lores/' + lore.ref.value.id + '/edit'"
-      ) Edit
+      template(v-if="lore.ref.value.creatorId == userId")
+        .w-full.bg-base-100(class="h-[1px]")
+        RouterLink.btn.btn-sm.btn-primary.shrink-0(
+          :to="'/lores/' + lore.ref.value.id + '/edit'"
+        ) Edit
 
     .grid.gap-3.sm_grid-cols-3
       LoreCard.gap-2.rounded.border.p-2(:lore="lore.ref.value")
