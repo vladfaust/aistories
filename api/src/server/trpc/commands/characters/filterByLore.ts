@@ -13,11 +13,18 @@ export default t.procedure
       loreId: z.number(),
     })
   )
-  .query(async ({ input }) => {
-    return (
-      await prisma.character.findMany({
-        where: { loreId: input.loreId },
-        select: { id: true },
-      })
-    ).map((c) => c.id);
+  .output(z.array(z.number()))
+  .query(async ({ ctx, input }) => {
+    const chars = await prisma.character.findMany({
+      where: { loreId: input.loreId },
+      select: {
+        id: true,
+        creatorId: true,
+        public: true,
+      },
+    });
+
+    return chars
+      .filter((c) => c.public || ctx.user?.id === c.creatorId)
+      .map((c) => c.id);
   });
