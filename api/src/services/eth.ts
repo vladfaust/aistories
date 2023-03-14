@@ -2,7 +2,7 @@ import config from "@/config.js";
 import { BigNumber, ethers } from "ethers";
 import { timeout } from "@/utils.js";
 import assert from "assert";
-import ERC1155 from "@/abi/ERC1155.json" assert { type: "json" };
+import ERC1155 from "@/abi/erc1155.json" assert { type: "json" };
 import IERC721 from "@/abi/IERC721.json" assert { type: "json" };
 import IERC165 from "@/abi/IERC165.json" assert { type: "json" };
 import receiverAbi from "@/abi/receiver.json" assert { type: "json" };
