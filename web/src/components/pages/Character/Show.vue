@@ -2,8 +2,6 @@
 import Spinner2 from "@/components/utility/Spinner2.vue";
 import Character from "@/models/Character";
 import { Deferred } from "@/utils/deferred";
-import { shallowRef } from "vue";
-import * as api from "@/services/api";
 import LoreCard from "@/components/Lore/Card.vue";
 import LoreSummary from "@/components/Lore/Summary.vue";
 import CharCard from "@/components/Character/Card.vue";
@@ -12,18 +10,12 @@ import { userId } from "@/store";
 import nProgress from "nprogress";
 
 const { character } = defineProps<{ character: Deferred<Character | null> }>();
-const fellowChars = shallowRef<Deferred<Character>[]>([]);
 
 await character.promise;
 
 if (character.ref.value) {
   await character.ref.value.lore.promise;
-
-  fellowChars.value = (
-    await api.trpc.commands.characters.filterByLore.query({
-      loreId: character.ref.value.lore.ref.value!.id,
-    })
-  ).map((id) => Character.findOrCreate(id) as Deferred<Character>);
+  await character.ref.value.lore.ref.value!.loadCharacters();
 }
 
 nProgress.done();
@@ -66,9 +58,11 @@ nProgress.done();
           :to="'/chars/new?loreId=' + character.ref.value.lore.ref.value.id"
         ) Create new ✨
 
-    .grid.grid-cols-2.gap-2.sm_grid-cols-4
+    .grid.grid-cols-2.gap-2.sm_grid-cols-4(
+      v-if="character.ref.value.lore.ref.value"
+    )
       template(
-        v-for="char of fellowChars.filter((c) => c.ref.value?.id != character.ref.value?.id)"
+        v-for="char of character.ref.value.lore.ref.value.characters.value.filter((c) => c.ref.value?.id != character.ref.value?.id)"
         :key="char.ref.value?.id"
       )
         RouterLink.pressable.transition-transform(

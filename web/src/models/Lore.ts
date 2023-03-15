@@ -1,7 +1,8 @@
 import { Deferred } from "@/utils/deferred";
 import * as api from "@/services/api";
 import config from "@/config";
-import { markRaw, ref, Ref } from "vue";
+import { markRaw, ref, Ref, shallowRef, ShallowRef } from "vue";
+import Character from "./Character";
 
 export default class Lore {
   static cache = new Map<number, Deferred<Lore | null>>();
@@ -46,7 +47,8 @@ export default class Lore {
         ref(data.about),
         data.setup ? ref(data.setup) : undefined,
         new Date(data.createdAt),
-        new Date(data.updatedAt)
+        new Date(data.updatedAt),
+        shallowRef([])
       )
     );
   }
@@ -59,10 +61,17 @@ export default class Lore {
     readonly about: Ref<string>,
     readonly prompt: Ref<string> | undefined,
     readonly createdAt: Date,
-    readonly updatedAt: Date
+    readonly updatedAt: Date,
+    readonly characters: ShallowRef<Deferred<Character>[]>
   ) {}
 
   get imageUrl(): URL {
     return new URL(config.cdnUrl + "lores/" + this.id + "/image");
+  }
+
+  async loadCharacters() {
+    this.characters.value = (
+      await api.trpc.commands.characters.filterByLore.query({ loreId: this.id })
+    ).map((id) => Character.findOrCreate(id) as Deferred<Character>);
   }
 }

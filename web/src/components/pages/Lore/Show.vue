@@ -1,27 +1,20 @@
 <script setup lang="ts">
 import Spinner2 from "@/components/utility/Spinner2.vue";
-import Character from "@/models/Character";
 import Lore from "@/models/Lore";
 import { Deferred } from "@/utils/deferred";
-import { shallowRef } from "vue";
-import * as api from "@/services/api";
 import LoreSummary from "@/components/Lore/Summary.vue";
 import LoreCard from "@/components/Lore/Card.vue";
 import CharCard from "@/components/Character/Card.vue";
 import { userId } from "@/store";
 import nProgress from "nprogress";
+import Placeholder from "@/components/utility/Placeholder.vue";
 
 const { lore } = defineProps<{ lore: Deferred<Lore | null> }>();
-const characters = shallowRef<Deferred<Character>[]>([]);
 
 await lore.promise;
 
 if (lore.ref.value) {
-  characters.value = (
-    await api.trpc.commands.characters.filterByLore.query({
-      loreId: lore.ref.value.id,
-    })
-  ).map((id) => Character.findOrCreate(id) as Deferred<Character>);
+  lore.ref.value.loadCharacters();
 }
 
 nProgress.done();
@@ -50,14 +43,19 @@ nProgress.done();
       ) Create new ✨
 
     .grid.grid-cols-2.gap-2.sm_grid-cols-4
-      template(v-for="char in characters" :key="char.ref.value?.id")
-        RouterLink.pressable.transition-transform(
-          :to="'/chars/' + char.ref.value?.id"
-        )
-          CharCard.pressable.gap-2.rounded.border.p-2.transition-transform.transition-transform(
-            v-if="char.ref.value"
-            :char="char.ref.value"
+      template(
+        v-for="char in lore.ref.value.characters.value"
+        :key="char.ref.value?.id"
+      )
+        template(v-if="char.ref.value")
+          RouterLink.pressable.transition-transform(
+            :to="'/chars/' + char.ref.value?.id"
           )
+            CharCard.pressable.gap-2.rounded.border.p-2.transition-transform.transition-transform(
+              v-if="char.ref.value"
+              :char="char.ref.value"
+            )
+        Placeholder.h-52.w-full.rounded.bg-base-100(v-else)
   template(v-else-if="lore.ref.value == null")
     p Lore not found.
   template(v-else)
