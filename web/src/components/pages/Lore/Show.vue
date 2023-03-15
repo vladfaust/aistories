@@ -42,7 +42,7 @@ nProgress.done();
         :to="'/chars/new?loreId=' + lore.ref.value.id"
       ) Create new ✨
 
-    .grid.grid-cols-2.gap-2.sm_grid-cols-4
+    .grid.grid-cols-2.gap-2.sm_grid-cols-5
       template(
         v-for="char in lore.ref.value.characters.value"
         :key="char.ref.value?.id"

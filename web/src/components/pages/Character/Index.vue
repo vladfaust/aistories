@@ -22,7 +22,7 @@ nProgress.done();
     .w-full.bg-base-100(class="h-[1px]")
     button.btn.btn-sm.btn-primary.shrink-0 Create new ✨
 
-  .grid.grid-cols-2.gap-2.sm_grid-cols-4
+  .grid.grid-cols-2.gap-2.sm_grid-cols-5
     template(v-for="char in characters" :key="char.ref.value?.id")
       CharCard.gap-2.rounded.border.p-2(
         v-if="char.ref.value"

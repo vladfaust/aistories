@@ -58,7 +58,7 @@ nProgress.done();
           :to="'/chars/new?loreId=' + character.ref.value.lore.ref.value.id"
         ) Create new ✨
 
-    .grid.grid-cols-2.gap-2.sm_grid-cols-4(
+    .grid.grid-cols-2.gap-2.sm_grid-cols-5(
       v-if="character.ref.value.lore.ref.value"
     )
       template(

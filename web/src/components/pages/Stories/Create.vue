@@ -115,7 +115,7 @@ async function create() {
   template(v-if="chosenLore")
     h2.text-lg.leading-none 2. Choose protagonist
     .flex.flex-col.gap-3
-      .grid.grid-cols-2.gap-2.sm_grid-cols-4.sm_gap-3
+      .grid.grid-cols-2.gap-2.sm_grid-cols-5
         CharCard.pressable.cursor-pointer.gap-2.rounded.border.p-2.transition-transform(
           v-for="character in characters.filter((c) => c.lore.ref.value?.id === chosenLore?.id)"
           :char="character"
@@ -138,7 +138,7 @@ async function create() {
         :class="{ 'text-error-500': selectedCharactes.size > CHAR_LIMIT }"
       ) 3. Choose characters ({{ selectedCharactes.size }}/{{ CHAR_LIMIT }})
       .flex.flex-col.gap-3
-        .grid.grid-cols-2.gap-2.sm_grid-cols-4.sm_gap-3
+        .grid.grid-cols-2.gap-2.sm_grid-cols-5
           CharCard.gap-2.rounded.border.p-2(
             v-for="character in characters.filter((c) => c.lore.ref.value?.id === chosenLore?.id)"
             :key="character.id"
