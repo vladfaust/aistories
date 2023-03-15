@@ -10,6 +10,7 @@ import LoreSummary from "@/components/Lore/Summary.vue";
 import CharCard from "@/components/Character/Card.vue";
 import CharSummary from "@/components/Character/Summary.vue";
 import nProgress from "nprogress";
+import { useSessionStorage } from "@vueuse/core";
 
 const CHAR_LIMIT = 1;
 
@@ -36,25 +37,56 @@ const promises = [
 await Promise.all(promises);
 nProgress.done();
 
-function chooseLore(lore: Lore) {
+const chosenLore: ShallowRef<Lore | undefined> = shallowRef();
+const chosenProtagonist: ShallowRef<Character | undefined> = shallowRef();
+const selectedCharactes: ShallowRef<Set<Character>> = ref(new Set());
+
+const chosenLoreStore = useSessionStorage<number | undefined>(
+  "newStory:chosenLore",
+  undefined
+);
+
+function chooseLore(loreId: number) {
+  const lore = lores.value.find((l) => l.id == loreId);
+  if (!lore) return;
+
   chosenLore.value = lore;
   chosenProtagonist.value = undefined;
   selectedCharactes.value.clear();
+
+  chosenLoreStore.value = loreId;
 }
 
-const chosenLore: ShallowRef<Lore | undefined> = shallowRef(
-  route.query.loreId
-    ? lores.value.find((l) => l.id === Number(route.query.loreId))
-    : undefined
-);
+function chooseProtagonist(charId: number) {
+  const char = characters.value.find((c) => c.id == charId);
+  if (!char) return;
 
-const chosenProtagonist: ShallowRef<Character | undefined> = shallowRef(
-  route.query.charId
-    ? characters.value.find((c) => c.id === Number(route.query.charId))
-    : undefined
-);
+  chosenProtagonist.value = char;
+  selectedCharactes.value.delete(char);
+}
 
-const selectedCharactes: ShallowRef<Set<Character>> = ref(new Set());
+function selectCharacter(charId: number) {
+  const char = characters.value.find((c) => c.id == charId);
+  if (!char) return;
+
+  if (char === chosenProtagonist.value) return;
+
+  if (selectedCharactes.value.has(char)) {
+    selectedCharactes.value.delete(char);
+  } else {
+    selectedCharactes.value.add(char);
+  }
+}
+
+if (route.query.loreId) {
+  chooseLore(Number(route.query.loreId));
+} else if (chosenLoreStore.value) {
+  chooseLore(chosenLoreStore.value);
+}
+
+if (route.query.charId) {
+  chooseProtagonist(Number(route.query.charId));
+}
 
 const fabula: Ref<string | undefined> = ref();
 
@@ -119,7 +151,7 @@ async function create() {
         :key="lore.id"
         :lore="lore"
         :class="{ 'border border-primary-500': lore === chosenLore }"
-        :click="() => chooseLore(lore)"
+        :click="() => chooseLore(lore.id)"
       )
 
     .grid.gap-3.rounded.border.border-primary-500.p-3.shadow-lg.sm_grid-cols-4(
@@ -139,7 +171,7 @@ async function create() {
           :char="character"
           :selected="character === chosenProtagonist"
           :class="chosenProtagonist === character ? (character.collected.value ? 'border-primary-500' : 'border-error-500') : ''"
-          :click="() => { chosenProtagonist = character; selectedCharactes.delete(character); }"
+          :click="() => chooseProtagonist(character.id)"
         )
 
       .grid.gap-3.rounded.border.p-3.shadow-lg.sm_grid-cols-4(
@@ -163,7 +195,7 @@ async function create() {
             :char="character"
             :selected="selectedCharactes.has(character)"
             :class="{ 'cursor-pointer pressable transition-transform': chosenProtagonist !== character, 'cursor-not-allowed grayscale opacity-50': chosenProtagonist === character, 'border-primary-500': selectedCharactes.has(character) && character.collected.value, 'border-error-500': selectedCharactes.has(character) && !character.collected.value }"
-            :click="() => { chosenProtagonist === character ? null : selectedCharactes.has(character) ? selectedCharactes.delete(character) : selectedCharactes.add(character); }"
+            :click="() => selectCharacter(character.id)"
           )
 
         .grid.grid-cols-4.gap-3.rounded.border.p-3.shadow-lg(
