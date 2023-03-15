@@ -15,6 +15,7 @@ export default t.procedure.query(async ({ ctx }) => {
           OR: [{ public: true }, { creatorId: ctx.user.id }],
         },
         select: { id: true },
+        orderBy: { id: "asc" },
       })
     ).map((l) => l.id);
   } else {
@@ -25,6 +26,7 @@ export default t.procedure.query(async ({ ctx }) => {
           public: true,
         },
         select: { id: true },
+        orderBy: { id: "asc" },
       })
     ).map((l) => l.id);
   }

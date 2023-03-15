@@ -11,6 +11,7 @@ export default t.procedure.query(async () => {
     await prisma.character.findMany({
       where: { id: { gt: 0 } },
       select: { id: true },
+      orderBy: { id: "asc" },
     })
   ).map((c) => c.id);
 });

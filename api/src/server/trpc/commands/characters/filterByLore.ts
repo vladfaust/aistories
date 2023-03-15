@@ -22,6 +22,7 @@ export default t.procedure
         creatorId: true,
         public: true,
       },
+      orderBy: { id: "asc" },
     });
 
     return chars
