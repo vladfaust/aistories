@@ -83,8 +83,8 @@ async function create() {
 
   try {
     if (
-      chosenProtagonist.value?.nft ||
-      [...selectedCharactes.value].find((c) => c.nft)
+      chosenProtagonist.value?.nft.value ||
+      [...selectedCharactes.value].find((c) => c.nft.value)
     ) {
       await ensureWeb3Token();
     }
