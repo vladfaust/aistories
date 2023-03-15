@@ -29,7 +29,7 @@ nProgress.done();
     .w-full.bg-base-100(class="h-[1px]")
     RouterLink.btn.btn-sm.btn-primary.shrink-0(:to="'/lores/new'") Create new ✨
 
-  .flex.flex-col.gap-3
+  .hidden.flex-col.gap-3.sm_flex
     .grid.gap-3.rounded.border.p-3.sm_grid-cols-4(v-for="lore in lores")
       template(v-if="lore.ref.value")
         .flex.flex-col.gap-2
@@ -53,4 +53,12 @@ nProgress.done();
                 :char="char.ref.value"
                 style="width: calc(25%)"
               )
+
+  .grid.grid-cols-2.gap-2.sm_hidden
+    template(v-for="lore in lores")
+      LoreCard.gap-2.rounded.border.p-2(
+        v-if="lore.ref.value"
+        :key="lore.ref.value?.id"
+        :lore="lore.ref.value"
+      )
 </template>
