@@ -33,7 +33,11 @@ nProgress.done();
 
     .grid.gap-3.sm_grid-cols-3
       LoreCard.gap-2.rounded.border.p-2(:lore="lore.ref.value")
-      LoreSummary.sm_col-span-2(:lore="lore.ref.value")
+      .flex.flex-col.gap-2.sm_col-span-2
+        LoreSummary(:lore="lore.ref.value")
+        RouterLink.btn.btn-primary.sm_w-max(
+          :to="'/story/new?loreId=' + lore.ref.value.id"
+        ) New {{ lore.ref.value.name.value }} story 📚
 
     .flex.items-center.justify-between.gap-3
       h2.shrink-0.text-lg.font-medium Lore characters

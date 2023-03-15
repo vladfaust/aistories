@@ -3,8 +3,8 @@ import Character from "@/models/Character";
 import Lore from "@/models/Lore";
 import * as api from "@/services/api";
 import { ensureWeb3Token, userId, web3Token } from "@/store";
-import { computed, onMounted, ref, type Ref, type ShallowRef } from "vue";
-import { useRouter } from "vue-router";
+import { computed, ref, shallowRef, type Ref, type ShallowRef } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import LoreCard from "@/components/Lore/Card.vue";
 import LoreSummary from "@/components/Lore/Summary.vue";
 import CharCard from "@/components/Character/Card.vue";
@@ -13,28 +13,11 @@ import nProgress from "nprogress";
 
 const CHAR_LIMIT = 1;
 
+const route = useRoute();
 const router = useRouter();
 
 const lores: ShallowRef<Lore[]> = ref([]);
-const chosenLore: Ref<Lore | undefined> = ref();
-
 const characters: ShallowRef<Character[]> = ref([]);
-const chosenProtagonist: ShallowRef<Character | null> = ref(null);
-const selectedCharactes: ShallowRef<Set<Character>> = ref(new Set());
-const fabula: Ref<string | undefined> = ref();
-
-const mayCreate = computed(() => {
-  return (
-    !createInProgress.value &&
-    chosenLore.value &&
-    chosenProtagonist.value &&
-    chosenProtagonist.value.collected.value &&
-    selectedCharactes.value.size > 0 &&
-    selectedCharactes.value.size <= CHAR_LIMIT &&
-    [...selectedCharactes.value].every((c) => c.collected.value)
-  );
-});
-const createInProgress = ref(false);
 
 const promises = [
   api.trpc.commands.lores.index.query().then(async (ids) => {
@@ -52,6 +35,41 @@ const promises = [
 
 await Promise.all(promises);
 nProgress.done();
+
+function chooseLore(lore: Lore) {
+  chosenLore.value = lore;
+  chosenProtagonist.value = undefined;
+  selectedCharactes.value.clear();
+}
+
+const chosenLore: ShallowRef<Lore | undefined> = shallowRef(
+  route.query.loreId
+    ? lores.value.find((l) => l.id === Number(route.query.loreId))
+    : undefined
+);
+
+const chosenProtagonist: ShallowRef<Character | undefined> = shallowRef(
+  route.query.charId
+    ? characters.value.find((c) => c.id === Number(route.query.charId))
+    : undefined
+);
+
+const selectedCharactes: ShallowRef<Set<Character>> = ref(new Set());
+
+const fabula: Ref<string | undefined> = ref();
+
+const mayCreate = computed(() => {
+  return (
+    !createInProgress.value &&
+    chosenLore.value &&
+    chosenProtagonist.value &&
+    chosenProtagonist.value.collected.value &&
+    selectedCharactes.value.size > 0 &&
+    selectedCharactes.value.size <= CHAR_LIMIT &&
+    [...selectedCharactes.value].every((c) => c.collected.value)
+  );
+});
+const createInProgress = ref(false);
 
 async function create() {
   if (!mayCreate.value) return;
@@ -101,7 +119,7 @@ async function create() {
         :key="lore.id"
         :lore="lore"
         :class="{ 'border border-primary-500': lore === chosenLore }"
-        :click="() => { chosenLore = lore; chosenProtagonist = null; selectedCharactes.clear(); }"
+        :click="() => chooseLore(lore)"
       )
 
     .grid.gap-3.rounded.border.border-primary-500.p-3.shadow-lg.sm_grid-cols-4(

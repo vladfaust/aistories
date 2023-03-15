@@ -32,10 +32,14 @@ nProgress.done();
   .flex.flex-col.gap-3
     .grid.gap-3.rounded.border.p-3.sm_grid-cols-4(v-for="lore in lores")
       template(v-if="lore.ref.value")
-        LoreCard.h-max.gap-2.rounded.border.p-2(
-          :key="lore.ref.value?.id"
-          :lore="lore.ref.value"
-        )
+        .flex.flex-col.gap-2
+          LoreCard.h-max.gap-2.rounded.border.p-2(
+            :key="lore.ref.value?.id"
+            :lore="lore.ref.value"
+          )
+          RouterLink.btn.btn-primary.btn-sm(
+            :to="'/story/new?loreId=' + lore.ref.value.id"
+          ) New story 📚
         .col-span-3.flex.max-h-full.flex-col.gap-2.overflow-x-auto
           LoreSummary.w-full(
             v-if="lore.ref.value"

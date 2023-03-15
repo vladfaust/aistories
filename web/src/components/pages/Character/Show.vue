@@ -37,7 +37,12 @@ nProgress.done();
         v-if="character.ref.value"
         :char="character.ref.value"
       )
-      CharSummary.sm_col-span-2(:char="character.ref.value")
+      .flex.flex-col.gap-2.sm_col-span-2
+        CharSummary(:char="character.ref.value")
+        RouterLink.btn.btn-primary.sm_w-max(
+          v-if="character.ref.value.lore.ref.value"
+          :to="'/story/new?loreId=' + character.ref.value.lore.ref.value.id + '&charId=' + character.ref.value.id"
+        ) New story as {{ character.ref.value.name.value }} 📚
 
     template(v-if="character.ref.value.lore.ref.value")
       h2.shrink-0.text-lg.font-medium Lore
