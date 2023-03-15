@@ -27,7 +27,7 @@ async function addChar() {
   }
 
   try {
-    if (newChar.ref.value.nft) {
+    if (newChar.ref.value.nft.value) {
       if (!newChar.ref.value.collected.value) {
         alert("You must collect this character's NFT to add it to a story.");
         return;
