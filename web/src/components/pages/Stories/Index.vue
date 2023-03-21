@@ -7,7 +7,7 @@ import nProgress from "nprogress";
 
 const stories: ShallowRef<Story[]> = ref([]);
 
-if (userId) {
+if (userId.value) {
   stories.value = (await api.trpc.commands.story.list.query()).map((data) =>
     Story.fromBackendModel(data)
   );
