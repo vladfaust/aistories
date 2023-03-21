@@ -1,5 +1,6 @@
 import config from "@/config";
 import konsole from "@/services/konsole";
+import * as settings from "@/settings";
 import { PrismaClient } from "@prisma/client";
 import { Request, Response } from "express";
 import { nanoid } from "nanoid";
@@ -60,6 +61,11 @@ export default async function (req: Request, res: Response) {
   const id = me.user?.id;
   konsole.log(["oauth", input.provider], "/@me response", { id });
 
+  let registrationGrant: number | undefined;
+  try {
+    registrationGrant = parseInt(await settings.get("registrationGrant"));
+  } catch (e) {}
+
   const identity = await prisma.$transaction(async (prisma) => {
     let identity = await prisma.oAuth2Identity.findFirst({
       where: {
@@ -107,6 +113,21 @@ export default async function (req: Request, res: Response) {
           userId: true,
         },
       });
+
+      if (registrationGrant) {
+        konsole.log(["oauth", input.provider], "Granting registration grant", {
+          userId: identity.userId,
+          amount: registrationGrant,
+        });
+
+        await prisma.energyGrant.create({
+          data: {
+            userId: identity.userId,
+            reason: "registration",
+            amount: registrationGrant,
+          },
+        });
+      }
     }
 
     return identity;
