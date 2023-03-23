@@ -22,15 +22,15 @@ const characters: ShallowRef<Character[]> = ref([]);
 
 const promises = [
   api.trpc.commands.lores.index.query().then(async (ids) => {
-    lores.value = (await Promise.all(
-      ids.map((id) => Lore.findOrCreate(id).promise)
-    )) as Lore[];
+    lores.value = (
+      await Promise.all(ids.map((id) => Lore.findOrCreate(id).promise))
+    ).filter((l) => l) as Lore[];
   }),
 
   api.trpc.commands.characters.index.query().then(async (ids) => {
-    characters.value = (await Promise.all(
-      ids.map((id) => Character.findOrCreate(id).promise)
-    )) as Character[];
+    characters.value = (
+      await Promise.all(ids.map((id) => Character.findOrCreate(id).promise))
+    ).filter((c) => c) as Character[];
   }),
 ];
 
