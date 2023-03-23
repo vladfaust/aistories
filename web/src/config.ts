@@ -20,6 +20,14 @@ class Eth {
   ) {}
 }
 
+class Sentry {
+  constructor(
+    readonly dsn: string,
+    readonly debug?: boolean,
+    readonly environment?: string
+  ) {}
+}
+
 class Config {
   constructor(
     readonly restApiUrl: URL,
@@ -28,6 +36,7 @@ class Config {
     readonly discordClientId: string,
     readonly discordRedirectUri: string,
     readonly cdnUrl: URL,
+    readonly sentry: Sentry | undefined,
     readonly eth: Eth
   ) {}
 }
@@ -44,6 +53,15 @@ const config = new Config(
   requireEnv("VITE_DISCORD_CLIENT_ID"),
   requireEnv("VITE_DISCORD_REDIRECT_URI"),
   new URL(requireEnv("VITE_CDN_URL")),
+  import.meta.env.VITE_SENTRY_DSN
+    ? new Sentry(
+        requireEnv("VITE_SENTRY_DSN"),
+        import.meta.env.VITE_SENTRY_DEBUG !== undefined
+          ? import.meta.env.VITE_SENTRY_DEBUG
+          : undefined,
+        import.meta.env.VITE_SENTRY_ENVIRONMENT
+      )
+    : undefined,
   new Eth(
     JSON.parse(requireEnv("VITE_ETH_CHAIN")),
     requireEnv("VITE_ETH_RECEIVER_ADDRESS")
