@@ -104,7 +104,6 @@ export default class Character {
     return (this.watchBalanceStopHandle = watch(
       account,
       (account) => {
-        console.debug("watchBalance", account);
         this.balance.value = undefined;
         this._fetchBalancePromise = undefined;
         if (account) this.fetchBalance(account);
