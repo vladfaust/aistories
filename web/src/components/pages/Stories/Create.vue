@@ -12,7 +12,7 @@ import CharSummary from "@/components/Character/Summary.vue";
 import nProgress from "nprogress";
 import { useSessionStorage } from "@vueuse/core";
 
-const CHAR_LIMIT = 1;
+const CHAR_LIMIT = 2;
 
 const route = useRoute();
 const router = useRouter();
