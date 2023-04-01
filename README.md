@@ -7,6 +7,7 @@ Live version is available (at the moment of writing) at https://beta.aistories.x
 
 AIStories is a platform for AI character simulation.
 You may choose the setup, the protagonist (you), and the characters in the story.
+It is possible to create your own setups, lores and characters.
 The AI will continiosly generate a story based on your inputs.
 
 This is an example of a story with Asuka from Evangelion: https://beta.aistories.xyz/story/UTix3ZYefK5QpWjt_dxLq.
